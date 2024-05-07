@@ -6,6 +6,9 @@
 - Automatically installs creamlinux and its components into selected steam games, excluding and handling specific config files.
 - Provides a simple cli to navigate and operate the entire process.
 
+# Demo
+https://www.youtube.com/watch?v=22LDDUoBvus&ab_channel=Nova
+
 # Prerequisites
 - `python 3.x`
 - `requests` library
