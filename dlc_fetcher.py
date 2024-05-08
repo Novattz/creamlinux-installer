@@ -5,6 +5,40 @@ import zipfile
 import time
 import stat
 
+def clear_screen():
+    os.system('cls' if os.name == 'nt' else 'clear')
+
+def fetch_latest_version():
+    try:
+        response = requests.get("https://api.github.com/repos/Novattz/creamlinux-installer/releases/latest")
+        data = response.json()
+        return data['tag_name']
+    except requests.exceptions.RequestException as e:
+        return "Unknown"
+
+def show_header():
+    clear_screen()
+    cyan = '\033[96m'
+    reset = '\033[0m'
+    print(f"{cyan}")
+    print(r"""
+  _    _ _   _ _      ____   _____ _  ________ _____  
+ | |  | | \ | | |    / __ \ / ____| |/ /  ____|  __ \ 
+ | |  | |  \| | |   | |  | | |    | ' /| |__  | |__) |
+ | |  | | . ` | |   | |  | | |    |  < |  __| |  _  / 
+ | |__| | |\  | |___| |__| | |____| . \| |____| | \ \ 
+  \____/|_| \_|______\____/ \_____|_|\_\______|_|  \_\
+                                                      
+    """)
+    print(f"""
+    > Made by Tickbase
+    > GitHub: https://github.com/Novattz/creamlinux-installer
+    > Version: {app_version}
+    {reset}
+    """)
+
+app_version = fetch_latest_version()
+
 def parse_vdf(file_path):
     library_paths = []
     try:
@@ -113,6 +147,7 @@ def install_files(app_id, game_install_dir, dlcs, game_name):
         print("Failed to download the files needed for installation.")
 
 def main():
+    show_header()
     library_folders = find_steam_library_folders()
     games = find_steam_apps(library_folders)
     if games:
