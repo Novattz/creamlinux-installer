@@ -12,6 +12,7 @@ https://www.youtube.com/watch?v=22LDDUoBvus&ab_channel=Nova
 # To do
 - Cross reference dlc files and dlc id's. Incase dlc id's and dlc files differ in terms of quantity it will notify the user.
 - Possibly add functionality to search for dlc files/automatically installing them.
+- Add the possibility to install cream/smokeapi for games running proton.
 
 # Prerequisites
 - `python 3.x`
