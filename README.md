@@ -28,7 +28,7 @@ python steam_dlc_fetcher.py
 ```
 
 # Issues?
-- Open a pull request and attach all relevant errors/logs.
+- Open a issue and attach all relevant errors/logs.
 
 # Credits
 - [All credits for creamlinux go to its original author and contributors.](https://github.com/anticitizn/creamlinux)
