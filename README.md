@@ -26,7 +26,7 @@ https://www.youtube.com/watch?v=22LDDUoBvus&ab_channel=Nova
 - Navigate to the directory containing the script.
 - Run the script using python.
 ```bash
-python steam_dlc_fetcher.py
+python dlc_fetcher.py
 ```
 
 # Issues?
