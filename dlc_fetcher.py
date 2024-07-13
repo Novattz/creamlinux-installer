@@ -4,6 +4,7 @@ import requests
 import zipfile
 import time
 import stat
+import subprocess
 
 LOG_FILE = 'script.log'
 
@@ -58,7 +59,18 @@ def parse_vdf(file_path):
         log_message(f"Failed to read {file_path}: {str(e)}")
     return library_paths
 
+def find_steam_binary():
+    try:
+        result = subprocess.run(['which', 'steam'], stdout=subprocess.PIPE)
+        steam_path = result.stdout.decode('utf-8').strip()
+        if steam_path:
+            return os.path.dirname(steam_path)
+    except Exception as e:
+        log_message(f"Failed to locate steam binary: {str(e)}")
+    return None
+
 def find_steam_library_folders():
+    steam_binary_path = find_steam_binary()
     base_paths = [
         os.path.expanduser('~/.steam/steam'),
         os.path.expanduser('~/.local/share/Steam'),
@@ -67,6 +79,9 @@ def find_steam_library_folders():
         '/mnt', '/media',
         '/run/media/mmcblk0p1/steamapps'
     ]
+    if steam_binary_path:
+        base_paths.append(steam_binary_path)
+
     library_folders = []
     try:
         for base_path in base_paths:
