@@ -5,11 +5,28 @@ import zipfile
 import time
 import stat
 import subprocess
+import psutil
 
 LOG_FILE = 'script.log'
 
 def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
+
+def log_error(message):
+    timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+    with open(LOG_FILE, 'a') as log_file:
+        log_file.write(f"[{timestamp}] {message}\n")
+    print(message)
+
+def read_steam_registry():
+    registry_path = os.path.expanduser('~/.steam/registry.vdf')
+    if os.path.exists(registry_path):
+        with open(registry_path, 'r') as f:
+            content = f.read()
+            install_path = re.search(r'"InstallPath"\s*"([^"]+)"', content)
+            if install_path:
+                return install_path.group(1)
+    return None
 
 def fetch_latest_version():
     try:
@@ -17,7 +34,7 @@ def fetch_latest_version():
         data = response.json()
         return data['tag_name']
     except requests.exceptions.RequestException as e:
-        log_message(f"Failed to fetch latest version: {str(e)}")
+        log_error(f"Failed to fetch latest version: {str(e)}")
         return "Unknown"
 
 def show_header(app_version):
@@ -43,11 +60,6 @@ def show_header(app_version):
 
 app_version = fetch_latest_version()
 
-def log_message(message):
-    with open(LOG_FILE, 'a') as log_file:
-        log_file.write(f"{message}\n")
-    print(message)
-
 def parse_vdf(file_path):
     library_paths = []
     try:
@@ -56,7 +68,7 @@ def parse_vdf(file_path):
             paths = re.findall(r'"path"\s*"(.*?)"', content, re.IGNORECASE)
             library_paths.extend([os.path.normpath(path) for path in paths])
     except Exception as e:
-        log_message(f"Failed to read {file_path}: {str(e)}")
+        log_error(f"Failed to read {file_path}: {str(e)}")
     return library_paths
 
 def find_steam_binary():
@@ -66,7 +78,7 @@ def find_steam_binary():
         if steam_path:
             return os.path.dirname(steam_path)
     except Exception as e:
-        log_message(f"Failed to locate steam binary: {str(e)}")
+        log_error(f"Failed to locate steam binary: {str(e)}")
     return None
 
 def find_steam_library_folders():
@@ -74,19 +86,25 @@ def find_steam_library_folders():
     base_paths = [
         os.path.expanduser('~/.steam/steam'),
         os.path.expanduser('~/.local/share/Steam'),
-        os.path.expanduser('~/home/deck/.steam/steam'),
-        os.path.expanduser('~/home/deck/.local/share/Steam'),
+        os.path.expanduser('/home/deck/.steam/steam'),
+        os.path.expanduser('/home/deck/.local/share/Steam'),
         '/mnt', '/media',
         '/run/media/mmcblk0p1/steamapps'
     ]
     if steam_binary_path:
         base_paths.append(steam_binary_path)
 
+    steam_install_path = read_steam_registry()
+    if steam_install_path:
+        base_paths.append(steam_install_path)
+
     library_folders = []
+    scanned_paths = []
     try:
         for base_path in base_paths:
             if os.path.exists(base_path):
-                for root, dirs, files in os.walk(base_path, topdown=True):
+                for root, dirs, files in os.walk(base_path, topdown=True, followlinks=True):
+                    scanned_paths.append(root)
                     if 'steamapps' in dirs:
                         steamapps_path = os.path.join(root, 'steamapps')
                         library_folders.append(steamapps_path)
@@ -101,14 +119,19 @@ def find_steam_library_folders():
         if not library_folders:
             raise FileNotFoundError("No Steam library folders found.")
     except Exception as e:
-        log_message(f"Error finding Steam library folders: {e}")
+        log_error(f"Error finding Steam library folders: {e}")
+        log_error("Scanned paths:")
+        for path in scanned_paths:
+            log_error(f"  - {path}")
     return library_folders
 
 def find_steam_apps(library_folders):
     acf_pattern = re.compile(r'^appmanifest_(\d+)\.acf$')
     games = {}
+    scanned_folders = []
     try:
         for folder in library_folders:
+            scanned_folders.append(folder)
             if os.path.exists(folder):
                 for item in os.listdir(folder):
                     if acf_pattern.match(item):
@@ -120,11 +143,14 @@ def find_steam_apps(library_folders):
                                     cream_installed = 'Cream installed' if 'cream.sh' in os.listdir(install_path) else ''
                                     games[app_id] = (game_name, cream_installed, install_path)
                         except Exception as e:
-                            log_message(f"Error parsing {item}: {e}")
+                            log_error(f"Error parsing {item}: {e}")
         if not games:
             raise FileNotFoundError("No Steam games found.")
     except Exception as e:
-        log_message(f"Error finding Steam apps: {e}")
+        log_error(f"Error finding Steam apps: {e}")
+        log_error("Scanned folders:")
+        for folder in scanned_folders:
+            log_error(f"  - {folder}")
     return games
 
 def parse_acf(file_path):
@@ -136,7 +162,7 @@ def parse_acf(file_path):
         install_dir = re.search(r'"installdir"\s+"([^"]+)"', data)
         return app_id.group(1), name.group(1), install_dir.group(1)
     except Exception as e:
-        log_message(f"Error reading ACF file {file_path}: {e}")
+        log_error(f"Error reading ACF file {file_path}: {e}")
         return None, None, None
 
 def fetch_dlc_details(app_id):
@@ -145,7 +171,7 @@ def fetch_dlc_details(app_id):
         response = requests.get(base_url)
         data = response.json()
         if app_id not in data or "data" not in data[app_id]:
-            log_message("Error: Unable to fetch game details.")
+            log_error("Error: Unable to fetch game details.")
             return []
         game_data = data[app_id]["data"]
         dlcs = game_data.get("dlc", [])
@@ -161,17 +187,17 @@ def fetch_dlc_details(app_id):
                         dlc_name = dlc_data[str(dlc_id)]["data"].get("name", "Unknown DLC")
                         dlc_details.append({"appid": dlc_id, "name": dlc_name})
                     else:
-                        log_message(f"Data missing for DLC {dlc_id}")
+                        log_error(f"Data missing for DLC {dlc_id}")
                 elif dlc_response.status_code == 429:
-                    log_message("Rate limited! Please wait before trying again.")
+                    log_error("Rate limited! Please wait before trying again.")
                     time.sleep(10)
                 else:
-                    log_message(f"Failed to fetch details for DLC {dlc_id}, Status Code: {dlc_response.status_code}")
+                    log_error(f"Failed to fetch details for DLC {dlc_id}, Status Code: {dlc_response.status_code}")
             except Exception as e:
-                log_message(f"Exception for DLC {dlc_id}: {str(e)}")
+                log_error(f"Exception for DLC {dlc_id}: {str(e)}")
         return dlc_details
     except requests.exceptions.RequestException as e:
-        log_message(f"Failed to fetch DLC details for {app_id}: {e}")
+        log_error(f"Failed to fetch DLC details for {app_id}: {e}")
         return []
 
 def install_files(app_id, game_install_dir, dlcs, game_name):
@@ -196,9 +222,9 @@ def install_files(app_id, game_install_dir, dlcs, game_name):
             print(f"Custom cream_api.ini has been written to {game_install_dir}.")
             print(f"Installation complete. Set launch options in Steam: 'sh ./cream.sh %command%' for {game_name}.")
         else:
-            log_message("Failed to download the files needed for installation.")
+            log_error("Failed to download the files needed for installation.")
     except Exception as e:
-        log_message(f"Failed to install files for {game_name}: {e}")
+        log_error(f"Failed to install files for {game_name}: {e}")
 
 def main():
     show_header(app_version)
@@ -231,7 +257,7 @@ def main():
         else:
             print("No Steam games found on this computer or connected drives.")
     except Exception as e:
-        log_message(f"An error occurred: {e}")
+        log_error(f"An error occurred: {e}")
 
 if __name__ == "__main__":
     main()
