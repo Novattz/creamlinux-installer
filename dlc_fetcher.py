@@ -74,10 +74,6 @@ def find_steam_library_folders():
     base_paths = [
         os.path.expanduser('~/.steam/steam'),
         os.path.expanduser('~/.local/share/Steam'),
-        os.path.expanduser('~/.steam/steam'),
-        os.path.expanduser('~/.local/share/Steam'),
-        '/mnt', '/media',
-        '/run/media/mmcblk0p1/steamapps'
     ]
     if steam_binary_path:
         base_paths.append(steam_binary_path)
