@@ -16,7 +16,7 @@ def fetch_latest_version():
     except requests.exceptions.RequestException as e:
         return "Unknown"
 
-def show_header():
+def show_header(app_version):
     clear_screen()
     cyan = '\033[96m'
     reset = '\033[0m'
@@ -51,7 +51,13 @@ def parse_vdf(file_path):
     return library_paths
 
 def find_steam_library_folders():
-    base_paths = [os.path.expanduser('~/.steam/steam'), os.path.expanduser('~/.local/share/Steam'), '/mnt', '/media']
+    base_paths = [
+        os.path.expanduser('~/.steam/steam'),
+        os.path.expanduser('~/.local/share/Steam'),
+        os.path.expanduser('~/home/deck/.steam/steam'),
+        os.path.expanduser('~/home/deck/.local/share/Steam'),
+        '/mnt', '/media'
+    ]
     library_folders = []
     for base_path in base_paths:
         if os.path.exists(base_path):
@@ -76,100 +82,125 @@ def find_steam_apps(library_folders):
         if os.path.exists(folder):
             for item in os.listdir(folder):
                 if acf_pattern.match(item):
-                    app_id, game_name, install_dir = parse_acf(os.path.join(folder, item))
-                    if app_id and game_name:
-                        install_path = os.path.join(folder, 'common', install_dir)
-                        if os.path.exists(install_path):
-                            cream_installed = 'Cream installed' if 'cream.sh' in os.listdir(install_path) else ''
-                            games[app_id] = (game_name, cream_installed, install_path)
+                    try:
+                        app_id, game_name, install_dir = parse_acf(os.path.join(folder, item))
+                        if app_id and game_name:
+                            install_path = os.path.join(folder, 'common', install_dir)
+                            if os.path.exists(install_path):
+                                cream_installed = 'Cream installed' if 'cream.sh' in os.listdir(install_path) else ''
+                                games[app_id] = (game_name, cream_installed, install_path)
+                    except Exception as e:
+                        print(f"Error parsing {item}: {e}")
     return games
 
 def parse_acf(file_path):
-    with open(file_path, 'r', encoding='utf-8') as file:
-        data = file.read()
-    app_id = re.search(r'"appid"\s+"(\d+)"', data)
-    name = re.search(r'"name"\s+"([^"]+)"', data)
-    install_dir = re.search(r'"installdir"\s+"([^"]+)"', data)
-    return app_id.group(1), name.group(1), install_dir.group(1)
+    try:
+        with open(file_path, 'r', encoding='utf-8') as file:
+            data = file.read()
+        app_id = re.search(r'"appid"\s+"(\d+)"', data)
+        name = re.search(r'"name"\s+"([^"]+)"', data)
+        install_dir = re.search(r'"installdir"\s+"([^"]+)"', data)
+        return app_id.group(1), name.group(1), install_dir.group(1)
+    except Exception as e:
+        print(f"Error reading ACF file {file_path}: {e}")
+        return None, None, None
 
 def fetch_dlc_details(app_id):
     base_url = f"https://store.steampowered.com/api/appdetails?appids={app_id}"
-    response = requests.get(base_url)
-    data = response.json()
-    if app_id not in data or "data" not in data[app_id]:
-        print("Error: Unable to fetch game details.")
-        return []
-    game_data = data[app_id]["data"]
-    dlcs = game_data.get("dlc", [])
-    dlc_details = []
-    for dlc_id in dlcs:
-        try:
-            time.sleep(0.3)
-            dlc_url = f"https://store.steampowered.com/api/appdetails?appids={dlc_id}"
-            dlc_response = requests.get(dlc_url)
-            if dlc_response.status_code == 200:
-                dlc_data = dlc_response.json()
-                if str(dlc_id) in dlc_data and "data" in dlc_data[str(dlc_id)]:
-                    dlc_name = dlc_data[str(dlc_id)]["data"].get("name", "Unknown DLC")
-                    dlc_details.append({"appid": dlc_id, "name": dlc_name})
+    try:
+        response = requests.get(base_url)
+        data = response.json()
+        if app_id not in data or "data" not in data[app_id]:
+            print("Error: Unable to fetch game details.")
+            return []
+        game_data = data[app_id]["data"]
+        dlcs = game_data.get("dlc", [])
+        dlc_details = []
+        for dlc_id in dlcs:
+            try:
+                time.sleep(0.3)
+                dlc_url = f"https://store.steampowered.com/api/appdetails?appids={dlc_id}"
+                dlc_response = requests.get(dlc_url)
+                if dlc_response.status_code == 200:
+                    dlc_data = dlc_response.json()
+                    if str(dlc_id) in dlc_data and "data" in dlc_data[str(dlc_id)]:
+                        dlc_name = dlc_data[str(dlc_id)]["data"].get("name", "Unknown DLC")
+                        dlc_details.append({"appid": dlc_id, "name": dlc_name})
+                    else:
+                        print(f"Data missing for DLC {dlc_id}")
+                elif dlc_response.status_code == 429:
+                    print("Rate limited! Please wait before trying again.")
+                    time.sleep(10)
                 else:
-                    print(f"Data missing for DLC {dlc_id}")
-            elif dlc_response.status_code == 429:
-                print("Rate limited! Please wait before trying again.")
-                time.sleep(10)
-            else:
-                print(f"Failed to fetch details for DLC {dlc_id}, Status Code: {dlc_response.status_code}")
-        except Exception as e:
-            print(f"Exception for DLC {dlc_id}: {str(e)}")
-    return dlc_details
+                    print(f"Failed to fetch details for DLC {dlc_id}, Status Code: {dlc_response.status_code}")
+            except Exception as e:
+                print(f"Exception for DLC {dlc_id}: {str(e)}")
+        return dlc_details
+    except requests.exceptions.RequestException as e:
+        print(f"Failed to fetch DLC details for {app_id}: {e}")
+        return []
 
 def install_files(app_id, game_install_dir, dlcs, game_name):
     zip_url = "https://github.com/anticitizn/creamlinux/releases/latest/download/creamlinux.zip"
     zip_path = os.path.join(game_install_dir, 'creamlinux.zip')
-    response = requests.get(zip_url)
-    if response.status_code == 200:
-        with open(zip_path, 'wb') as f:
-            f.write(response.content)
-        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-            zip_ref.extractall(game_install_dir)
-        os.remove(zip_path)
+    try:
+        response = requests.get(zip_url)
+        if response.status_code == 200:
+            with open(zip_path, 'wb') as f:
+                f.write(response.content)
+            with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+                zip_ref.extractall(game_install_dir)
+            os.remove(zip_path)
 
-        cream_sh_path = os.path.join(game_install_dir, 'cream.sh')
-        os.chmod(cream_sh_path, os.stat(cream_sh_path).st_mode | stat.S_IEXEC)
+            cream_sh_path = os.path.join(game_install_dir, 'cream.sh')
+            os.chmod(cream_sh_path, os.stat(cream_sh_path).st_mode | stat.S_IEXEC)
 
-        dlc_list = "\n".join([f"{dlc['appid']} = {dlc['name']}" for dlc in dlcs])
-        cream_api_path = os.path.join(game_install_dir, 'cream_api.ini')
-        with open(cream_api_path, 'w') as f:
-            f.write(f"APPID = {app_id}\n[config]\nissubscribedapp_on_false_use_real = true\n[methods]\ndisable_steamapps_issubscribedapp = false\n[dlc]\n{dlc_list}")
-        print(f"Custom cream_api.ini has been written to {game_install_dir}.")
-        print(f"Installation complete. Set launch options in Steam: 'sh ./cream.sh %command%' for {game_name}.")
-    else:
-        print("Failed to download the files needed for installation.")
+            dlc_list = "\n".join([f"{dlc['appid']} = {dlc['name']}" for dlc in dlcs])
+            cream_api_path = os.path.join(game_install_dir, 'cream_api.ini')
+            with open(cream_api_path, 'w') as f:
+                f.write(f"APPID = {app_id}\n[config]\nissubscribedapp_on_false_use_real = true\n[methods]\ndisable_steamapps_issubscribedapp = false\n[dlc]\n{dlc_list}")
+            print(f"Custom cream_api.ini has been written to {game_install_dir}.")
+            print(f"Installation complete. Set launch options in Steam: 'sh ./cream.sh %command%' for {game_name}.")
+        else:
+            print("Failed to download the files needed for installation.")
+    except Exception as e:
+        print(f"Failed to install files for {game_name}: {e}")
 
 def main():
-    show_header()
-    library_folders = find_steam_library_folders()
-    games = find_steam_apps(library_folders)
-    if games:
-        print("Select the game for which you want to fetch DLCs:")
-        games_list = list(games.items())
-        GREEN = '\033[92m'
-        RESET = '\033[0m'
-        for idx, (app_id, (name, cream_status, _)) in enumerate(games_list, 1):
-            if cream_status:
-                print(f"{idx}. {GREEN}{name} (App ID: {app_id}) - Cream installed{RESET}")
+    show_header(app_version)
+    try:
+        library_folders = find_steam_library_folders()
+        if not library_folders:
+            raise FileNotFoundError("No Steam library folders found.")
+        games = find_steam_apps(library_folders)
+        if games:
+            print("Select the game for which you want to fetch DLCs:")
+            games_list = list(games.items())
+            GREEN = '\033[92m'
+            RESET = '\033[0m'
+            for idx, (app_id, (name, cream_status, _)) in enumerate(games_list, 1):
+                if cream_status:
+                    print(f"{idx}. {GREEN}{name} (App ID: {app_id}) - Cream installed{RESET}")
+                else:
+                    print(f"{idx}. {name} (App ID: {app_id})")
+
+            choice = int(input("Enter the number of the game: ")) - 1
+            if choice < 0 or choice >= len(games_list):
+                raise ValueError("Invalid selection.")
+            selected_app_id, (selected_game_name, _, selected_install_dir) = games_list[choice]
+            print(f"You selected: {selected_game_name} (App ID: {selected_app_id})")
+
+            dlcs = fetch_dlc_details(selected_app_id)
+            if dlcs:
+                print("DLC IDs found:", [dlc['appid'] for dlc in dlcs])  # Only print app IDs for clarity
+                install_files(selected_app_id, selected_install_dir, dlcs, selected_game_name)
             else:
-                print(f"{idx}. {name} (App ID: {app_id})")
-
-        choice = int(input("Enter the number of the game: ")) - 1
-        selected_app_id, (selected_game_name, _, selected_install_dir) = games_list[choice]
-        print(f"You selected: {selected_game_name} (App ID: {selected_app_id})")
-
-        dlcs = fetch_dlc_details(selected_app_id)
-        print("DLC IDs found:", [dlc['appid'] for dlc in dlcs])  # Only print app IDs for clarity
-        install_files(selected_app_id, selected_install_dir, dlcs, selected_game_name)
-    else:
-        print("No Steam games found on this computer or connected drives.")
+                print("No DLCs found for the selected game.")
+        else:
+            print("No Steam games found on this computer or connected drives.")
+    except Exception as e:
+        print(f"An error occurred: {e}")
 
 if __name__ == "__main__":
     main()
+
