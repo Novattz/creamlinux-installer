@@ -11,6 +11,7 @@ import logging
 import argparse
 
 LOG_FILE = 'script.log'
+DEBUG_FILE = 'debug_script.log'
 LOOP_THRESHOLD = 5  # Number of times a directory can be visited before considered a loop
 TIMEOUT = 180  # Timeout in seconds (3 minutes)
 
@@ -18,7 +19,7 @@ def setup_logging(debug):
     log_format = '%(asctime)s [%(levelname)s] %(message)s'
     date_format = '%m-%d %H:%M:%S'
     if debug:
-        logging.basicConfig(filename=LOG_FILE, level=logging.DEBUG, format=log_format, datefmt=date_format)
+        logging.basicConfig(filename=DEBUG_FILE, level=logging.DEBUG, format=log_format, datefmt=date_format)
     else:
         logging.basicConfig(filename=LOG_FILE, level=logging.ERROR, format=log_format, datefmt=date_format)
 
