@@ -6,21 +6,36 @@ import time
 import stat
 import subprocess
 import psutil
+from collections import defaultdict
+import logging
+import argparse
 
 LOG_FILE = 'script.log'
+LOOP_THRESHOLD = 5  # Number of times a directory can be visited before considered a loop
+TIMEOUT = 180  # Timeout in seconds (3 minutes)
+
+def setup_logging(debug):
+    log_format = '%(asctime)s [%(levelname)s] %(message)s'
+    date_format = '%m-%d %H:%M:%S'
+    if debug:
+        logging.basicConfig(filename=LOG_FILE, level=logging.DEBUG, format=log_format, datefmt=date_format)
+    else:
+        logging.basicConfig(filename=LOG_FILE, level=logging.ERROR, format=log_format, datefmt=date_format)
 
 def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
 
 def log_error(message):
-    timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
-    with open(LOG_FILE, 'a') as log_file:
-        log_file.write(f"[{timestamp}] {message}\n")
+    logging.error(message)
     print(message)
+
+def log_debug(message):
+    logging.debug(message)
 
 def read_steam_registry():
     registry_path = os.path.expanduser('~/.steam/registry.vdf')
     if os.path.exists(registry_path):
+        log_debug(f"Found Steam registry file: {registry_path}")
         with open(registry_path, 'r') as f:
             content = f.read()
             install_path = re.search(r'"InstallPath"\s*"([^"]+)"', content)
@@ -37,9 +52,10 @@ def fetch_latest_version():
         log_error(f"Failed to fetch latest version: {str(e)}")
         return "Unknown"
 
-def show_header(app_version):
+def show_header(app_version, debug_mode):
     clear_screen()
     cyan = '\033[96m'
+    red = '\033[91m'
     reset = '\033[0m'
     print(f"{cyan}")
     print(r"""
@@ -57,6 +73,9 @@ def show_header(app_version):
     > Version: {app_version}
     {reset}
     """)
+    if debug_mode:
+        print(f"{red}    [Running in DEBUG mode]{reset}\n")
+    print()
 
 app_version = fetch_latest_version()
 
@@ -98,26 +117,41 @@ def find_steam_library_folders():
     if steam_install_path:
         base_paths.append(steam_install_path)
 
+    log_debug(f"Searching base paths: {base_paths}")
+
     library_folders = []
-    scanned_paths = []
+    scanned_paths = defaultdict(int)
+    start_time = time.time()
+
     try:
         for base_path in base_paths:
             if os.path.exists(base_path):
+                log_debug(f"Scanning path: {base_path}")
                 for root, dirs, files in os.walk(base_path, topdown=True, followlinks=True):
-                    scanned_paths.append(root)
+                    if time.time() - start_time > TIMEOUT:
+                        log_error("Script timeout reached. Stopping directory scan.")
+                        return library_folders
+                    scanned_paths[root] += 1
+                    if scanned_paths[root] > LOOP_THRESHOLD:
+                        log_error(f"Potential loop detected at {root}. Skipping further scans of this directory.")
+                        continue
                     if 'steamapps' in dirs:
                         steamapps_path = os.path.join(root, 'steamapps')
                         library_folders.append(steamapps_path)
+                        log_debug(f"Found steamapps folder: {steamapps_path}")
                         vdf_path = os.path.join(steamapps_path, 'libraryfolders.vdf')
                         if os.path.exists(vdf_path):
+                            log_debug(f"Found libraryfolders.vdf: {vdf_path}")
                             additional_paths = parse_vdf(vdf_path)
                             for path in additional_paths:
                                 new_steamapps_path = os.path.join(path, 'steamapps')
                                 if os.path.exists(new_steamapps_path):
                                     library_folders.append(new_steamapps_path)
+                                    log_debug(f"Added additional steamapps folder: {new_steamapps_path}")
                             dirs[:] = []  # Prevent further scanning into subdirectories
         if not library_folders:
             raise FileNotFoundError("No Steam library folders found.")
+        log_debug(f"Total Steam library folders found: {len(library_folders)}")
     except Exception as e:
         log_error(f"Error finding Steam library folders: {e}")
         log_error("Scanned paths:")
@@ -129,12 +163,20 @@ def find_steam_apps(library_folders):
     acf_pattern = re.compile(r'^appmanifest_(\d+)\.acf$')
     games = {}
     scanned_folders = []
+    start_time = time.time()
+
     try:
         for folder in library_folders:
+            if time.time() - start_time > TIMEOUT:
+                log_error("Script timeout reached. Stopping Steam app scan.")
+                return games
             scanned_folders.append(folder)
             if os.path.exists(folder):
+                log_debug(f"Scanning folder for ACF files: {folder}")
+                acf_count = 0
                 for item in os.listdir(folder):
                     if acf_pattern.match(item):
+                        acf_count += 1
                         try:
                             app_id, game_name, install_dir = parse_acf(os.path.join(folder, item))
                             if app_id and game_name:
@@ -142,10 +184,13 @@ def find_steam_apps(library_folders):
                                 if os.path.exists(install_path):
                                     cream_installed = 'Cream installed' if 'cream.sh' in os.listdir(install_path) else ''
                                     games[app_id] = (game_name, cream_installed, install_path)
+                                    log_debug(f"Found game: {game_name} (App ID: {app_id})")
                         except Exception as e:
                             log_error(f"Error parsing {item}: {e}")
+                log_debug(f"Found {acf_count} ACF files in {folder}")
         if not games:
             raise FileNotFoundError("No Steam games found.")
+        log_debug(f"Total games found: {len(games)}")
     except Exception as e:
         log_error(f"Error finding Steam apps: {e}")
         log_error("Scanned folders:")
@@ -227,7 +272,13 @@ def install_files(app_id, game_install_dir, dlcs, game_name):
         log_error(f"Failed to install files for {game_name}: {e}")
 
 def main():
-    show_header(app_version)
+    parser = argparse.ArgumentParser(description="Steam DLC Fetcher")
+    parser.add_argument("--debug", action="store_true", help="Enable debug logging")
+    args = parser.parse_args()
+
+    setup_logging(args.debug)
+    show_header(app_version, args.debug)
+
     try:
         library_folders = find_steam_library_folders()
         games = find_steam_apps(library_folders)
@@ -257,6 +308,7 @@ def main():
         else:
             print("No Steam games found on this computer or connected drives.")
     except Exception as e:
+        logging.exception("An error occurred:")
         log_error(f"An error occurred: {e}")
 
 if __name__ == "__main__":
