@@ -30,6 +30,7 @@ git clone https://github.com/Novattz/creamlinux-installer;cd creamlinux-installe
 - [ ] Add the possibility to install cream/smokeapi for games running proton.
 - [ ] Check if the game already has dlc files installed
 - [ ] Gui?
+- [ ] Add checker for configs already applied to games. (i.e script will check for new dlc id's for already applied games.)
 
 ### Issues?
 - Open a issue and attach all relevant errors/logs.
