@@ -101,7 +101,7 @@ def find_steam_binary():
         log_error(f"Failed to locate steam binary: {str(e)}")
     return None
 
-def find_steam_library_folders():
+def find_steam_library_folders(manual_path=""):
     steam_binary_path = find_steam_binary()
     base_paths = [
         os.path.expanduser('~/.steam/steam'),
@@ -125,6 +125,11 @@ def find_steam_library_folders():
     start_time = time.time()
 
     try:
+        if manual_path != "" and manual_path != None:
+            log_debug(f"Manual game path set to \"{manual_path}\" skipping path lookup")
+            library_folders.append(manual_path)
+            return library_folders
+        
         for base_path in base_paths:
             if os.path.exists(base_path):
                 log_debug(f"Scanning path: {base_path}")
@@ -274,6 +279,7 @@ def install_files(app_id, game_install_dir, dlcs, game_name):
 
 def main():
     parser = argparse.ArgumentParser(description="Steam DLC Fetcher")
+    parser.add_argument("--manual", metavar='steamapps_path', help="Sets the steamapps path for faster operation", required=False)
     parser.add_argument("--debug", action="store_true", help="Enable debug logging")
     args = parser.parse_args()
 
@@ -281,7 +287,7 @@ def main():
     show_header(app_version, args.debug)
 
     try:
-        library_folders = find_steam_library_folders()
+        library_folders = find_steam_library_folders(args.manual)
         games = find_steam_apps(library_folders)
         if games:
             print("Select the game for which you want to fetch DLCs:")
