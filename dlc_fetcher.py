@@ -12,7 +12,6 @@ import argparse
 
 LOG_FILE = 'script.log'
 DEBUG_FILE = 'debug_script.log'
-LOOP_THRESHOLD = 5  # Number of times a directory can be visited before considered a loop
 TIMEOUT = 180  # Timeout in seconds (3 minutes)
 
 def setup_logging(debug):
@@ -79,6 +78,7 @@ def show_header(app_version, debug_mode):
     print()
 
 app_version = fetch_latest_version()
+#app_version = "TESTING / LETS NOT OVERLOAD GITHUB FOR NO REASON"
 
 def parse_vdf(file_path):
     library_paths = []
@@ -101,45 +101,49 @@ def find_steam_binary():
         log_error(f"Failed to locate steam binary: {str(e)}")
     return None
 
-def find_steam_library_folders():
-    steam_binary_path = find_steam_binary()
-    base_paths = [
+def find_steam_library_folders(manual_path=""):
+    search_list = [
+        # Default
         os.path.expanduser('~/.steam/steam'),
         os.path.expanduser('~/.local/share/Steam'),
+
+        # Steam Deck
         os.path.expanduser('/home/deck/.steam/steam'),
         os.path.expanduser('/home/deck/.local/share/Steam'),
-        '/mnt', '/media',
-        '/run/media/mmcblk0p1/steamapps'
+
+        # Others
+        '/mnt/Jogos/Steam',
+        '/run/media/mmcblk0p1'
     ]
-    if steam_binary_path:
-        base_paths.append(steam_binary_path)
-
-    steam_install_path = read_steam_registry()
-    if steam_install_path:
-        base_paths.append(steam_install_path)
-
-    log_debug(f"Searching base paths: {base_paths}")
 
     library_folders = []
-    scanned_paths = defaultdict(int)
-    start_time = time.time()
-
     try:
-        for base_path in base_paths:
-            if os.path.exists(base_path):
-                log_debug(f"Scanning path: {base_path}")
-                for root, dirs, files in os.walk(base_path, topdown=True, followlinks=True):
-                    if time.time() - start_time > TIMEOUT:
-                        log_error("Script timeout reached. Stopping directory scan.")
-                        return library_folders
-                    scanned_paths[root] += 1
-                    if scanned_paths[root] > LOOP_THRESHOLD:
-                        log_error(f"Potential loop detected at {root}. Skipping further scans of this directory.")
-                        continue
-                    if 'steamapps' in dirs:
-                        steamapps_path = os.path.join(root, 'steamapps')
+        if manual_path != "" and manual_path != None:
+            log_debug(f"Manual game path set to \"{manual_path}\" skipping path lookup")
+            library_folders.append(manual_path)
+
+        else:
+            steam_binary_path = find_steam_binary()
+            if steam_binary_path and steam_binary_path not in search_list:
+                log_debug(f"Found Steam Binary path! adding it to search paths: {steam_binary_path}")
+                search_list.append(steam_binary_path)
+
+            steam_install_path = read_steam_registry()
+            if steam_install_path and steam_install_path not in search_list:
+                log_debug(f"Found Steam Binary path! adding it to search paths: {steam_install_path}")
+                search_list.append(steam_install_path)
+
+            log_debug(f"Paths that will be searched: {search_list}")
+
+            for search_path in search_list:
+                if os.path.exists(search_path):
+                    log_debug(f"Scanning path: {search_path}")
+
+                    steamapps_path = str(os.path.normpath(f"{search_path}/steamapps"))
+                    if os.path.exists(steamapps_path):
                         library_folders.append(steamapps_path)
                         log_debug(f"Found steamapps folder: {steamapps_path}")
+
                         vdf_path = os.path.join(steamapps_path, 'libraryfolders.vdf')
                         if os.path.exists(vdf_path):
                             log_debug(f"Found libraryfolders.vdf: {vdf_path}")
@@ -149,14 +153,14 @@ def find_steam_library_folders():
                                 if os.path.exists(new_steamapps_path):
                                     library_folders.append(new_steamapps_path)
                                     log_debug(f"Added additional steamapps folder: {new_steamapps_path}")
-                            dirs[:] = []  # Prevent further scanning into subdirectories
-        if not library_folders:
-            raise FileNotFoundError("No Steam library folders found.")
-        log_debug(f"Total Steam library folders found: {len(library_folders)}")
+
+            if not library_folders:
+                raise FileNotFoundError("No Steam library folders found.")
+            log_debug(f"Total Steam library folders found: {len(library_folders)}")
     except Exception as e:
         log_error(f"Error finding Steam library folders: {e}")
         log_error("Scanned paths:")
-        for path in scanned_paths:
+        for path in search_list:
             log_error(f"  - {path}")
     return library_folders
 
@@ -194,9 +198,11 @@ def find_steam_apps(library_folders):
         log_debug(f"Total games found: {len(games)}")
     except Exception as e:
         log_error(f"Error finding Steam apps: {e}")
+
         log_error("Scanned folders:")
         for folder in scanned_folders:
             log_error(f"  - {folder}")
+
     return games
 
 def parse_acf(file_path):
@@ -274,6 +280,7 @@ def install_files(app_id, game_install_dir, dlcs, game_name):
 
 def main():
     parser = argparse.ArgumentParser(description="Steam DLC Fetcher")
+    parser.add_argument("--manual", metavar='steamapps_path', help="Sets the steamapps path for faster operation", required=False)
     parser.add_argument("--debug", action="store_true", help="Enable debug logging")
     args = parser.parse_args()
 
@@ -281,7 +288,18 @@ def main():
     show_header(app_version, args.debug)
 
     try:
-        library_folders = find_steam_library_folders()
+        library_folders = find_steam_library_folders(args.manual)
+        if library_folders == [] or library_folders == None:
+            print("Falling back to Manual Method since no library folder was found")
+            steamapps_path = input("Steamapps Path: ")
+
+            if len(steamapps_path) > 3:
+                library_folders = [ steamapps_path ]
+
+            else:
+                print("Invalid path! Closing the program...")
+                return
+
         games = find_steam_apps(library_folders)
         if games:
             print("Select the game for which you want to fetch DLCs:")
