@@ -113,7 +113,11 @@ def find_steam_library_folders(manual_path=""):
 
         # Others
         '/mnt/Jogos/Steam',
-        '/run/media/mmcblk0p1'
+        '/run/media/mmcblk0p1',
+
+        # Flatpak
+        os.path.expanduser('~/.var/app/com.valvesoftware.Steam/.local/share/Steam'),
+        os.path.expanduser('~/.var/app/com.valvesoftware.Steam/data/Steam/steamapps/common')
     ]
 
     library_folders = []
