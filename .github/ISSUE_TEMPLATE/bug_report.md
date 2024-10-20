@@ -7,6 +7,11 @@ assignees: Novattz
 
 ---
 
+
+**Before submitting, have you tried:**
+- Using smokeapi with Proton? [ ] Yes [ ] No
+- Checking if `LD_PRELOAD` is blocked on your system? [ ] Yes [ ] No
+
 **Describe the bug**
 - A clear and concise description of what the bug is.
 
