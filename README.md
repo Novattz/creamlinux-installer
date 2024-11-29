@@ -1,6 +1,6 @@
 
 # Steam DLC Fetcher and installer for Linux
-- Python script designed for linux to automate fetching of DLC id's for steam games and the installation of creamlinux automatically. [Demo](https://www.youtube.com/watch?v=22LDDUoBvus&ab_channel=Nova)
+- Python script designed for linux to automate fetching of DLC id's for steam games and the installation of creamlinux automatically. [Demo/Tutorial](https://www.youtube.com/watch?v=Y1E15rUsdDw)
 ### Features
 - Automatically fetches and lists DLC's for selected steam game(s) installed on the computer.
 - Automatically installs creamlinux and its components into selected steam games, excluding and handling specific config files.
