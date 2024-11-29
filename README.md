@@ -11,6 +11,7 @@
 - `python 3.x`
 - `requests` library
 - `zipfile` library
+- `tqdm` >=4.65.0
 
 
 ### Installation
