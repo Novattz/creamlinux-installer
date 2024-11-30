@@ -303,7 +303,7 @@ def install_files(app_id, game_install_dir, dlcs, game_name):
         print("\nFound DLCs:")
         for idx, dlc in enumerate(dlcs, 1):
             print(f"{idx}. {dlc['name']} (ID: {dlc['appid']})")
-        if input("\nProceed with installation? (Y/n): ").lower() != 'n':
+        if input("\nProceed with installation? (Y/n): ").lower() == 'n':
             return
     GREEN = '\033[92m'
     YELLOW = '\033[93m'
