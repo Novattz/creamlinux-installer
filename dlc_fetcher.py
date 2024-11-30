@@ -10,6 +10,7 @@ import logging
 import argparse
 from concurrent.futures import ThreadPoolExecutor
 from tqdm import tqdm
+import shutil
 
 LOG_FILE = 'script.log'
 DEBUG_FILE = 'debug_script.log'
@@ -43,6 +44,23 @@ def read_steam_registry():
             if install_path:
                 return install_path.group(1)
     return None
+
+def check_requirements():
+    required_commands = ['which', 'steam']
+    required_packages = ['requests', 'tqdm']
+    
+    for cmd in required_commands:
+        if not subprocess.run(['which', cmd], capture_output=True).returncode == 0:
+            print(f"Missing required command: {cmd}")
+            return False
+            
+    for package in required_packages:
+        try:
+            __import__(package)
+        except ImportError:
+            print(f"Missing required package: {package}")
+            return False
+    return True
 
 def fetch_latest_version():
     try:
@@ -80,6 +98,26 @@ def show_header(app_version, debug_mode):
 
 app_version = fetch_latest_version()
 #app_version = "TESTING / LETS NOT OVERLOAD GITHUB FOR NO REASON"
+
+def filter_games(games_list, search_term):
+    filtered = [(idx, item) for idx, item in enumerate(games_list) 
+                if search_term.lower() in item[1][0].lower()]
+    if not filtered:
+        print("No games found matching your search.")
+    return filtered
+
+def select_multiple_games(games_list):
+    while True:
+        selections = input("Enter game numbers (comma-separated) or 'all': ").strip()
+        try:
+            if selections.lower() == 'all':
+                return list(range(len(games_list)))
+            numbers = [int(x.strip()) - 1 for x in selections.split(',')]
+            if all(0 <= n < len(games_list) for n in numbers):
+                return numbers
+            print("Some selections were out of range. Please try again.")
+        except ValueError:
+            print("Invalid input. Please enter numbers separated by commas.")
 
 def parse_vdf(file_path):
     library_paths = []
@@ -187,13 +225,14 @@ def find_steam_apps(library_folders):
         for folder in library_folders:
             if os.path.exists(folder):
                 log_debug(f"Scanning folder for ACF files: {folder}")
+                folder_items = os.listdir(folder)
                 acf_count = 0
-                for item in os.listdir(folder):
-                    if acf_pattern.match(item):
-                        acf_count += 1
-                        futures.append(
-                            executor.submit(process_acf_file, folder, item)
-                        )
+                with tqdm(total=len(folder_items), desc=f"Scanning {os.path.basename(folder)}") as pbar:
+                    for item in folder_items:
+                        if acf_pattern.match(item):
+                            acf_count += 1
+                            futures.append(executor.submit(process_acf_file, folder, item))
+                        pbar.update(1)
                 log_debug(f"Found {acf_count} ACF files in {folder}")
         
         for future in futures:
@@ -260,6 +299,12 @@ def fetch_dlc_details(app_id):
         return []
 
 def install_files(app_id, game_install_dir, dlcs, game_name):
+    if dlcs:
+        print("\nFound DLCs:")
+        for idx, dlc in enumerate(dlcs, 1):
+            print(f"{idx}. {dlc['name']} (ID: {dlc['appid']})")
+        if input("\nProceed with installation? (Y/n): ").lower() != 'n':
+            return
     GREEN = '\033[92m'
     YELLOW = '\033[93m'
     RESET = '\033[0m'
@@ -323,6 +368,10 @@ def main():
     setup_logging(args.debug)
     show_header(app_version, args.debug)
 
+    if not check_requirements():
+        print("Missing required dependencies. Please install them and try again.")
+        return
+
     try:
         library_folders = find_steam_library_folders(args.manual)
         if not library_folders:
@@ -334,53 +383,66 @@ def main():
                 print("Invalid path! Closing the program...")
                 return
 
+        # Do initial game scan
         games = find_steam_apps(library_folders)
-        if games:
-            print("\nSelect the game for which you want to fetch DLCs:")
+        if not games:
+            print("No Steam games found on this computer or connected drives.")
+            return
+
+        while True:
             games_list = list(games.items())
+            
+            # Show game list
+            print("\nSelect the game(s) for which you want to fetch DLCs:")
             GREEN = '\033[92m'
             RESET = '\033[0m'
             
             for idx, (app_id, (name, cream_status, _)) in enumerate(games_list, 1):
-                status = []
-                if cream_status:
-                    status.append(f"{GREEN}Cream installed{RESET}")
-                
-                status_str = f" ({', '.join(status)})" if status else ""
-                print(f"{idx}. {name} (App ID: {app_id}){status_str}")
+                status = f" ({GREEN}Cream installed{RESET})" if cream_status else ""
+                print(f"{idx}. {name} (App ID: {app_id}){status}")
 
-            choice = int(input("\nEnter the number of the game: ")) - 1
-            if 0 <= choice < len(games_list):
-                selected_app_id, (selected_game_name, cream_status, selected_install_dir) = games_list[choice]
+            try:
+                choice = int(input("\nEnter the number of the game: ")) - 1
+                if not (0 <= choice < len(games_list)):
+                    print("Invalid selection.")
+                    continue
+            except ValueError:
+                print("Invalid input. Please enter a number.")
+                continue
+
+            selected_app_id, (selected_game_name, cream_status, selected_install_dir) = games_list[choice]
+            
+            if cream_status:
+                print(f"\nCreamLinux is installed for {selected_game_name}. What would you like to do?")
+                print("1. Fetch DLC IDs")
+                print("2. Uninstall CreamLinux")
+                action = input("Enter your choice (1-2): ")
                 
-                if cream_status:
-                    print("\nCreamLinux is installed. What would you like to do?")
-                    print("1. Fetch DLC IDs")
-                    print("2. Uninstall CreamLinux")
-                    action = input("Enter your choice (1-2): ")
-                    
-                    if action == "1":
-                        print(f"\nSelected: {selected_game_name} (App ID: {selected_app_id})")
-                        dlcs = fetch_dlc_details(selected_app_id)
-                        if dlcs:
-                            install_files(selected_app_id, selected_install_dir, dlcs, selected_game_name)
-                        else:
-                            print("No DLCs found for the selected game.")
-                    elif action == "2":
-                        uninstall_creamlinux(selected_install_dir, selected_game_name)
-                    else:
-                        print("Invalid choice.")
-                else:
+                if action == "1":
                     print(f"\nSelected: {selected_game_name} (App ID: {selected_app_id})")
                     dlcs = fetch_dlc_details(selected_app_id)
                     if dlcs:
                         install_files(selected_app_id, selected_install_dir, dlcs, selected_game_name)
                     else:
                         print("No DLCs found for the selected game.")
+                elif action == "2":
+                    uninstall_creamlinux(selected_install_dir, selected_game_name)
+                else:
+                    print("Invalid choice.")
             else:
-                print("Invalid selection.")
-        else:
-            print("No Steam games found on this computer or connected drives.")
+                print(f"\nSelected: {selected_game_name} (App ID: {selected_app_id})")
+                dlcs = fetch_dlc_details(selected_app_id)
+                if dlcs:
+                    install_files(selected_app_id, selected_install_dir, dlcs, selected_game_name)
+                else:
+                    print("No DLCs found for the selected game.")
+
+            if input("\nWould you like to perform another operation? (y/N): ").lower() != 'y':
+                break
+                
+            # Only scan again if user wants to continue
+            games = find_steam_apps(library_folders)
+
     except Exception as e:
         logging.exception("An error occurred:")
         log_error(f"An error occurred: {e}")
