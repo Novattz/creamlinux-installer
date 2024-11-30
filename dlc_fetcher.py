@@ -129,10 +129,12 @@ def find_steam_library_folders(manual_path=""):
         else:
             steam_binary_path = find_steam_binary()
             if steam_binary_path and steam_binary_path not in search_list:
+                log_debug(f"Found Steam Binary path! adding it to search paths: {steam_binary_path}")
                 search_list.append(steam_binary_path)
 
             steam_install_path = read_steam_registry()
             if steam_install_path and steam_install_path not in search_list:
+                log_debug(f"Found Steam Binary path! adding it to search paths: {steam_install_path}")
                 search_list.append(steam_install_path)
 
             log_debug(f"Paths that will be searched: {search_list}")
@@ -157,6 +159,7 @@ def find_steam_library_folders(manual_path=""):
 
             if not library_folders:
                 raise FileNotFoundError("No Steam library folders found.")
+            log_debug(f"Total Steam library folders found: {len(library_folders)}")
     except Exception as e:
         log_error(f"Error finding Steam library folders: {e}")
         log_error("Scanned paths:")
@@ -183,18 +186,27 @@ def find_steam_apps(library_folders):
         futures = []
         for folder in library_folders:
             if os.path.exists(folder):
+                log_debug(f"Scanning folder for ACF files: {folder}")
+                acf_count = 0
                 for item in os.listdir(folder):
                     if acf_pattern.match(item):
+                        acf_count += 1
                         futures.append(
                             executor.submit(process_acf_file, folder, item)
                         )
+                log_debug(f"Found {acf_count} ACF files in {folder}")
         
         for future in futures:
             result = future.result()
             if result:
                 app_id, game_name, install_path = result
                 cream_installed = 'Cream installed' if os.path.exists(os.path.join(install_path, 'cream.sh')) else ''
+                log_debug(f"Found game: {game_name} (App ID: {app_id})")
                 games[app_id] = (game_name, cream_installed, install_path)
+        
+        if not games:
+            log_error("No Steam games found.")
+        log_debug(f"Total games found: {len(games)}")
     
     return games
 
@@ -254,19 +266,25 @@ def install_files(app_id, game_install_dir, dlcs, game_name):
     zip_url = "https://github.com/anticitizn/creamlinux/releases/latest/download/creamlinux.zip"
     zip_path = os.path.join(game_install_dir, 'creamlinux.zip')
     try:
+        log_debug(f"Downloading creamlinux.zip from {zip_url}")
         response = requests.get(zip_url)
         if response.status_code == 200:
+            log_debug("Successfully downloaded creamlinux.zip")
             with open(zip_path, 'wb') as f:
                 f.write(response.content)
             with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+                log_debug(f"Extracting files to {game_install_dir}")
                 zip_ref.extractall(game_install_dir)
             os.remove(zip_path)
+            log_debug("Removed temporary zip file")
 
             cream_sh_path = os.path.join(game_install_dir, 'cream.sh')
             os.chmod(cream_sh_path, os.stat(cream_sh_path).st_mode | stat.S_IEXEC)
+            log_debug("Set executable permissions for cream.sh")
 
             dlc_list = "\n".join([f"{dlc['appid']} = {dlc['name']}" for dlc in dlcs])
             cream_api_path = os.path.join(game_install_dir, 'cream_api.ini')
+            log_debug(f"Writing cream_api.ini with {len(dlcs)} DLCs")
             with open(cream_api_path, 'w') as f:
                 f.write(f"APPID = {app_id}\n[config]\nissubscribedapp_on_false_use_real = true\n[methods]\ndisable_steamapps_issubscribedapp = false\n[dlc]\n{dlc_list}")
             print(f"Custom cream_api.ini has been written to {game_install_dir}.")
@@ -283,13 +301,16 @@ def uninstall_creamlinux(install_path, game_name):
     GREEN = '\033[92m'
     RESET = '\033[0m'
     try:
+        log_debug(f"Starting uninstallation for {game_name}")
         files_to_remove = ['cream.sh', 'cream_api.ini', 'cream_api.so', 'lib32Creamlinux.so', 'lib64Creamlinux.so']
         for file in files_to_remove:
             file_path = os.path.join(install_path, file)
             if os.path.exists(file_path):
+                log_debug(f"Removing {file}")
                 os.remove(file_path)
         print(f"\n{GREEN}Successfully uninstalled CreamLinux from {game_name}{RESET}")
         print(f"\n{YELLOW}Make sure to remove{RESET} {GREEN}'sh ./cream.sh %command%'{RESET} {YELLOW}from launch options{RESET}")
+        log_debug("Uninstallation completed successfully")
     except Exception as e:
         log_error(f"Failed to uninstall CreamLinux: {e}")
 
