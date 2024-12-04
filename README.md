@@ -33,6 +33,7 @@ git clone https://github.com/Novattz/creamlinux-installer;cd creamlinux-installe
 - [ ] Gui?
 - [ ] Add checker for configs already applied to games. (i.e script will check for new dlc id's for already applied games.)
 - [ ] Add a way to check if a game blocks LD_PRELOAD.
+- [ ] Update/notifier if creamlinux itself is outdated.
 
 ### Issues?
 - Open a issue and attach all relevant errors/logs.
