@@ -30,7 +30,7 @@ git clone https://github.com/Novattz/creamlinux-installer;cd creamlinux-installe
 - [ ] Possibly add functionality to search for dlc files/automatically installing them.
 - [ ] Add the possibility to install cream/smokeapi for games running proton.
 - [ ] Check if the game already has dlc files installed
-- [ ] Gui?
+- [ ] Gui? (most likely not but ill see what i can do ¯\_(ツ)_/¯ )
 - [ ] Add checker for configs already applied to games. (i.e script will check for new dlc id's for already applied games.)
 - [ ] Add a way to check if a game blocks LD_PRELOAD.
 - [ ] Update/notifier if creamlinux itself is outdated.
