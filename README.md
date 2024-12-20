@@ -20,6 +20,12 @@
 - Navigate to the directory containing the script.
 - Run the script using python.
 
+#### Nix
+- Clone the repo.
+- Navigate to the directory containing the `default.nix`.
+- Run `nix-build` it will produce `result/bin` symlink with script.
+- Run produced script.
+
 #### OR
 Use this one-line shell script.
 ```bash
