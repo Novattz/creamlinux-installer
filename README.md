@@ -4,6 +4,9 @@
 
 [Demo/Tutorial](https://www.youtube.com/watch?v=Y1E15rUsdDw) - [OUTDATED]
 
+## Preview:
+![ss-20250122-135304](https://github.com/user-attachments/assets/899ff1dd-0c4b-4d95-bea5-77e8af0e3c90)
+
 ### Features
 - Automatic Steam library detection
 - Support for Linux and Proton
