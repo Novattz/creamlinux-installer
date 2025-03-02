@@ -28,7 +28,7 @@ class SteamHelper:
         # Create default config if it doesn't exist
         if not os.path.exists(config_path):
             default_config = {
-                "version": "v1.0.8",
+                "version": "v1.0.9",
                 "github_repo": "Novattz/creamlinux-installer",
                 "github_api": "https://api.github.com/repos/",
                 "creamlinux_release": "https://github.com/anticitizn/creamlinux/releases/latest/download/creamlinux.zip",
