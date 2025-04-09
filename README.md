@@ -22,21 +22,18 @@
 
 ### Installation
 
-- Clone the repo or download the script.
-- Navigate to the directory containing the script.
-- Run the script using python:
 ```bash
-python main.py
+bash <(wget -qO- https://raw.githubusercontent.com/NL-TCH/creamlinux-installer/refs/heads/main/installer.sh)
 ```
 
 ### Basic Usage
 - `--manual <path>`: Specify steam library path manually
 ```bash
-python main.py --manual "/path/to/steamapps"
+creamlinux-installer --manual "/path/to/steamapps"
 ```
 - `--debug`: Enable debug logging
 ```bash
-python main.py --debug
+creamlinux-installer --debug
 ```
 
 ### Issues?
