@@ -56,7 +56,7 @@ Updates are disabled when installed via Nix `--no-update` is automatically passe
 
 ### Installation (for non-Nix users)
 
-- Clone the repo or download the script.
+- Clone the repo.
 - Navigate to the directory containing the script.
 - Run the script using python:
 ```bash
