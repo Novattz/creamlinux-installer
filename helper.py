@@ -22,8 +22,10 @@ class SteamHelper:
 
     def load_config(self):
         """Load configuration from config.json"""
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        config_path = os.path.join(script_dir, 'config.json')
+        xdg_config_home = os.environ.get("XDG_CONFIG_HOME", os.path.expanduser("~/.config"))
+        config_dir = os.path.join(xdg_config_home, 'creamlinux')
+        os.makedirs(config_dir, exist_ok=True)
+        config_path = os.path.join(config_dir, 'config.json')
         
         # Create default config if it doesn't exist
         if not os.path.exists(config_path):
@@ -64,8 +66,8 @@ class SteamHelper:
 
     def _setup_logging(self):
         """Setup logging to file with detailed formatting"""
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        log_dir = os.path.join(script_dir, 'logs')
+        xdg_cache_home = os.environ.get("XDG_CACHE_HOME", os.path.expanduser("~/.cache"))
+        log_dir = os.path.join(xdg_cache_home, 'creamlinux')
         os.makedirs(log_dir, exist_ok=True)
         
         self._cleanup_old_logs(log_dir)
