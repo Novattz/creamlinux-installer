@@ -64,6 +64,15 @@ available.
 python main.py
 ```
 
+### Flatpak
+
+Create a `steam` stub in your `$PATH`.
+
+```bash
+echo -e '#!/bin/bash\nflatpak run com.valvesoftware.Steam "$@"' > ~/.local/bin/steam
+chmod +x ~/.local/bin/steam
+```
+
 ### Basic Usage
 
 - `--manual <path>`: Specify steam library path manually
