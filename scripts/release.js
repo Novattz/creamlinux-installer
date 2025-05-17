@@ -13,7 +13,7 @@
  *   node scripts/release.js major "Major redesign with new UI"
  */
 
-const { execSync } = require('child_process')
+import { execSync } from 'child_process'
 const { existsSync } = require('fs')
 const path = require('path')
 
