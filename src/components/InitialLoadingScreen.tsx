@@ -1,14 +1,11 @@
-import React from 'react';
+import React from 'react'
 
 interface InitialLoadingScreenProps {
-  message: string;
-  progress: number;
+  message: string
+  progress: number
 }
 
-const InitialLoadingScreen: React.FC<InitialLoadingScreenProps> = ({ 
-  message, 
-  progress 
-}) => {
+const InitialLoadingScreen: React.FC<InitialLoadingScreenProps> = ({ message, progress }) => {
   return (
     <div className="initial-loading-screen">
       <div className="loading-content">
@@ -22,15 +19,12 @@ const InitialLoadingScreen: React.FC<InitialLoadingScreenProps> = ({
         </div>
         <p className="loading-message">{message}</p>
         <div className="progress-bar-container">
-          <div 
-            className="progress-bar" 
-            style={{ width: `${progress}%` }}
-          />
+          <div className="progress-bar" style={{ width: `${progress}%` }} />
         </div>
         <div className="progress-percentage">{Math.round(progress)}%</div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default InitialLoadingScreen;
+export default InitialLoadingScreen

@@ -9,13 +9,13 @@
   align-items: center;
   justify-content: center;
   z-index: var(--z-modal) + 1;
-  
+
   .loading-content {
     text-align: center;
     padding: 2rem;
     max-width: 500px;
     width: 90%;
-    
+
     h1 {
       font-size: 2.5rem;
       margin-bottom: 2rem;
@@ -23,46 +23,46 @@
       color: var(--primary-color);
       text-shadow: 0 2px 10px rgba(var(--primary-color), 0.4);
     }
-    
+
     .loading-animation {
       margin-bottom: 2rem;
     }
-    
+
     .loading-circles {
       display: flex;
       justify-content: center;
       gap: 1rem;
       margin-bottom: 1rem;
-      
+
       .circle {
         width: 20px;
         height: 20px;
         border-radius: 50%;
         animation: bounce 1.4s infinite ease-in-out both;
-        
+
         &.circle-1 {
           background-color: var(--primary-color);
           animation-delay: -0.32s;
         }
-        
+
         &.circle-2 {
           background-color: var(--cream-color);
           animation-delay: -0.16s;
         }
-        
+
         &.circle-3 {
           background-color: var(--smoke-color);
         }
       }
     }
-    
+
     .loading-message {
       font-size: 1.1rem;
       color: var(--text-secondary);
       margin-bottom: 1.5rem;
       min-height: 3rem;
     }
-    
+
     .progress-bar-container {
       height: 8px;
       background-color: var(--border-soft);
@@ -70,16 +70,21 @@
       overflow: hidden;
       margin-bottom: 0.5rem;
     }
-    
+
     .progress-bar {
       height: 100%;
       background-color: var(--primary-color);
       border-radius: 4px;
       transition: width 0.5s ease;
-      background: linear-gradient(to right, var(--cream-color), var(--primary-color), var(--smoke-color));
+      background: linear-gradient(
+        to right,
+        var(--cream-color),
+        var(--primary-color),
+        var(--smoke-color)
+      );
       box-shadow: 0px 0px 10px rgba(255, 200, 150, 0.4);
     }
-    
+
     .progress-percentage {
       text-align: right;
       font-size: 0.875rem;
@@ -91,10 +96,12 @@
 
 // Animation for the bouncing circles
 @keyframes bounce {
-  0%, 80%, 100% { 
+  0%,
+  80%,
+  100% {
     transform: scale(0);
   }
-  40% { 
-    transform: scale(1.0);
+  40% {
+    transform: scale(1);
   }
 }

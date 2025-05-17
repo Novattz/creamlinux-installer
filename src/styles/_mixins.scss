@@ -1,8 +1,4 @@
-// src/styles/_mixins.scss
-
 @use './variables' as *;
-
-// src/styles/_mixins.scss
 
 // Basic flex helpers
 @mixin flex-center {
@@ -43,7 +39,7 @@
 }
 
 @mixin shadow-hover {
-  box-shadow: var(--shadow-hover);;
+  box-shadow: var(--shadow-hover);
 }
 
 @mixin text-shadow {
@@ -60,19 +56,27 @@
 
 // Responsive mixins
 @mixin media-sm {
-  @media (min-width: 576px) { @content; }
+  @media (min-width: 576px) {
+    @content;
+  }
 }
 
 @mixin media-md {
-  @media (min-width: 768px) { @content; }
+  @media (min-width: 768px) {
+    @content;
+  }
 }
 
 @mixin media-lg {
-  @media (min-width: 992px) { @content; }
+  @media (min-width: 992px) {
+    @content;
+  }
 }
 
 @mixin media-xl {
-  @media (min-width: 1200px) { @content; }
+  @media (min-width: 1200px) {
+    @content;
+  }
 }
 
 // Card base styling

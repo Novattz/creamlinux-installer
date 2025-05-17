@@ -1,9 +1,7 @@
-// src/styles/_components/_dialog.scss
-
 @use '../variables' as *;
 @use '../mixins' as *;
 
-/* Progress Dialog */
+// Progress Dialog
 .progress-dialog-overlay {
   position: fixed;
   top: 0;
@@ -17,22 +15,28 @@
   opacity: 0;
   animation: modal-appear 0.2s ease-out;
   cursor: pointer;
-  
+
   &.visible {
     opacity: 1;
   }
 
   @keyframes modal-appear {
-    0% { opacity: 0; transform: scale(0.95); }
-    100% { opacity: 1; transform: scale(1); }
+    0% {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
   }
 }
-  
+
 .progress-dialog {
   background-color: var(--elevated-bg);
   border-radius: 8px;
   padding: 1.5rem;
-  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.3); /* shadow-glow */
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.3); // shadow-glow
   width: 450px;
   max-width: 90vw;
   border: 1px solid var(--border-soft);
@@ -43,17 +47,17 @@
     transform: scale(1);
     opacity: 1;
   }
-  
+
   &.with-instructions {
     width: 500px;
   }
-  
+
   h3 {
     font-weight: 700;
     margin-bottom: 1rem;
     color: var(--text-primary);
   }
-  
+
   p {
     margin-bottom: 1rem;
     color: var(--text-secondary);
@@ -85,7 +89,7 @@
   margin-bottom: 1rem;
 }
 
-/* Instruction container in progress dialog */
+// Instruction container in progress dialog
 .instruction-container {
   margin-top: 1.5rem;
   padding-top: 1rem;
@@ -112,7 +116,7 @@
   color: var(--info);
   border-radius: 4px;
   font-size: 0.8rem;
-  
+
   &::before {
     content: '';
     display: inline-block;
@@ -143,7 +147,7 @@
     max-width: 100%;
   }
 }
-  
+
 .selectable-text {
   font-size: 0.9rem;
   line-height: 1.5;
@@ -164,7 +168,8 @@
   justify-content: flex-end;
 }
 
-.copy-button, .close-button {
+.copy-button,
+.close-button {
   padding: 0.6rem 1.2rem;
   border-radius: var(--radius-sm);
   font-weight: 600;
@@ -180,7 +185,7 @@
 
   &:hover {
     background-color: var(--primary-color);
-    transform: translateY(-2px) scale(1.02); /* hover-lift */
+    transform: translateY(-2px) scale(1.02); // hover-lift
     box-shadow: 0 6px 14px var(--info-soft);
   }
 }
@@ -191,7 +196,7 @@
 
   &:hover {
     background-color: var(--border);
-    transform: translateY(-2px) scale(1.02); /* hover-lift */
+    transform: translateY(-2px) scale(1.02); // hover-lift
     box-shadow: 0 6px 14px rgba(0, 0, 0, 0.3);
   }
 }
@@ -210,20 +215,20 @@
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
   backdrop-filter: blur(5px);
   text-align: center;
-  
+
   h3 {
     color: var(--danger);
     font-weight: 700;
     margin-bottom: 1rem;
   }
-  
+
   p {
     margin-bottom: 1.5rem;
     color: var(--text-secondary);
     white-space: pre-wrap;
     word-break: break-word;
   }
-  
+
   button {
     background-color: var(--primary-color);
     color: var(--text-primary);
@@ -234,7 +239,7 @@
     letter-spacing: 0.5px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
     @include transition-standard;
-    
+
     &:hover {
       transform: translateY(-2px);
       box-shadow: 0 6px 14px rgba(var(--primary-color), 0.4);
@@ -244,6 +249,10 @@
 
 // Animation for progress bar
 @keyframes progress-shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
 }

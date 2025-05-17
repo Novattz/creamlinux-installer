@@ -29,23 +29,28 @@ CreamLinux is a GUI application for Linux that simplifies the management of DLC 
 ### Building from Source
 
 #### Prerequisites
+
 - Rust 1.77.2 or later
 - Node.js 18 or later
 - npm or yarn
 
 #### Steps
+
 1. Clone the repository:
+
    ```bash
    git clone https://github.com/yourusername/creamlinux.git
    cd creamlinux
    ```
 
 2. Install dependencies:
+
    ```bash
    npm install # or yarn
    ```
 
 3. Build the application:
+
    ```bash
    NO_STRIP=true npm run tauri build
    ```
@@ -57,11 +62,13 @@ CreamLinux is a GUI application for Linux that simplifies the management of DLC 
 If you're using the AppImage version, you can integrate it into your desktop environment:
 
 1. Create a desktop entry file:
+
    ```bash
    mkdir -p ~/.local/share/applications
    ```
 
 2. Create `~/.local/share/applications/creamlinux.desktop` with the following content (adjust the path to your AppImage):
+
    ```
    [Desktop Entry]
    Name=Creamlinux
@@ -73,6 +80,7 @@ If you're using the AppImage version, you can integrate it into your desktop env
    ```
 
 3. Update your desktop database so creamlinux appears in your app launcher:
+
 ```bash
 update-desktop-database ~/.local/share/applications
 ```

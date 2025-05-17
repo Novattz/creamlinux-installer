@@ -1,10 +1,10 @@
 @font-face {
-    font-family: 'Satoshi';
-    src: url('../assets/fonts/Satoshi.ttf') format('ttf'),
-         url('../assets/fonts/Roboto.ttf') format('ttf'),
-         url('../assets/fonts/WorkSans.ttf') format('ttf');
-    font-weight: 400; // adjust as needed
-    font-style: normal;
-    font-display: swap;
-  }
-  
+  font-family: 'Satoshi';
+  src:
+    url('../assets/fonts/Satoshi.ttf') format('ttf'),
+    url('../assets/fonts/Roboto.ttf') format('ttf'),
+    url('../assets/fonts/WorkSans.ttf') format('ttf');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}

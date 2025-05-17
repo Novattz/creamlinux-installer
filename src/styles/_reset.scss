@@ -1,9 +1,6 @@
-// src/styles/_reset.scss
-
 @use './variables' as *;
 @use './mixins' as *;
 @use './fonts' as *;
-// src/styles/_reset.scss
 
 * {
   box-sizing: border-box;
@@ -11,7 +8,8 @@
   padding: 0;
 }
 
-html, body {
+html,
+body {
   height: 100%;
   width: 100%;
   overflow: hidden;
@@ -23,7 +21,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
   background-color: var(--primary-bg);
   color: var(--text-primary);
-  /* Prevent text selection by default */
+  // Prevent text selection by default
   user-select: none;
   -webkit-user-select: none;
   -moz-user-select: none;
@@ -51,15 +49,24 @@ a {
   text-decoration: none;
 }
 
-ul, ol {
+ul,
+ol {
   list-style: none;
 }
 
-input, button, textarea, select {
+input,
+button,
+textarea,
+select {
   font: inherit;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-weight: inherit;
   font-size: inherit;
 }

@@ -1,23 +1,22 @@
-// src/components/DlcSelectionDialog.tsx
-import React, { useState, useEffect, useMemo } from 'react';
-import AnimatedCheckbox from './AnimatedCheckbox';
+import React, { useState, useEffect, useMemo } from 'react'
+import AnimatedCheckbox from './AnimatedCheckbox'
 
 interface DlcInfo {
-  appid: string;
-  name: string;
-  enabled: boolean;
+  appid: string
+  name: string
+  enabled: boolean
 }
 
 interface DlcSelectionDialogProps {
-  visible: boolean;
-  gameTitle: string;
-  dlcs: DlcInfo[];
-  onClose: () => void;
-  onConfirm: (selectedDlcs: DlcInfo[]) => void;
-  isLoading: boolean;
-  isEditMode?: boolean;
-  loadingProgress?: number;
-  estimatedTimeLeft?: string;
+  visible: boolean
+  gameTitle: string
+  dlcs: DlcInfo[]
+  onClose: () => void
+  onConfirm: (selectedDlcs: DlcInfo[]) => void
+  isLoading: boolean
+  isEditMode?: boolean
+  loadingProgress?: number
+  estimatedTimeLeft?: string
 }
 
 const DlcSelectionDialog: React.FC<DlcSelectionDialogProps> = ({
@@ -29,122 +28,125 @@ const DlcSelectionDialog: React.FC<DlcSelectionDialogProps> = ({
   isLoading,
   isEditMode = false,
   loadingProgress = 0,
-  estimatedTimeLeft = ''
+  estimatedTimeLeft = '',
 }) => {
-  const [selectedDlcs, setSelectedDlcs] = useState<DlcInfo[]>([]);
-  const [showContent, setShowContent] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectAll, setSelectAll] = useState(true);
-  const [initialized, setInitialized] = useState(false);
+  const [selectedDlcs, setSelectedDlcs] = useState<DlcInfo[]>([])
+  const [showContent, setShowContent] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [selectAll, setSelectAll] = useState(true)
+  const [initialized, setInitialized] = useState(false)
 
   // Initialize selected DLCs when DLC list changes
   useEffect(() => {
     if (visible && dlcs.length > 0 && !initialized) {
-      setSelectedDlcs(dlcs);
-      
+      setSelectedDlcs(dlcs)
+
       // Determine initial selectAll state based on if all DLCs are enabled
-      const allSelected = dlcs.every(dlc => dlc.enabled);
-      setSelectAll(allSelected);
-      
+      const allSelected = dlcs.every((dlc) => dlc.enabled)
+      setSelectAll(allSelected)
+
       // Mark as initialized so we don't reset selections on subsequent DLC additions
-      setInitialized(true);
+      setInitialized(true)
     }
-  }, [visible, dlcs, initialized]);
+  }, [visible, dlcs, initialized])
 
   // Handle visibility changes
   useEffect(() => {
     if (visible) {
       // Show content immediately for better UX
       const timer = setTimeout(() => {
-        setShowContent(true);
-      }, 50);
-      return () => clearTimeout(timer);
+        setShowContent(true)
+      }, 50)
+      return () => clearTimeout(timer)
     } else {
-      setShowContent(false);
-      setInitialized(false); // Reset initialized state when dialog closes
+      setShowContent(false)
+      setInitialized(false) // Reset initialized state when dialog closes
     }
-  }, [visible]);
+  }, [visible])
 
   // Memoize filtered DLCs to avoid unnecessary recalculations
   const filteredDlcs = useMemo(() => {
-    return searchQuery.trim() === '' 
-      ? selectedDlcs 
-      : selectedDlcs.filter(dlc => 
-          dlc.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-          dlc.appid.includes(searchQuery)
-        );
-  }, [selectedDlcs, searchQuery]);
+    return searchQuery.trim() === ''
+      ? selectedDlcs
+      : selectedDlcs.filter(
+          (dlc) =>
+            dlc.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            dlc.appid.includes(searchQuery)
+        )
+  }, [selectedDlcs, searchQuery])
 
   // Update DLC selection status
   const handleToggleDlc = (appid: string) => {
-    setSelectedDlcs(prev => prev.map(dlc => 
-      dlc.appid === appid ? { ...dlc, enabled: !dlc.enabled } : dlc
-    ));
-  };
+    setSelectedDlcs((prev) =>
+      prev.map((dlc) => (dlc.appid === appid ? { ...dlc, enabled: !dlc.enabled } : dlc))
+    )
+  }
 
   // Update selectAll state when individual DLC selections change
   useEffect(() => {
-    const allSelected = selectedDlcs.every(dlc => dlc.enabled);
-    setSelectAll(allSelected);
-  }, [selectedDlcs]);
+    const allSelected = selectedDlcs.every((dlc) => dlc.enabled)
+    setSelectAll(allSelected)
+  }, [selectedDlcs])
 
   // Handle new DLCs being added while dialog is already open
   useEffect(() => {
     if (initialized && dlcs.length > selectedDlcs.length) {
       // Find new DLCs that aren't in our current selection
-      const currentAppIds = new Set(selectedDlcs.map(dlc => dlc.appid));
-      const newDlcs = dlcs.filter(dlc => !currentAppIds.has(dlc.appid));
-      
+      const currentAppIds = new Set(selectedDlcs.map((dlc) => dlc.appid))
+      const newDlcs = dlcs.filter((dlc) => !currentAppIds.has(dlc.appid))
+
       // Add new DLCs to our selection, maintaining their enabled state
       if (newDlcs.length > 0) {
-        setSelectedDlcs(prev => [...prev, ...newDlcs]);
+        setSelectedDlcs((prev) => [...prev, ...newDlcs])
       }
     }
-  }, [dlcs, selectedDlcs, initialized]);
+  }, [dlcs, selectedDlcs, initialized])
 
   const handleToggleSelectAll = () => {
-    const newSelectAllState = !selectAll;
-    setSelectAll(newSelectAllState);
-    
-    setSelectedDlcs(prev => prev.map(dlc => ({
-      ...dlc,
-      enabled: newSelectAllState
-    })));
-  };
+    const newSelectAllState = !selectAll
+    setSelectAll(newSelectAllState)
+
+    setSelectedDlcs((prev) =>
+      prev.map((dlc) => ({
+        ...dlc,
+        enabled: newSelectAllState,
+      }))
+    )
+  }
 
   const handleConfirm = () => {
-    onConfirm(selectedDlcs);
-  };
+    onConfirm(selectedDlcs)
+  }
 
   // Modified to prevent closing when loading
   const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
     // Prevent clicks from propagating through the overlay
-    e.stopPropagation();
-    
+    e.stopPropagation()
+
     // Only allow closing via overlay click if not loading
     if (e.target === e.currentTarget && !isLoading) {
-      onClose();
+      onClose()
     }
-  };
+  }
 
   // Count selected DLCs
-  const selectedCount = selectedDlcs.filter(dlc => dlc.enabled).length;
-  
+  const selectedCount = selectedDlcs.filter((dlc) => dlc.enabled).length
+
   // Format loading message to show total number of DLCs found
   const getLoadingInfoText = () => {
     if (isLoading && loadingProgress < 100) {
-      return ` (Loading more DLCs...)`;
+      return ` (Loading more DLCs...)`
     } else if (dlcs.length > 0) {
-      return ` (Total DLCs: ${dlcs.length})`;
+      return ` (Total DLCs: ${dlcs.length})`
     }
-    return '';
-  };
+    return ''
+  }
 
-  if (!visible) return null;
+  if (!visible) return null
 
   return (
-    <div 
-      className={`dlc-dialog-overlay ${showContent ? 'visible' : ''}`} 
+    <div
+      className={`dlc-dialog-overlay ${showContent ? 'visible' : ''}`}
       onClick={handleOverlayClick}
     >
       <div className={`dlc-selection-dialog ${showContent ? 'dialog-visible' : ''}`}>
@@ -160,9 +162,9 @@ const DlcSelectionDialog: React.FC<DlcSelectionDialogProps> = ({
         </div>
 
         <div className="dlc-dialog-search">
-          <input 
-            type="text" 
-            placeholder="Search DLCs..." 
+          <input
+            type="text"
+            placeholder="Search DLCs..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="dlc-search-input"
@@ -179,14 +181,13 @@ const DlcSelectionDialog: React.FC<DlcSelectionDialogProps> = ({
         {isLoading && (
           <div className="dlc-loading-progress">
             <div className="progress-bar-container">
-              <div 
-                className="progress-bar" 
-                style={{ width: `${loadingProgress}%` }}
-              />
+              <div className="progress-bar" style={{ width: `${loadingProgress}%` }} />
             </div>
             <div className="loading-details">
               <span>Loading DLCs: {loadingProgress}%</span>
-              {estimatedTimeLeft && <span className="time-left">Est. time left: {estimatedTimeLeft}</span>}
+              {estimatedTimeLeft && (
+                <span className="time-left">Est. time left: {estimatedTimeLeft}</span>
+              )}
             </div>
           </div>
         )}
@@ -194,7 +195,7 @@ const DlcSelectionDialog: React.FC<DlcSelectionDialogProps> = ({
         <div className="dlc-list-container">
           {selectedDlcs.length > 0 ? (
             <ul className="dlc-list">
-              {filteredDlcs.map(dlc => (
+              {filteredDlcs.map((dlc) => (
                 <li key={dlc.appid} className="dlc-item">
                   <AnimatedCheckbox
                     checked={dlc.enabled}
@@ -219,24 +220,20 @@ const DlcSelectionDialog: React.FC<DlcSelectionDialogProps> = ({
         </div>
 
         <div className="dlc-dialog-actions">
-          <button 
-            className="cancel-button" 
+          <button
+            className="cancel-button"
             onClick={onClose}
             disabled={isLoading && loadingProgress < 10} // Briefly disable to prevent accidental closing at start
           >
             Cancel
           </button>
-          <button 
-            className="confirm-button" 
-            onClick={handleConfirm}
-            disabled={isLoading}
-          >
+          <button className="confirm-button" onClick={handleConfirm} disabled={isLoading}>
             {isEditMode ? 'Save Changes' : 'Install with Selected DLCs'}
           </button>
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default DlcSelectionDialog;
+export default DlcSelectionDialog

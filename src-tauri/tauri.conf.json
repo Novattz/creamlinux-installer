@@ -10,11 +10,7 @@
     "active": true,
     "targets": "all",
     "category": "Utility",
-    "icon": [
-      "icons/128x128.png",
-      "icons/128x128@2x.png",
-      "icons/icon.png"
-    ]
+    "icon": ["icons/128x128.png", "icons/128x128@2x.png", "icons/icon.png"]
   },
   "productName": "Creamlinux",
   "mainBinaryName": "creamlinux",

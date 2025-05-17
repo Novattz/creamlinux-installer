@@ -1,5 +1,3 @@
-// src/styles/components/_animated_checkbox.scss
-
 @use '../variables' as *;
 @use '../mixins' as *;
 
@@ -9,7 +7,7 @@
   cursor: pointer;
   width: 100%;
   position: relative;
-  
+
   &:hover .checkbox-custom {
     border-color: rgba(255, 255, 255, 0.3);
   }
@@ -35,7 +33,7 @@
   margin-right: 15px;
   flex-shrink: 0;
   position: relative;
-  
+
   &.checked {
     background-color: var(--primary-color, #ffc896);
     border-color: var(--primary-color, #ffc896);
@@ -53,7 +51,7 @@
   stroke-dashoffset: 30;
   opacity: 0;
   transition: stroke-dashoffset 0.3s ease;
-  
+
   &.checked {
     stroke-dashoffset: 0;
     opacity: 1;

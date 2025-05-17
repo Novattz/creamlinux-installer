@@ -1,5 +1,3 @@
-// src/styles/components/_dlc_dialog.scss
-
 @use '../variables' as *;
 @use '../mixins' as *;
 
@@ -15,7 +13,7 @@
   z-index: var(--z-modal);
   opacity: 0;
   cursor: pointer;
-  
+
   &.visible {
     opacity: 1;
     animation: modal-appear 0.2s ease-out;
@@ -35,18 +33,20 @@
   cursor: default;
   opacity: 0;
   transform: scale(0.95);
-  
+
   &.dialog-visible {
     transform: scale(1);
     opacity: 1;
-    transition: transform 0.2s var(--easing-bounce), opacity 0.2s ease-out;
+    transition:
+      transform 0.2s var(--easing-bounce),
+      opacity 0.2s ease-out;
   }
 }
 
 .dlc-dialog-header {
   padding: 1.5rem;
   border-bottom: 1px solid var(--border-soft);
-  
+
   h3 {
     font-size: 1.2rem;
     font-weight: 700;
@@ -60,12 +60,12 @@
   justify-content: space-between;
   align-items: center;
   margin-top: 0.5rem;
-  
+
   .game-title {
     font-weight: 500;
     color: var(--text-secondary);
   }
-  
+
   .dlc-count {
     font-size: 0.9rem;
     padding: 0.3rem 0.6rem;
@@ -94,13 +94,13 @@
   padding: 0.6rem 1rem;
   font-size: 0.9rem;
   @include transition-standard;
-  
+
   &:focus {
     border-color: var(--primary-color);
     outline: none;
     box-shadow: 0px 0px 6px rgba(245, 150, 130, 0.2);
   }
-  
+
   &::placeholder {
     color: var(--text-muted);
   }
@@ -110,12 +110,12 @@
   display: flex;
   align-items: center;
   min-width: 100px;
-  
+
   // Custom styling for the select all checkbox
   :global(.animated-checkbox) {
     margin-left: auto;
   }
-  
+
   :global(.checkbox-label) {
     font-size: 0.9rem;
     color: var(--text-secondary);
@@ -126,7 +126,7 @@
   padding: 0.75rem 1.5rem;
   background-color: rgba(0, 0, 0, 0.05);
   border-bottom: 1px solid var(--border-soft);
-  
+
   .progress-bar-container {
     height: 6px;
     background-color: var(--border-soft);
@@ -134,7 +134,7 @@
     overflow: hidden;
     margin-bottom: 0.5rem;
   }
-  
+
   .progress-bar {
     height: 100%;
     background-color: var(--primary-color);
@@ -143,13 +143,13 @@
     background: var(--primary-color);
     box-shadow: 0px 0px 6px rgba(128, 181, 255, 0.3);
   }
-  
+
   .loading-details {
     display: flex;
     justify-content: space-between;
     font-size: 0.8rem;
     color: var(--text-secondary);
-    
+
     .time-left {
       color: var(--text-muted);
     }
@@ -171,54 +171,56 @@
   padding: 0.75rem 1.5rem;
   border-bottom: 1px solid var(--border-soft);
   @include transition-standard;
-  
+
   &:hover {
     background-color: rgba(255, 255, 255, 0.03);
   }
-  
+
   &:last-child {
     border-bottom: none;
   }
-  
+
   &.dlc-item-loading {
     height: 30px;
     display: flex;
     align-items: center;
     justify-content: center;
-    
+
     .loading-pulse {
       width: 70%;
       height: 20px;
-      background: linear-gradient(90deg, 
-        var(--border-soft) 0%, 
-        var(--border) 50%, 
-        var(--border-soft) 100%);
+      background: linear-gradient(
+        90deg,
+        var(--border-soft) 0%,
+        var(--border) 50%,
+        var(--border-soft) 100%
+      );
       background-size: 200% 100%;
       border-radius: 4px;
       animation: loading-pulse 1.5s infinite;
     }
   }
-  
-  // Enhanced styling for the checkbox component inside dlc-item
+
+  // Styling for the checkbox component inside dlc-item
   :global(.animated-checkbox) {
     width: 100%;
-    
+
     .checkbox-label {
       color: var(--text-primary);
       font-weight: 500;
       transition: color 0.15s ease;
     }
-    
+
     .checkbox-sublabel {
       color: var(--text-muted);
     }
-    
+
     // Optional hover effect
     &:hover {
       .checkbox-label {
         color: var(--primary-color);
       }
-      
+
       .checkbox-custom {
         border-color: var(--primary-color, #ffc896);
         transform: scale(1.05);
@@ -232,7 +234,7 @@
   @include flex-center;
   flex-direction: column;
   gap: 1rem;
-  
+
   .loading-spinner {
     width: 40px;
     height: 40px;
@@ -241,7 +243,7 @@
     border-radius: 50%;
     animation: spin 1s linear infinite;
   }
-  
+
   p {
     color: var(--text-secondary);
   }
@@ -261,7 +263,8 @@
   gap: 1rem;
 }
 
-.cancel-button, .confirm-button {
+.cancel-button,
+.confirm-button {
   padding: 0.6rem 1.2rem;
   border-radius: var(--radius-sm);
   font-weight: 600;
@@ -274,7 +277,7 @@
 .cancel-button {
   background-color: var(--border-soft);
   color: var(--text-primary);
-  
+
   &:hover {
     background-color: var(--border);
     transform: translateY(-2px);
@@ -285,12 +288,12 @@
 .confirm-button {
   background-color: var(--primary-color);
   color: white;
-  
+
   &:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 14px var(--info-soft);
   }
-  
+
   &:disabled {
     opacity: 0.7;
     cursor: not-allowed;
@@ -299,16 +302,30 @@
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes modal-appear {
-  0% { opacity: 0; transform: scale(0.95); }
-  100% { opacity: 1; transform: scale(1); }
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 @keyframes loading-pulse {
-  0% { background-position: 200% 50%; }
-  100% { background-position: 0% 50%; }
+  0% {
+    background-position: 200% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
