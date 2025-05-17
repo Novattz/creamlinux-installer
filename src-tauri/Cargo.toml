@@ -2,7 +2,7 @@
 name = "app"
 version = "0.1.0"
 description = "DLC Manager for Steam games on Linux"
-authors = ["you"]
+authors = ["tickbase"]
 license = ""
 repository = ""
 edition = "2021"
