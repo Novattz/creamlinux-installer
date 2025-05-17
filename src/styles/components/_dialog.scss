@@ -1,0 +1,249 @@
+// src/styles/_components/_dialog.scss
+
+@use '../variables' as *;
+@use '../mixins' as *;
+
+/* Progress Dialog */
+.progress-dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--modal-backdrop);
+  backdrop-filter: blur(5px);
+  @include flex-center;
+  z-index: var(--z-modal);
+  opacity: 0;
+  animation: modal-appear 0.2s ease-out;
+  cursor: pointer;
+  
+  &.visible {
+    opacity: 1;
+  }
+
+  @keyframes modal-appear {
+    0% { opacity: 0; transform: scale(0.95); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+}
+  
+.progress-dialog {
+  background-color: var(--elevated-bg);
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.3); /* shadow-glow */
+  width: 450px;
+  max-width: 90vw;
+  border: 1px solid var(--border-soft);
+  opacity: 0;
+  cursor: default;
+
+  &.dialog-visible {
+    transform: scale(1);
+    opacity: 1;
+  }
+  
+  &.with-instructions {
+    width: 500px;
+  }
+  
+  h3 {
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+  }
+  
+  p {
+    margin-bottom: 1rem;
+    color: var(--text-secondary);
+  }
+}
+
+// Progress bar
+.progress-bar-container {
+  height: 8px;
+  background-color: var(--border-soft);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.progress-bar {
+  height: 100%;
+  background-color: var(--primary-color);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+  background: var(--primary-color);
+  box-shadow: 0px 0px 6px rgba(245, 150, 130, 0.3);
+}
+
+.progress-percentage {
+  text-align: right;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+}
+
+/* Instruction container in progress dialog */
+.instruction-container {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-soft);
+
+  h4 {
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+  }
+}
+
+.instruction-text {
+  line-height: 1.6;
+  margin-bottom: 1rem;
+  color: var(--text-secondary);
+}
+
+.dlc-count {
+  display: inline-block;
+  margin-bottom: 0.75rem;
+  padding: 0.4rem 0.8rem;
+  background-color: var(--info-soft);
+  color: var(--info);
+  border-radius: 4px;
+  font-size: 0.8rem;
+  
+  &::before {
+    content: '';
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--info);
+    margin-right: 8px;
+  }
+}
+
+.command-box {
+  background-color: var(--border-dark);
+  border: 1px solid var(--border-soft);
+  border-radius: 4px;
+  padding: 1rem;
+  margin-bottom: 1.2rem;
+  font-family: monospace;
+  position: relative;
+  overflow: hidden;
+
+  &.command-box-smoke {
+    font-size: 0.9rem;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    white-space: pre-wrap;
+    width: 100%;
+    max-width: 100%;
+  }
+}
+  
+.selectable-text {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  user-select: text;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  cursor: text;
+  margin: 0;
+  color: var(--text-primary);
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.copy-button, .close-button {
+  padding: 0.6rem 1.2rem;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  @include transition-standard;
+  border: none;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.copy-button {
+  background-color: var(--primary-color);
+  color: white;
+
+  &:hover {
+    background-color: var(--primary-color);
+    transform: translateY(-2px) scale(1.02); /* hover-lift */
+    box-shadow: 0 6px 14px var(--info-soft);
+  }
+}
+
+.close-button {
+  background-color: var(--border-soft);
+  color: var(--text-primary);
+
+  &:hover {
+    background-color: var(--border);
+    transform: translateY(-2px) scale(1.02); /* hover-lift */
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.3);
+  }
+}
+
+// Error message styling
+.error-message {
+  @include flex-column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  margin: 2rem auto;
+  max-width: 600px;
+  border-radius: var(--radius-lg);
+  background-color: rgba(var(--danger), 0.05);
+  border: 1px solid rgb(var(--danger), 0.2);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(5px);
+  text-align: center;
+  
+  h3 {
+    color: var(--danger);
+    font-weight: 700;
+    margin-bottom: 1rem;
+  }
+  
+  p {
+    margin-bottom: 1.5rem;
+    color: var(--text-secondary);
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  
+  button {
+    background-color: var(--primary-color);
+    color: var(--text-primary);
+    border: none;
+    padding: 0.7rem 1.5rem;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    @include transition-standard;
+    
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 14px rgba(var(--primary-color), 0.4);
+    }
+  }
+}
+
+// Animation for progress bar
+@keyframes progress-shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}

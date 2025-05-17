@@ -1,0 +1,262 @@
+// src/styles/_layout.scss
+
+@use './variables' as *;
+@use './mixins' as *;
+
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--primary-bg);
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: 
+      radial-gradient(circle at 20% 30%, rgba(var(--primary-color), 0.05) 0%, transparent 70%),
+      radial-gradient(circle at 80% 70%, rgba(var(--cream-color), 0.05) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: var(--z-bg);
+  }
+}
+
+// Header
+.app-header {
+  @include flex-between;
+  padding: 1rem 2rem;
+  background-color: var(--tertiary-bg);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  position: relative;
+  z-index: var(--z-header);
+  height: var(--header-height);
+  
+  h1 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    letter-spacing: 0.5px;
+    @include text-shadow;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--cream-color), var(--primary-color), var(--smoke-color));
+    opacity: 0.7;
+  }
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  }
+}
+  
+.header-controls {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+// Main content
+.main-content {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  width: 100%;
+  position: relative;
+  z-index: var(--z-elevate);
+}
+
+/* Sidebar */
+.sidebar {
+  width: var(--sidebar-width);
+  min-width: var(--sidebar-width);
+  background-color: var(--secondary-bg);
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: inset -5px 0 15px rgba(0, 0, 0, 0.2);
+  padding: 1.5rem 1rem;
+  @include flex-column;
+  height: 100%;
+  overflow-y: auto;
+  z-index: var(--z-elevate) + 1;
+
+  h2 {
+    color: var(--text-primary);
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    letter-spacing: 0.5px;
+    opacity: 0.9;
+  }
+
+  @include custom-scrollbar;
+}
+
+// Game list container
+.game-list {
+  padding: 1.5rem;
+  flex: 1;
+  overflow-y: auto;
+  height: 100%;
+  width: 100%;
+  @include custom-scrollbar;
+  position: relative;
+
+  h2 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    color: var(--text-primary);
+    letter-spacing: 0.5px;
+    position: relative;
+    display: inline-block;
+    padding-bottom: 0.5rem;
+
+    &:after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: linear-gradient(90deg, var(--primary-color), transparent);
+      border-radius: 3px;
+    }
+  }
+}
+
+// Game grid
+.game-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 2rem;
+  width: 100%;
+  padding: 0.5rem 0.5rem 2rem 0.5rem;
+  scroll-behavior: smooth;
+  align-items: stretch;
+  opacity: 0;
+  transform: translateY(10px);
+  animation: fadeIn 0.5s forwards;
+}
+
+// Loading and empty state
+.loading-indicator, .no-games-message {
+  @include flex-center;
+  height: 250px;
+  width: 100%;
+  font-size: 1.2rem;
+  color: var(--text-secondary);
+  text-align: center;
+  border-radius: var(--radius-lg);
+  background-color: rgba(255, 255, 255, 0.03);
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(5px);
+}
+
+.loading-indicator {
+  position: relative;
+  overflow: hidden;
+
+  &:after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.05),
+      transparent
+    );
+    animation: loading-shimmer 2s infinite;
+  }
+}
+
+// Responsive adjustments
+@include media-sm {
+  .game-grid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  }
+}
+
+@include media-lg {
+  .game-grid {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  }
+}
+
+@include media-xl {
+  .game-grid {
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  }
+}
+
+// Scroll to top button
+.scroll-top-button {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  @include gradient-bg($primary-color, color-mix(in srgb, black 10%, var(--primary-color)));
+  color: var(--text-primary);
+  @include flex-center;
+  cursor: pointer;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  opacity: 0;
+  transform: translateY(20px);
+  @include transition-standard;
+  z-index: var(--z-header);
+
+  &.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(var(--primary-color), 0.4);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+// Animation keyframes
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes loading-shimmer {
+  to {
+    left: 100%;
+  }
+}

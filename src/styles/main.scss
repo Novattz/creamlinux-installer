@@ -1,0 +1,21 @@
+// src/styles/main.scss
+
+// Import variables and mixins first
+@use './variables' as *;
+@use './mixins' as *;
+@use './fonts' as *;
+
+// Reset
+@use './reset';
+
+// Layout
+@use './layout';
+
+// Components
+@use './components/gamecard';
+@use './components/dialog';
+@use './components/background';
+@use './components/sidebar';
+@use './components/dlc_dialog';
+@use './components/loading_screen';
+@use './components/animated_checkbox';
