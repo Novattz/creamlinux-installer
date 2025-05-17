@@ -14,7 +14,7 @@
  */
 
 import { execSync } from 'child_process'
-const { existsSync } = require('fs')
+import { existsSync } from 'fs'
 const path = require('path')
 
 // Configuration
