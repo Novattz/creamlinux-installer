@@ -8,8 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "tauri": "tauri",
-    "release": "node scripts/release.js"
+    "tauri": "tauri"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.5.0",
