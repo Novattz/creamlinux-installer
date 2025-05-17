@@ -15,7 +15,7 @@
 
 import { execSync } from 'child_process'
 import { existsSync } from 'fs'
-const path = require('path')
+import path from 'path'
 
 // Configuration
 const GITHUB_WORKFLOW_NAME = 'release.yml'
