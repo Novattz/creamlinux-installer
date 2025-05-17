@@ -188,7 +188,7 @@ function triggerWorkflow(versionType, releaseNotes, isDryRun) {
 }
 
 // Main function
-function main() {
+async function main() {
   console.log('=== CreamLinux Release Script ===\n')
 
   const { versionType, releaseNotes, options } = parseArguments()
@@ -249,4 +249,7 @@ function main() {
   }
 }
 
-main()
+main().catch((err) => {
+  console.error(err)
+  process.exit(1)
+})
