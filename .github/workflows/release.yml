@@ -1,0 +1,177 @@
+name: 'Release CreamLinux'
+
+# Run on manual dispatch with version info and release notes
+on:
+  workflow_dispatch:
+    inputs:
+      version_type:
+        description: 'Version increment type (patch, minor, major)'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+      custom_release_notes:
+        description: 'Custom release notes (leave empty for auto-generated)'
+        required: false
+        type: string
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    outputs:
+      new_version: ${{ steps.version.outputs.new_version }}
+      release_id: ${{ steps.create_release.outputs.id }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Get all history for changelog
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Calculate New Version
+        id: version
+        run: |
+          # Read current version from package.json
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          echo "Current version: $CURRENT_VERSION"
+
+          # Split version into major.minor.patch
+          IFS='.' read -r major minor patch <<< "$CURRENT_VERSION"
+
+          # Increment based on input
+          if [[ "${{ github.event.inputs.version_type }}" == "major" ]]; then
+            major=$((major + 1))
+            minor=0
+            patch=0
+          elif [[ "${{ github.event.inputs.version_type }}" == "minor" ]]; then
+            minor=$((minor + 1))
+            patch=0
+          else # patch
+            patch=$((patch + 1))
+          fi
+
+          # Create new version
+          NEW_VERSION="${major}.${minor}.${patch}"
+          echo "New version: $NEW_VERSION"
+
+          # Set output for later steps
+          echo "new_version=${NEW_VERSION}" >> $GITHUB_OUTPUT
+
+      - name: Update Version in Files
+        env:
+          NEW_VERSION: ${{ steps.version.outputs.new_version }}
+        run: |
+          # Update package.json
+          npm version $NEW_VERSION --no-git-tag-version
+
+          # Update Cargo.toml
+          sed -i "s/^version = \".*\"/version = \"$NEW_VERSION\"/" src-tauri/Cargo.toml
+
+          # Update tauri.conf.json
+          sed -i "s/\"version\": \".*\"/\"version\": \"$NEW_VERSION\"/" src-tauri/tauri.conf.json
+
+      - name: Generate Changelog
+        id: changelog
+        if: github.event.inputs.custom_release_notes == ''
+        run: |
+          # Get all commit messages since the last tag
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+
+          if [ -z "$LATEST_TAG" ]; then
+            COMMITS=$(git log --pretty=format:"- %s" --no-merges)
+          else
+            COMMITS=$(git log $LATEST_TAG..HEAD --pretty=format:"- %s" --no-merges)
+          fi
+
+          # Generate changelog from commits
+          CHANGELOG="## Changes\n\n$COMMITS"
+
+          # Save changelog to a file (multiline to output)
+          echo "$CHANGELOG" > changelog.md
+          echo "Generated changelog from commit messages"
+
+      - name: Commit Version Changes
+        env:
+          NEW_VERSION: ${{ steps.version.outputs.new_version }}
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add package.json src-tauri/Cargo.toml src-tauri/tauri.conf.json
+          git commit -m "chore: bump version to $NEW_VERSION [skip ci]"
+          git tag -a "v$NEW_VERSION" -m "Version $NEW_VERSION"
+          git push origin HEAD:${GITHUB_REF#refs/heads/}
+          git push origin "v$NEW_VERSION"
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NEW_VERSION: ${{ steps.version.outputs.new_version }}
+        with:
+          tag_name: v${{ steps.version.outputs.new_version }}
+          release_name: CreamLinux v${{ steps.version.outputs.new_version }}
+          body_path: ${{ github.event.inputs.custom_release_notes == '' && 'changelog.md' || github.event.inputs.custom_release_notes }}
+          draft: false
+          prerelease: false
+
+  build-linux:
+    needs: create-release
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: v${{ needs.create-release.outputs.new_version }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - name: Install frontend dependencies
+        run: npm install
+
+      - name: Build the app
+        run: npm run tauri build
+
+      - name: Upload AppImage
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.release_id }}
+          asset_path: ./src-tauri/target/release/bundle/appimage/*.AppImage
+          asset_name: CreamLinux-${{ needs.create-release.outputs.new_version }}.AppImage
+          asset_content_type: application/octet-stream
+
+      - name: Upload Debian Package
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.release_id }}
+          asset_path: ./src-tauri/target/release/bundle/deb/*.deb
+          asset_name: creamlinux_${{ needs.create-release.outputs.new_version }}_amd64.deb
+          asset_content_type: application/vnd.debian.binary-package
