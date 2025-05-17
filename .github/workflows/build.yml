@@ -24,12 +24,16 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: 'npm'
 
-      - name: Install Rust
-        uses: actions-rs/toolchain@v1
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
         with:
-          toolchain: stable
-          profile: minimal
+          workspaces: 'src-tauri -> target'
+          cache-on-failure: true
 
       - name: Install system dependencies
         run: |

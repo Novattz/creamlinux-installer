@@ -17,16 +17,22 @@ on:
         description: 'Custom release notes (leave empty for auto-generated)'
         required: false
         type: string
+      dry_run:
+        description: 'Perform a dry run (no actual release)'
+        required: false
+        default: false
+        type: boolean
 
 env:
   CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+  RUST_BACKTRACE: short
 
 jobs:
-  create-release:
+  version-bump:
     runs-on: ubuntu-latest
     outputs:
       new_version: ${{ steps.version.outputs.new_version }}
-      release_id: ${{ steps.create_release.outputs.id }}
 
     steps:
       - uses: actions/checkout@v4
@@ -37,9 +43,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
+          cache: 'npm'
 
       - name: Calculate New Version
         id: version
@@ -100,10 +104,11 @@ jobs:
           CHANGELOG="## Changes\n\n$COMMITS"
 
           # Save changelog to a file (multiline to output)
-          echo "$CHANGELOG" > changelog.md
+          echo -e "$CHANGELOG" > changelog.md
           echo "Generated changelog from commit messages"
 
       - name: Commit Version Changes
+        if: ${{ !github.event.inputs.dry_run }}
         env:
           NEW_VERSION: ${{ steps.version.outputs.new_version }}
         run: |
@@ -115,35 +120,40 @@ jobs:
           git push origin HEAD:${GITHUB_REF#refs/heads/}
           git push origin "v$NEW_VERSION"
 
-      - name: Create GitHub Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NEW_VERSION: ${{ steps.version.outputs.new_version }}
+      # Upload changelog as an artifact for the publish-release job
+      - name: Upload Changelog
+        uses: actions/upload-artifact@v4
         with:
-          tag_name: v${{ steps.version.outputs.new_version }}
-          release_name: CreamLinux v${{ steps.version.outputs.new_version }}
-          body_path: ${{ github.event.inputs.custom_release_notes == '' && 'changelog.md' || github.event.inputs.custom_release_notes }}
-          draft: false
-          prerelease: false
+          name: changelog
+          path: changelog.md
+          retention-days: 1
 
   build-linux:
-    needs: create-release
+    needs: version-bump
     runs-on: ubuntu-latest
+    outputs:
+      appimage_path: ${{ steps.find-assets.outputs.appimage_path }}
+      deb_path: ${{ steps.find-assets.outputs.deb_path }}
 
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: v${{ needs.create-release.outputs.new_version }}
+          ref: v${{ needs.version-bump.outputs.new_version }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: 'npm'
 
-      - name: Install Rust
+      - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: 'src-tauri -> target'
+          cache-on-failure: true
 
       - name: Install system dependencies
         run: |
@@ -153,25 +163,143 @@ jobs:
       - name: Install frontend dependencies
         run: npm install
 
+      - name: Quick lint and type-check
+        run: |
+          npm run lint
+          npx tsc --noEmit
+
+      - name: Build the app (optimized)
+        run: npm run tauri build
+
+      - name: Find build assets
+        id: find-assets
+        run: |
+          echo "appimage_path=$(find src-tauri/target/release/bundle/appimage -name "*.AppImage" | head -n 1)" >> $GITHUB_OUTPUT
+          echo "deb_path=$(find src-tauri/target/release/bundle/deb -name "*.deb" | head -n 1)" >> $GITHUB_OUTPUT
+
+      - name: Upload Linux builds as artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-builds
+          path: |
+            ${{ steps.find-assets.outputs.appimage_path }}
+            ${{ steps.find-assets.outputs.deb_path }}
+          retention-days: 1
+
+  # Build for other platforms in parallel if needed - examples:
+  build-windows:
+    needs: version-bump
+    runs-on: windows-latest
+    if: false # Disabled until we add Windows build support
+    outputs:
+      msi_path: ${{ steps.find-assets.outputs.msi_path }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: v${{ needs.version-bump.outputs.new_version }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: 'src-tauri -> target'
+          cache-on-failure: true
+
+      - name: Install frontend dependencies
+        run: npm install
+
       - name: Build the app
         run: npm run tauri build
 
-      - name: Upload AppImage
+      - name: Find build assets
+        id: find-assets
+        shell: bash
+        run: |
+          echo "msi_path=$(find src-tauri/target/release/bundle/msi -name "*.msi" | head -n 1)" >> $GITHUB_OUTPUT
+
+      - name: Upload Windows builds as artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-builds
+          path: |
+            ${{ steps.find-assets.outputs.msi_path }}
+          retention-days: 1
+
+  # Final job to create the release and upload assets
+  publish-release:
+    needs: [version-bump, build-linux]
+    if: ${{ !github.event.inputs.dry_run }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download changelog
+        uses: actions/download-artifact@v4
+        with:
+          name: changelog
+
+      - name: Download Linux builds
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-builds
+          path: dist
+
+      # Add this step if Windows builds are enabled
+      # - name: Download Windows builds
+      #   if: needs.build-windows.result == 'success'
+      #   uses: actions/download-artifact@v4
+      #   with:
+      #     name: windows-builds
+      #     path: dist
+
+      - name: Check downloaded artifacts
+        run: |
+          echo "Contents of dist directory:"
+          find dist -type f | sort
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NEW_VERSION: ${{ needs.version-bump.outputs.new_version }}
+        with:
+          tag_name: v${{ needs.version-bump.outputs.new_version }}
+          release_name: CreamLinux v${{ needs.version-bump.outputs.new_version }}
+          body_path: ${{ github.event.inputs.custom_release_notes == '' && 'changelog.md' || github.event.inputs.custom_release_notes }}
+          draft: false
+          prerelease: false
+
+      - name: Get filenames
+        id: get_filenames
+        run: |
+          echo "appimage_filename=$(basename $(find dist -name '*.AppImage' | head -n 1))" >> $GITHUB_OUTPUT
+          echo "deb_filename=$(basename $(find dist -name '*.deb' | head -n 1))" >> $GITHUB_OUTPUT
+
+      - name: Upload AppImage to release
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ needs.create-release.outputs.release_id }}
-          asset_path: ./src-tauri/target/release/bundle/appimage/*.AppImage
-          asset_name: CreamLinux-${{ needs.create-release.outputs.new_version }}.AppImage
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./dist/${{ steps.get_filenames.outputs.appimage_filename }}
+          asset_name: CreamLinux-${{ needs.version-bump.outputs.new_version }}.AppImage
           asset_content_type: application/octet-stream
 
-      - name: Upload Debian Package
+      - name: Upload Debian Package to release
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ needs.create-release.outputs.release_id }}
-          asset_path: ./src-tauri/target/release/bundle/deb/*.deb
-          asset_name: creamlinux_${{ needs.create-release.outputs.new_version }}_amd64.deb
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./dist/${{ steps.get_filenames.outputs.deb_filename }}
+          asset_name: creamlinux_${{ needs.version-bump.outputs.new_version }}_amd64.deb
           asset_content_type: application/vnd.debian.binary-package
