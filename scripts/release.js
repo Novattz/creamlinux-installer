@@ -101,7 +101,7 @@ function triggerWorkflow(versionType, releaseNotes) {
 
     console.log('\nRelease workflow triggered successfully!')
     console.log('You can check the progress in the Actions tab of your GitHub repository.')
-    console.log('https://github.com/yourusername/creamlinux/actions')
+    console.log('https://github.com/Novattz/rust-gui-dev/actions')
   } catch (error) {
     console.error(`Failed to trigger workflow: ${error.message}`)
     process.exit(1)
