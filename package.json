@@ -10,13 +10,7 @@
     "preview": "vite preview",
     "tauri": "tauri",
     "optimize-svg": "node scripts/optimize-svg.js",
-    "sync-version": "node scripts/sync-version.js",
-    "generate-updater": "node scripts/generate-updater-json.js",
-    "update-tauri-config": "node scripts/update-tauri-config.js",
-    "update-api-changelog": "node scripts/api-changelog.js",
-    "prepare-release": "node scripts/prepare-release.js",
-    "release": "semantic-release",
-    "install-updater": "npm install --save @tauri-apps/plugin-updater @tauri-apps/plugin-process"
+    "prepare-release": "node scripts/prepare-release.js"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.5.0",
