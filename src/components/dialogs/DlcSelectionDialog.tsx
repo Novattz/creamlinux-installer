@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import Dialog from './Dialog'
 import DialogHeader from './DialogHeader'
 import DialogBody from './DialogBody'
@@ -22,6 +22,7 @@ export interface DlcSelectionDialogProps {
 /**
  * DLC Selection Dialog component
  * Allows users to select which DLCs they want to enable
+ * Works for both initial installation and editing existing configurations
  */
 const DlcSelectionDialog = ({
   visible,
@@ -34,6 +35,7 @@ const DlcSelectionDialog = ({
   loadingProgress = 0,
   estimatedTimeLeft = '',
 }: DlcSelectionDialogProps) => {
+  // State for DLC management
   const [selectedDlcs, setSelectedDlcs] = useState<DlcInfo[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [selectAll, setSelectAll] = useState(true)
@@ -41,17 +43,29 @@ const DlcSelectionDialog = ({
 
   // Initialize selected DLCs when DLC list changes
   useEffect(() => {
-    if (dlcs.length > 0 && !initialized) {
-      setSelectedDlcs(dlcs)
-
-      // Determine initial selectAll state based on if all DLCs are enabled
-      const allSelected = dlcs.every((dlc) => dlc.enabled)
-      setSelectAll(allSelected)
-
-      // Mark as initialized so we don't reset selections on subsequent DLC additions
-      setInitialized(true)
+    if (dlcs.length > 0) {
+      if (!initialized) {
+        // Initial setup - preserve the enabled state from incoming DLCs
+        setSelectedDlcs(dlcs)
+        
+        // Determine initial selectAll state based on if all DLCs are enabled
+        const allSelected = dlcs.every((dlc) => dlc.enabled)
+        setSelectAll(allSelected)
+        
+        // Mark as initialized to avoid resetting selections on subsequent updates
+        setInitialized(true)
+      } else {
+        // Find new DLCs that aren't in our current selection 
+        const currentAppIds = new Set(selectedDlcs.map((dlc) => dlc.appid))
+        const newDlcs = dlcs.filter((dlc) => !currentAppIds.has(dlc.appid))
+        
+        // If we found new DLCs, add them to our selection
+        if (newDlcs.length > 0) {
+          setSelectedDlcs((prev) => [...prev, ...newDlcs])
+        }
+      }
     }
-  }, [dlcs, initialized])
+  }, [dlcs, selectedDlcs, initialized])
 
   // Memoize filtered DLCs to avoid unnecessary recalculations
   const filteredDlcs = React.useMemo(() => {
@@ -65,33 +79,22 @@ const DlcSelectionDialog = ({
   }, [selectedDlcs, searchQuery])
 
   // Update DLC selection status
-  const handleToggleDlc = (appid: string) => {
+  const handleToggleDlc = useCallback((appid: string) => {
     setSelectedDlcs((prev) =>
       prev.map((dlc) => (dlc.appid === appid ? { ...dlc, enabled: !dlc.enabled } : dlc))
     )
-  }
+  }, [])
 
   // Update selectAll state when individual DLC selections change
   useEffect(() => {
-    const allSelected = selectedDlcs.every((dlc) => dlc.enabled)
-    setSelectAll(allSelected)
+    if (selectedDlcs.length > 0) {
+      const allSelected = selectedDlcs.every((dlc) => dlc.enabled)
+      setSelectAll(allSelected)
+    }
   }, [selectedDlcs])
 
-  // Handle new DLCs being added while dialog is already open
-  useEffect(() => {
-    if (initialized && dlcs.length > selectedDlcs.length) {
-      // Find new DLCs that aren't in our current selection
-      const currentAppIds = new Set(selectedDlcs.map((dlc) => dlc.appid))
-      const newDlcs = dlcs.filter((dlc) => !currentAppIds.has(dlc.appid))
-
-      // Add new DLCs to our selection, maintaining their enabled state
-      if (newDlcs.length > 0) {
-        setSelectedDlcs((prev) => [...prev, ...newDlcs])
-      }
-    }
-  }, [dlcs, selectedDlcs, initialized])
-
-  const handleToggleSelectAll = () => {
+  // Toggle all DLCs at once
+  const handleToggleSelectAll = useCallback(() => {
     const newSelectAllState = !selectAll
     setSelectAll(newSelectAllState)
 
@@ -101,15 +104,29 @@ const DlcSelectionDialog = ({
         enabled: newSelectAllState,
       }))
     )
-  }
+  }, [selectAll])
 
-  const handleConfirm = () => {
+  // Submit selected DLCs to parent component
+  const handleConfirm = useCallback(() => {
     onConfirm(selectedDlcs)
-  }
+  }, [onConfirm, selectedDlcs])
+
+  // Reset dialog state when it opens or closes
+  useEffect(() => {
+    if (!visible) {
+      setInitialized(false)
+      setSelectedDlcs([])
+      setSearchQuery('')
+    }
+  }, [visible])
 
   // Count selected DLCs
   const selectedCount = selectedDlcs.filter((dlc) => dlc.enabled).length
 
+  // Format dialog title and messages based on mode
+  const dialogTitle = isEditMode ? 'Edit DLCs' : 'Select DLCs to Enable'
+  const actionButtonText = isEditMode ? 'Save Changes' : 'Install with Selected DLCs'
+  
   // Format loading message to show total number of DLCs found
   const getLoadingInfoText = () => {
     if (isLoading && loadingProgress < 100) {
@@ -128,7 +145,7 @@ const DlcSelectionDialog = ({
       preventBackdropClose={isLoading}
     >
       <DialogHeader onClose={onClose}>
-        <h3>{isEditMode ? 'Edit DLCs' : 'Select DLCs to Enable'}</h3>
+        <h3>{dialogTitle}</h3>
         <div className="dlc-game-info">
           <span className="game-title">{gameTitle}</span>
           <span className="dlc-count">
@@ -155,7 +172,7 @@ const DlcSelectionDialog = ({
         </div>
       </div>
 
-      {isLoading && (
+      {isLoading && loadingProgress > 0 && (
         <div className="dlc-loading-progress">
           <div className="progress-bar-container">
             <div className="progress-bar" style={{ width: `${loadingProgress}%` }} />
@@ -210,7 +227,7 @@ const DlcSelectionDialog = ({
             onClick={handleConfirm} 
             disabled={isLoading}
           >
-            {isEditMode ? 'Save Changes' : 'Install with Selected DLCs'}
+            {actionButtonText}
           </Button>
         </DialogActions>
       </DialogFooter>

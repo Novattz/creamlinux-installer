@@ -81,6 +81,13 @@ export function useGameActions() {
   // Unified handler for game actions (install/uninstall)
   const handleGameAction = useCallback(async (gameId: string, action: ActionType, games: Game[]) => {
     try {
+      // For CreamLinux installation, we should NOT call process_game_action directly
+      // Instead, we show the DLC selection dialog first, which is handled in AppProvider
+      if (action === 'install_cream') {
+        return
+      }
+      
+      // For other actions (uninstall_cream, install_smoke, uninstall_smoke)
       // Find game to get title
       const game = games.find((g) => g.id === gameId)
       if (!game) return
@@ -179,7 +186,7 @@ export function useGameActions() {
         setProgressDialog({
           visible: true,
           title: `Installing CreamLinux for ${game.title}`,
-          message: 'Processing...',
+          message: 'Preparing to download CreamLinux...',
           progress: 0,
           showInstructions: false,
           instructions: undefined,
@@ -190,6 +197,8 @@ export function useGameActions() {
           gameId,
           selectedDlcs,
         })
+        
+        // Note: The progress dialog will be updated through the installation-progress event listener
       }
     } catch (error) {
       console.error('Error processing DLC selection:', error)

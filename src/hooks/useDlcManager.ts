@@ -50,7 +50,7 @@ export function useDlcManager() {
         const unlistenDlcFound = await listen<string>('dlc-found', (event) => {
           const dlc = JSON.parse(event.payload) as { appid: string; name: string }
 
-          // Add the DLC to the current list with enabled=true
+          // Add the DLC to the current list with enabled=true by default
           setDlcDialog((prev) => ({
             ...prev,
             dlcs: [...prev.dlcs, { ...dlc, enabled: true }],
@@ -175,7 +175,7 @@ export function useDlcManager() {
         dlcs: [],
         enabledDlcs: [],
         isLoading: true,
-        isEditMode: true,
+        isEditMode: true, // This is an edit operation
         progress: 0,
         progressMessage: 'Reading DLC configuration...',
         timeLeft: '',

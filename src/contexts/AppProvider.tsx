@@ -29,6 +29,7 @@ export const AppProvider = ({ children }: AppProviderProps) => {
     setDlcDialog,
     handleDlcDialogClose: closeDlcDialog,
     streamGameDlcs,
+    handleGameEdit,
   } = useDlcManager()
 
   const {
@@ -47,35 +48,7 @@ export const AppProvider = ({ children }: AppProviderProps) => {
     info
   } = useToasts()
 
-  // Combined handler for game edit
-  const handleGameEdit = async (gameId: string) => {
-    const game = games.find(g => g.id === gameId)
-    if (!game || !game.cream_installed) {
-      showError("Cannot edit game: not found or CreamLinux not installed")
-      return
-    }
-    
-    try {
-      // Open the dialog
-      setDlcDialog({
-        ...dlcDialog,
-        visible: true,
-        gameId,
-        gameTitle: game.title,
-        isLoading: true,
-        isEditMode: true,
-        dlcs: [], // start empty
-        progress: 0,
-      })
-
-      // Now fetch DLCs in the background
-      streamGameDlcs(gameId)
-    } catch (error) {
-      showError(`Failed to load DLCs: ${error}`)
-    }
-  }
-  
-  // Enhanced game action handler with proper error reporting
+  // Game action handler with proper error reporting
   const handleGameAction = async (gameId: string, action: ActionType) => {
     const game = games.find(g => g.id === gameId)
     if (!game) {
@@ -83,6 +56,31 @@ export const AppProvider = ({ children }: AppProviderProps) => {
       return
     }
     
+    // For DLC installation, we want to show the DLC selection dialog first
+    if (action === 'install_cream') {
+      try {
+        // Show DLC selection dialog
+        setDlcDialog({
+          ...dlcDialog,
+          visible: true,
+          gameId,
+          gameTitle: game.title,
+          dlcs: [], // Start with empty list
+          isLoading: true,
+          isEditMode: false, // This is a new installation
+          progress: 0,
+        })
+        
+        // Start streaming DLCs
+        streamGameDlcs(gameId)
+        return
+      } catch (error) {
+        showError(`Failed to prepare DLC installation: ${error}`)
+        return
+      }
+    }
+    
+    // For other actions (uninstall cream, install/uninstall smoke)
     // Mark game as installing
     setGames(prevGames => 
       prevGames.map(g => g.id === gameId ? {...g, installing: true} : g)
@@ -154,7 +152,9 @@ export const AppProvider = ({ children }: AppProviderProps) => {
     
     // DLC management
     dlcDialog,
-    handleGameEdit,
+    handleGameEdit: (gameId: string) => {
+      handleGameEdit(gameId, games)
+    },
     handleDlcDialogClose: closeDlcDialog,
     
     // Game actions
