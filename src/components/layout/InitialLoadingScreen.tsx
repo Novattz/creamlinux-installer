@@ -9,7 +9,7 @@ interface InitialLoadingScreenProps {
 /**
  * Initial loading screen displayed when the app first loads
  */
-const InitialLoadingScreen = ({ message, progress, onComplete }: InitialLoadingScreenProps) => {
+const InitialLoadingScreen = ({ message, progress }: InitialLoadingScreenProps) => {
   const [detailedStatus, setDetailedStatus] = useState<string[]>([
     "Initializing application...",
     "Setting up Steam integration...",
