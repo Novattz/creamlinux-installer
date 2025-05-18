@@ -57,7 +57,7 @@ export const IconNames = {
   Warning: warning,
   Wine: wine,
   Diamond: diamond,
-  
+
   // Brand icons
   Discord: discord,
   GitHub: github,

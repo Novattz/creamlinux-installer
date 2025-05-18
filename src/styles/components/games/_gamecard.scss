@@ -45,11 +45,15 @@
 
 // Special styling for cards with different statuses
 .game-item-card:has(.status-badge.cream) {
-  box-shadow: var(--shadow-standard), 0 0 15px rgba(128, 181, 255, 0.15);
+  box-shadow:
+    var(--shadow-standard),
+    0 0 15px rgba(128, 181, 255, 0.15);
 }
 
 .game-item-card:has(.status-badge.smoke) {
-  box-shadow: var(--shadow-standard), 0 0 15px rgba(255, 239, 150, 0.15);
+  box-shadow:
+    var(--shadow-standard),
+    0 0 15px rgba(255, 239, 150, 0.15);
 }
 
 // Game item overlay

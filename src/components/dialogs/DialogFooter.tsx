@@ -1,8 +1,8 @@
 import { ReactNode } from 'react'
 
 export interface DialogFooterProps {
-  children: ReactNode;
-  className?: string;
+  children: ReactNode
+  className?: string
 }
 
 /**
@@ -10,11 +10,7 @@ export interface DialogFooterProps {
  * Contains action buttons and optional status information
  */
 const DialogFooter = ({ children, className = '' }: DialogFooterProps) => {
-  return (
-    <div className={`dialog-footer ${className}`}>
-      {children}
-    </div>
-  )
+  return <div className={`dialog-footer ${className}`}>{children}</div>
 }
 
 export default DialogFooter

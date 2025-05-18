@@ -47,10 +47,10 @@ function StatusIndicator({ status }) {
     status === 'success'
       ? 'Check'
       : status === 'warning'
-      ? 'Warning'
-      : status === 'error'
-      ? 'Close'
-      : 'Info'
+        ? 'Warning'
+        : status === 'error'
+          ? 'Close'
+          : 'Info'
 
   return <Icon name={iconName} variant="bold" />
 }

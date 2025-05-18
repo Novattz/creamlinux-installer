@@ -36,7 +36,9 @@
   border: 1px solid var(--border-soft);
   opacity: 0;
   transform: scale(0.95);
-  transition: transform 0.2s var(--easing-bounce), opacity 0.2s ease-out;
+  transition:
+    transform 0.2s var(--easing-bounce),
+    opacity 0.2s ease-out;
   cursor: default;
   display: flex;
   flex-direction: column;

@@ -1,9 +1,9 @@
 import { ReactNode } from 'react'
 
 export interface DialogHeaderProps {
-  children: ReactNode;
-  className?: string;
-  onClose?: () => void;
+  children: ReactNode
+  className?: string
+  onClose?: () => void
 }
 
 /**
@@ -15,11 +15,7 @@ const DialogHeader = ({ children, className = '', onClose }: DialogHeaderProps) 
     <div className={`dialog-header ${className}`}>
       {children}
       {onClose && (
-        <button 
-          className="dialog-close-button" 
-          onClick={onClose} 
-          aria-label="Close dialog"
-        >
+        <button className="dialog-close-button" onClick={onClose} aria-label="Close dialog">
           ×
         </button>
       )}

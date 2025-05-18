@@ -45,7 +45,7 @@ const getSizeValue = (size: IconSize): string => {
     sm: '16px',
     md: '24px',
     lg: '32px',
-    xl: '48px'
+    xl: '48px',
   }
 
   return sizeMap[size] || sizeMap.md
@@ -54,11 +54,15 @@ const getSizeValue = (size: IconSize): string => {
 /**
  * Gets the icon component based on name and variant
  */
-const getIconComponent = (name: string, variant: IconVariant | string): React.ComponentType<React.SVGProps<SVGSVGElement>> | null => {
+const getIconComponent = (
+  name: string,
+  variant: IconVariant | string
+): React.ComponentType<React.SVGProps<SVGSVGElement>> | null => {
   // Normalize variant to ensure it's a valid IconVariant
-  const normalizedVariant = (variant === 'bold' || variant === 'outline' || variant === 'brand') 
-    ? variant as IconVariant 
-    : undefined;
+  const normalizedVariant =
+    variant === 'bold' || variant === 'outline' || variant === 'brand'
+      ? (variant as IconVariant)
+      : undefined
 
   // Try to get the icon from the specified variant
   switch (normalizedVariant) {
@@ -97,7 +101,7 @@ const Icon: React.FC<IconProps> = ({
 }) => {
   // Determine default variant based on icon type if no variant provided
   let defaultVariant: IconVariant | string = variant
-  
+
   if (defaultVariant === undefined) {
     if (BRAND_ICON_NAMES.has(name)) {
       defaultVariant = 'brand'
@@ -105,17 +109,17 @@ const Icon: React.FC<IconProps> = ({
       defaultVariant = 'bold' // Default to bold for non-brand icons
     }
   }
-  
+
   // Get the icon component based on name and variant
   let finalIconComponent = getIconComponent(name, defaultVariant)
   let finalVariant = defaultVariant
-  
+
   // Try fallbacks if the icon doesn't exist in the requested variant
   if (!finalIconComponent && defaultVariant !== 'outline') {
     finalIconComponent = getIconComponent(name, 'outline')
     finalVariant = 'outline'
   }
-  
+
   if (!finalIconComponent && defaultVariant !== 'bold') {
     finalIconComponent = getIconComponent(name, 'bold')
     finalVariant = 'bold'
@@ -125,7 +129,7 @@ const Icon: React.FC<IconProps> = ({
     finalIconComponent = getIconComponent(name, 'brand')
     finalVariant = 'brand'
   }
-  
+
   // If still no icon found, return null
   if (!finalIconComponent) {
     console.warn(`Icon not found: ${name} (${defaultVariant})`)
@@ -134,7 +138,7 @@ const Icon: React.FC<IconProps> = ({
 
   const sizeValue = getSizeValue(size)
   const combinedClassName = `icon icon-${size} icon-${finalVariant} ${className}`.trim()
-  
+
   const IconComponentToRender = finalIconComponent
 
   return (
@@ -142,7 +146,7 @@ const Icon: React.FC<IconProps> = ({
       className={combinedClassName}
       width={sizeValue}
       height={sizeValue}
-      fill={fillColor || 'currentColor'} 
+      fill={fillColor || 'currentColor'}
       stroke={strokeColor || 'currentColor'}
       role="img"
       aria-hidden={!title}

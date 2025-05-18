@@ -7,20 +7,20 @@ import DialogActions from './DialogActions'
 import { Button } from '@/components/buttons'
 
 export interface InstallationInstructions {
-  type: string;
-  command: string;
-  game_title: string;
-  dlc_count?: number;
+  type: string
+  command: string
+  game_title: string
+  dlc_count?: number
 }
 
 export interface ProgressDialogProps {
-  visible: boolean;
-  title: string;
-  message: string;
-  progress: number;
-  showInstructions?: boolean;
-  instructions?: InstallationInstructions;
-  onClose?: () => void;
+  visible: boolean
+  title: string
+  message: string
+  progress: number
+  showInstructions?: boolean
+  instructions?: InstallationInstructions
+  onClose?: () => void
 }
 
 /**
@@ -126,7 +126,7 @@ const ProgressDialog = ({
       <DialogHeader>
         <h3>{title}</h3>
       </DialogHeader>
-      
+
       <DialogBody>
         <p>{message}</p>
 
@@ -150,24 +150,17 @@ const ProgressDialog = ({
           </div>
         )}
       </DialogBody>
-      
+
       <DialogFooter>
         <DialogActions>
           {showInstructions && showCopyButton && (
-            <Button 
-              variant="primary"
-              onClick={handleCopyCommand}
-            >
+            <Button variant="primary" onClick={handleCopyCommand}>
               {copySuccess ? 'Copied!' : 'Copy to Clipboard'}
             </Button>
           )}
 
           {isCloseButtonEnabled && (
-            <Button
-              variant="secondary"
-              onClick={onClose}
-              disabled={!isCloseButtonEnabled}
-            >
+            <Button variant="secondary" onClick={onClose} disabled={!isCloseButtonEnabled}>
               Close
             </Button>
           )}

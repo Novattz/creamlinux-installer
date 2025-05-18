@@ -1,15 +1,15 @@
-import { FC, ButtonHTMLAttributes } from 'react';
+import { FC, ButtonHTMLAttributes } from 'react'
 
-export type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'success' | 'warning';
-export type ButtonSize = 'small' | 'medium' | 'large';
+export type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'success' | 'warning'
+export type ButtonSize = 'small' | 'medium' | 'large'
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: ButtonVariant;
-  size?: ButtonSize;
-  isLoading?: boolean;
-  leftIcon?: React.ReactNode;
-  rightIcon?: React.ReactNode;
-  fullWidth?: boolean;
+  variant?: ButtonVariant
+  size?: ButtonSize
+  isLoading?: boolean
+  leftIcon?: React.ReactNode
+  rightIcon?: React.ReactNode
+  fullWidth?: boolean
 }
 
 /**
@@ -32,7 +32,7 @@ const Button: FC<ButtonProps> = ({
     small: 'btn-sm',
     medium: 'btn-md',
     large: 'btn-lg',
-  }[size];
+  }[size]
 
   // Variant class mapping
   const variantClass = {
@@ -41,7 +41,7 @@ const Button: FC<ButtonProps> = ({
     danger: 'btn-danger',
     success: 'btn-success',
     warning: 'btn-warning',
-  }[variant];
+  }[variant]
 
   return (
     <button
@@ -56,12 +56,12 @@ const Button: FC<ButtonProps> = ({
           <span className="spinner"></span>
         </span>
       )}
-      
+
       {leftIcon && !isLoading && <span className="btn-icon btn-icon-left">{leftIcon}</span>}
       <span className="btn-text">{children}</span>
       {rightIcon && !isLoading && <span className="btn-icon btn-icon-right">{rightIcon}</span>}
     </button>
-  );
-};
+  )
+}
 
-export default Button;
+export default Button

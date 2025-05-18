@@ -4,11 +4,11 @@ export type LoadingType = 'spinner' | 'dots' | 'progress'
 export type LoadingSize = 'small' | 'medium' | 'large'
 
 interface LoadingIndicatorProps {
-  size?: LoadingSize;
-  type?: LoadingType;
-  message?: string;
-  progress?: number;
-  className?: string;
+  size?: LoadingSize
+  type?: LoadingType
+  message?: string
+  progress?: number
+  className?: string
 }
 
 /**
@@ -34,7 +34,7 @@ const LoadingIndicator = ({
     switch (type) {
       case 'spinner':
         return <div className="loading-spinner"></div>
-        
+
       case 'dots':
         return (
           <div className="loading-dots">
@@ -43,7 +43,7 @@ const LoadingIndicator = ({
             <div className="dot dot-3"></div>
           </div>
         )
-        
+
       case 'progress':
         return (
           <div className="loading-progress">
@@ -53,12 +53,10 @@ const LoadingIndicator = ({
                 style={{ width: `${Math.min(Math.max(progress, 0), 100)}%` }}
               ></div>
             </div>
-            {progress > 0 && (
-              <div className="progress-percentage">{Math.round(progress)}%</div>
-            )}
+            {progress > 0 && <div className="progress-percentage">{Math.round(progress)}%</div>}
           </div>
         )
-        
+
       default:
         return <div className="loading-spinner"></div>
     }

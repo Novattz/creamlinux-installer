@@ -12,12 +12,7 @@ interface HeaderProps {
  * Application header component
  * Contains the app title, search input, and refresh button
  */
-const Header = ({
-  onRefresh,
-  refreshDisabled = false,
-  onSearch,
-  searchQuery,
-}: HeaderProps) => {
+const Header = ({ onRefresh, refreshDisabled = false, onSearch, searchQuery }: HeaderProps) => {
   return (
     <header className="app-header">
       <div className="app-title">
@@ -25,9 +20,9 @@ const Header = ({
         <h1>CreamLinux</h1>
       </div>
       <div className="header-controls">
-        <Button 
+        <Button
           variant="primary"
-          onClick={onRefresh} 
+          onClick={onRefresh}
           disabled={refreshDisabled}
           className="refresh-button"
           leftIcon={<Icon name={refresh} variant="bold" size="md" />}

@@ -22,29 +22,24 @@ const Sidebar = ({ setFilter, currentFilter }: SidebarProps) => {
   const filters: FilterItem[] = [
     { id: 'all', label: 'All Games', icon: layers, variant: 'bold' },
     { id: 'native', label: 'Native', icon: linux, variant: 'brand' },
-    { id: 'proton', label: 'Proton Required', icon: proton, variant: 'brand' }
+    { id: 'proton', label: 'Proton Required', icon: proton, variant: 'brand' },
   ]
-  
+
   return (
     <div className="sidebar">
       <div className="sidebar-header">
         <h2>Library</h2>
       </div>
-      
+
       <ul className="filter-list">
-        {filters.map(filter => (
-          <li 
+        {filters.map((filter) => (
+          <li
             key={filter.id}
             className={currentFilter === filter.id ? 'active' : ''}
             onClick={() => setFilter(filter.id)}
           >
             <div className="filter-item">
-              <Icon 
-                name={filter.icon}
-                variant={filter.variant}
-                size="md" 
-                className="filter-icon"
-              />
+              <Icon name={filter.icon} variant={filter.variant} size="md" className="filter-icon" />
               <span>{filter.label}</span>
             </div>
           </li>

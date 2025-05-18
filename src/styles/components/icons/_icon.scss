@@ -37,7 +37,9 @@
   // Interactive icons
   &.icon-clickable {
     cursor: pointer;
-    transition: transform 0.2s ease, opacity 0.2s ease;
+    transition:
+      transform 0.2s ease,
+      opacity 0.2s ease;
 
     &:hover {
       opacity: 0.8;

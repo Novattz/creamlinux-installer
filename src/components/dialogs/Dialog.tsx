@@ -1,13 +1,13 @@
 import { ReactNode, useEffect, useState } from 'react'
 
 export interface DialogProps {
-  visible: boolean;
-  onClose?: () => void;
-  className?: string;
-  preventBackdropClose?: boolean;
-  children: ReactNode;
-  size?: 'small' | 'medium' | 'large';
-  showAnimationOnUnmount?: boolean;
+  visible: boolean
+  onClose?: () => void
+  className?: string
+  preventBackdropClose?: boolean
+  children: ReactNode
+  size?: 'small' | 'medium' | 'large'
+  showAnimationOnUnmount?: boolean
 }
 
 /**
@@ -66,13 +66,8 @@ const Dialog = ({
   }[size]
 
   return (
-    <div
-      className={`dialog-overlay ${showContent ? 'visible' : ''}`}
-      onClick={handleBackdropClick}
-    >
-      <div
-        className={`dialog ${sizeClass} ${className} ${showContent ? 'dialog-visible' : ''}`}
-      >
+    <div className={`dialog-overlay ${showContent ? 'visible' : ''}`} onClick={handleBackdropClick}>
+      <div className={`dialog ${sizeClass} ${className} ${showContent ? 'dialog-visible' : ''}`}>
         {children}
       </div>
     </div>

@@ -4,17 +4,17 @@ import { listen } from '@tauri-apps/api/event'
 import { Game, DlcInfo } from '@/types'
 
 export interface DlcDialogState {
-  visible: boolean;
-  gameId: string;
-  gameTitle: string;
-  dlcs: DlcInfo[];
-  enabledDlcs: string[];
-  isLoading: boolean;
-  isEditMode: boolean;
-  progress: number;
-  progressMessage: string;
-  timeLeft: string;
-  error: string | null;
+  visible: boolean
+  gameId: string
+  gameTitle: string
+  dlcs: DlcInfo[]
+  enabledDlcs: string[]
+  isLoading: boolean
+  isEditMode: boolean
+  progress: number
+  progressMessage: string
+  timeLeft: string
+  error: string | null
 }
 
 /**
@@ -60,9 +60,9 @@ export function useDlcManager() {
 
         // When progress is 100%, mark loading as complete and reset fetch state
         const unlistenDlcProgress = await listen<{
-          message: string;
-          progress: number;
-          timeLeft?: string;
+          message: string
+          progress: number
+          timeLeft?: string
         }>('dlc-progress', (event) => {
           const { message, progress, timeLeft } = event.payload
 
@@ -196,9 +196,9 @@ export function useDlcManager() {
         if (allDlcs.length > 0) {
           // Log the fresh DLC config
           console.log('Loaded existing DLC configuration:', allDlcs)
-          
+
           // IMPORTANT: Create a completely new array to avoid reference issues
-          const freshDlcs = allDlcs.map(dlc => ({...dlc}))
+          const freshDlcs = allDlcs.map((dlc) => ({ ...dlc }))
 
           setDlcDialog((prev) => ({
             ...prev,
@@ -207,7 +207,7 @@ export function useDlcManager() {
             progress: 100,
             progressMessage: 'Loaded existing DLC configuration',
           }))
-          
+
           // Reset force reload flag
           setForceReload(false)
           return
@@ -279,12 +279,12 @@ export function useDlcManager() {
     }
 
     // Close dialog and reset state
-    setDlcDialog((prev) => ({ 
-      ...prev, 
+    setDlcDialog((prev) => ({
+      ...prev,
       visible: false,
       dlcs: [], // Clear DLCs to force a reload next time
     }))
-    
+
     // Set flag to force reload next time
     setForceReload(true)
   }

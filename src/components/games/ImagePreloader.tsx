@@ -16,24 +16,24 @@ const ImagePreloader = ({ gameIds, onComplete }: ImagePreloaderProps) => {
       try {
         // Only preload the first batch for performance (10 images max)
         const batchToPreload = gameIds.slice(0, 10)
-        
+
         // Track loading progress
         let loadedCount = 0
         const totalImages = batchToPreload.length
-        
+
         // Load images in parallel
         await Promise.allSettled(
           batchToPreload.map(async (id) => {
             await findBestGameImage(id)
             loadedCount++
-            
+
             // If all images are loaded, call onComplete
             if (loadedCount === totalImages && onComplete) {
               onComplete()
             }
           })
         )
-        
+
         // Fallback if Promise.allSettled doesn't trigger onComplete
         if (onComplete) {
           onComplete()

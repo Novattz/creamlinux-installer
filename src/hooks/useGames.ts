@@ -64,17 +64,15 @@ export function useGames() {
           // Update only the specific game in the state
           setGames((prevGames) =>
             prevGames.map((game) =>
-              game.id === updatedGame.id 
-                ? { ...updatedGame, platform: 'Steam' } 
-                : game
+              game.id === updatedGame.id ? { ...updatedGame, platform: 'Steam' } : game
             )
           )
         })
 
         // Listen for scan progress events
         const unlistenScanProgress = await listen<{
-          message: string;
-          progress: number;
+          message: string
+          progress: number
         }>('scan-progress', (event) => {
           const { message, progress } = event.payload
 
@@ -102,7 +100,7 @@ export function useGames() {
 
     // Cleanup function
     return () => {
-      unlisteners.forEach(fn => fn())
+      unlisteners.forEach((fn) => fn())
     }
   }, [loadGames, isInitialLoad])
 

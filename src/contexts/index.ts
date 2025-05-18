@@ -1,3 +1,3 @@
-export * from './AppContext';
-export * from './AppProvider';
-export * from './useAppContext';
+export * from './AppContext'
+export * from './AppProvider'
+export * from './useAppContext'

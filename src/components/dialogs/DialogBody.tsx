@@ -1,8 +1,8 @@
 import { ReactNode } from 'react'
 
 export interface DialogBodyProps {
-  children: ReactNode;
-  className?: string;
+  children: ReactNode
+  className?: string
 }
 
 /**
@@ -10,11 +10,7 @@ export interface DialogBodyProps {
  * Contains the main content with scrolling capability
  */
 const DialogBody = ({ children, className = '' }: DialogBodyProps) => {
-  return (
-    <div className={`dialog-body ${className}`}>
-      {children}
-    </div>
-  )
+  return <div className={`dialog-body ${className}`}>{children}</div>
 }
 
 export default DialogBody

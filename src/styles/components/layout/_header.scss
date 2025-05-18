@@ -96,7 +96,9 @@
     border-color: var(--primary-color);
     background-color: rgba(255, 255, 255, 0.1);
     outline: none;
-    box-shadow: 0 0 0 2px rgba(var(--primary-color), 0.3), inset 0 2px 5px rgba(0, 0, 0, 0.2);
+    box-shadow:
+      0 0 0 2px rgba(var(--primary-color), 0.3),
+      inset 0 2px 5px rgba(0, 0, 0, 0.2);
 
     & + .search-icon {
       color: var(--primary-color);

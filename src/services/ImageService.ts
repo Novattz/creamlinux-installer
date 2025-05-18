@@ -2,10 +2,10 @@
  * Game image sources from Steam's CDN
  */
 export const SteamImageType = {
-  HEADER: 'header',                 // 460x215
-  CAPSULE: 'capsule_616x353',       // 616x353
-  LOGO: 'logo',                     // Game logo with transparency
-  LIBRARY_HERO: 'library_hero',     // 1920x620
+  HEADER: 'header', // 460x215
+  CAPSULE: 'capsule_616x353', // 616x353
+  LOGO: 'logo', // Game logo with transparency
+  LIBRARY_HERO: 'library_hero', // 1920x620
   LIBRARY_CAPSULE: 'library_600x900', // 600x900
 } as const
 
@@ -68,16 +68,12 @@ export const findBestGameImage = async (appId: string): Promise<string | null> =
   }
 
   // Try these image types in order of preference
-  const typesToTry = [
-    SteamImageType.HEADER, 
-    SteamImageType.CAPSULE, 
-    SteamImageType.LIBRARY_CAPSULE
-  ]
+  const typesToTry = [SteamImageType.HEADER, SteamImageType.CAPSULE, SteamImageType.LIBRARY_CAPSULE]
 
   for (const type of typesToTry) {
     const url = getSteamImageUrl(appId, type)
     const exists = await checkImageExists(url)
-    
+
     if (exists) {
       try {
         // Preload the image to prevent flickering

@@ -27,9 +27,9 @@ function App() {
     filteredGames,
     handleRefresh,
     isLoading,
-    error
+    error,
   } = useAppLogic({ autoLoad: true })
-  
+
   // Get action handlers from context
   const {
     dlcDialog,
@@ -38,15 +38,12 @@ function App() {
     progressDialog,
     handleGameAction,
     handleDlcConfirm,
-    handleGameEdit
+    handleGameEdit,
   } = useAppContext()
 
   // Show loading screen during initial load
   if (isInitialLoad) {
-    return <InitialLoadingScreen 
-      message={scanProgress.message} 
-      progress={scanProgress.progress}
-    />
+    return <InitialLoadingScreen message={scanProgress.message} progress={scanProgress.progress} />
   }
 
   return (
@@ -56,17 +53,17 @@ function App() {
         <AnimatedBackground />
 
         {/* Header with search */}
-        <Header 
-          onRefresh={handleRefresh} 
-          onSearch={handleSearchChange} 
-          searchQuery={searchQuery} 
+        <Header
+          onRefresh={handleRefresh}
+          onSearch={handleSearchChange}
+          searchQuery={searchQuery}
           refreshDisabled={isLoading}
         />
 
         <div className="main-content">
           {/* Sidebar for filtering */}
           <Sidebar setFilter={setFilter} currentFilter={filter} />
-          
+
           {/* Show error or game list */}
           {error ? (
             <div className="error-message">

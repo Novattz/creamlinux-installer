@@ -109,13 +109,7 @@ const AnimatedBackground = () => {
     }
   }, [])
 
-  return (
-    <canvas
-      ref={canvasRef}
-      className="animated-background"
-      aria-hidden="true"
-    />
-  )
+  return <canvas ref={canvasRef} className="animated-background" aria-hidden="true" />
 }
 
 export default AnimatedBackground

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import {GameItem, ImagePreloader} from '@/components/games'
+import { GameItem, ImagePreloader } from '@/components/games'
 import { ActionType } from '@/components/buttons'
 import { Game } from '@/types'
 import LoadingIndicator from '../common/LoadingIndicator'
@@ -18,7 +18,7 @@ interface GameListProps {
 const GameList = ({ games, isLoading, onAction, onEdit }: GameListProps) => {
   const [imagesPreloaded, setImagesPreloaded] = useState(false)
 
-  // Sort games alphabetically by title 
+  // Sort games alphabetically by title
   const sortedGames = useMemo(() => {
     return [...games].sort((a, b) => a.title.localeCompare(b.title))
   }, [games])
@@ -35,11 +35,7 @@ const GameList = ({ games, isLoading, onAction, onEdit }: GameListProps) => {
   if (isLoading) {
     return (
       <div className="game-list">
-        <LoadingIndicator
-          type="spinner"
-          size="large"
-          message="Scanning for games..."
-        />
+        <LoadingIndicator type="spinner" size="large" message="Scanning for games..." />
       </div>
     )
   }

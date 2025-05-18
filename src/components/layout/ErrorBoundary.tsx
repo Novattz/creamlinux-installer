@@ -2,14 +2,14 @@ import { Component, ErrorInfo, ReactNode } from 'react'
 import { Button } from '@/components/buttons'
 
 interface ErrorBoundaryProps {
-  children: ReactNode;
-  fallback?: ReactNode;
-  onError?: (error: Error, errorInfo: ErrorInfo) => void;
+  children: ReactNode
+  fallback?: ReactNode
+  onError?: (error: Error, errorInfo: ErrorInfo) => void
 }
 
 interface ErrorBoundaryState {
-  hasError: boolean;
-  error: Error | null;
+  hasError: boolean
+  error: Error | null
 }
 
 /**
@@ -35,7 +35,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     // Log the error
     console.error('ErrorBoundary caught an error:', error, errorInfo)
-    
+
     // Call the onError callback if provided
     if (this.props.onError) {
       this.props.onError(error, errorInfo)
@@ -52,22 +52,18 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
       if (this.props.fallback) {
         return this.props.fallback
       }
-      
+
       // Default error UI
       return (
         <div className="error-container">
           <h2>Something went wrong</h2>
-          
+
           <details>
             <summary>Error details</summary>
             <p>{this.state.error?.toString()}</p>
           </details>
-          
-          <Button 
-            variant="primary"
-            onClick={this.handleReset}
-            className="error-retry-button"
-          >
+
+          <Button variant="primary" onClick={this.handleReset} className="error-retry-button">
             Try again
           </Button>
         </div>

@@ -8,15 +8,15 @@ import { Button, AnimatedCheckbox } from '@/components/buttons'
 import { DlcInfo } from '@/types'
 
 export interface DlcSelectionDialogProps {
-  visible: boolean;
-  gameTitle: string;
-  dlcs: DlcInfo[];
-  onClose: () => void;
-  onConfirm: (selectedDlcs: DlcInfo[]) => void;
-  isLoading: boolean;
-  isEditMode?: boolean;
-  loadingProgress?: number;
-  estimatedTimeLeft?: string;
+  visible: boolean
+  gameTitle: string
+  dlcs: DlcInfo[]
+  onClose: () => void
+  onConfirm: (selectedDlcs: DlcInfo[]) => void
+  isLoading: boolean
+  isEditMode?: boolean
+  loadingProgress?: number
+  estimatedTimeLeft?: string
 }
 
 /**
@@ -56,18 +56,18 @@ const DlcSelectionDialog = ({
       if (!initialized) {
         // Create a new array to ensure we don't share references
         setSelectedDlcs([...dlcs])
-        
+
         // Determine initial selectAll state based on if all DLCs are enabled
         const allSelected = dlcs.every((dlc) => dlc.enabled)
         setSelectAll(allSelected)
-        
+
         // Mark as initialized to avoid resetting selections on subsequent updates
         setInitialized(true)
       } else {
-        // Find new DLCs that aren't in our current selection 
+        // Find new DLCs that aren't in our current selection
         const currentAppIds = new Set(selectedDlcs.map((dlc) => dlc.appid))
         const newDlcs = dlcs.filter((dlc) => !currentAppIds.has(dlc.appid))
-        
+
         // If we found new DLCs, add them to our selection
         if (newDlcs.length > 0) {
           setSelectedDlcs((prev) => [...prev, ...newDlcs])
@@ -118,9 +118,9 @@ const DlcSelectionDialog = ({
   // Submit selected DLCs to parent component
   const handleConfirm = useCallback(() => {
     // Create a deep copy to prevent reference issues
-    const dlcsCopy = JSON.parse(JSON.stringify(selectedDlcs));
-    onConfirm(dlcsCopy);
-  }, [onConfirm, selectedDlcs]);
+    const dlcsCopy = JSON.parse(JSON.stringify(selectedDlcs))
+    onConfirm(dlcsCopy)
+  }, [onConfirm, selectedDlcs])
 
   // Count selected DLCs
   const selectedCount = selectedDlcs.filter((dlc) => dlc.enabled).length
@@ -128,7 +128,7 @@ const DlcSelectionDialog = ({
   // Format dialog title and messages based on mode
   const dialogTitle = isEditMode ? 'Edit DLCs' : 'Select DLCs to Enable'
   const actionButtonText = isEditMode ? 'Save Changes' : 'Install with Selected DLCs'
-  
+
   // Format loading message to show total number of DLCs found
   const getLoadingInfoText = () => {
     if (isLoading && loadingProgress < 100) {
@@ -140,12 +140,7 @@ const DlcSelectionDialog = ({
   }
 
   return (
-    <Dialog
-      visible={visible}
-      onClose={onClose}
-      size="large"
-      preventBackdropClose={isLoading}
-    >
+    <Dialog visible={visible} onClose={onClose} size="large" preventBackdropClose={isLoading}>
       <DialogHeader onClose={onClose}>
         <h3>{dialogTitle}</h3>
         <div className="dlc-game-info">
@@ -224,11 +219,7 @@ const DlcSelectionDialog = ({
           >
             Cancel
           </Button>
-          <Button 
-            variant="primary" 
-            onClick={handleConfirm} 
-            disabled={isLoading}
-          >
+          <Button variant="primary" onClick={handleConfirm} disabled={isLoading}>
             {actionButtonText}
           </Button>
         </DialogActions>

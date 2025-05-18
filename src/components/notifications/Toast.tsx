@@ -2,38 +2,38 @@ import { ReactNode, useState, useEffect, useCallback } from 'react'
 import { Icon, check, info, warning, error } from '@/components/icons'
 
 export interface ToastProps {
-  id: string;
-  type: 'success' | 'error' | 'warning' | 'info';
-  title?: string;
-  message: string;
-  duration?: number;
-  onDismiss: (id: string) => void;
+  id: string
+  type: 'success' | 'error' | 'warning' | 'info'
+  title?: string
+  message: string
+  duration?: number
+  onDismiss: (id: string) => void
 }
 
 /**
  * Individual Toast component
  * Displays a notification message with automatic dismissal
  */
-const Toast = ({ 
-  id, 
-  type, 
-  title, 
-  message, 
-  duration = 5000, // default 5 seconds 
-  onDismiss 
+const Toast = ({
+  id,
+  type,
+  title,
+  message,
+  duration = 5000, // default 5 seconds
+  onDismiss,
 }: ToastProps) => {
   const [visible, setVisible] = useState(false)
-  const [isClosing, setIsClosing] = useState(false);
+  const [isClosing, setIsClosing] = useState(false)
 
   // Use useCallback to memoize the handleDismiss function
   const handleDismiss = useCallback(() => {
-    setIsClosing(true);
+    setIsClosing(true)
     // Give time for exit animation
     setTimeout(() => {
-      setVisible(false);
-      setTimeout(() => onDismiss(id), 50);
-    }, 300);
-  }, [id, onDismiss]);
+      setVisible(false)
+      setTimeout(() => onDismiss(id), 50)
+    }, 300)
+  }, [id, onDismiss])
 
   // Handle animation on mount/unmount
   useEffect(() => {
@@ -60,20 +60,22 @@ const Toast = ({
   const getIcon = (): ReactNode => {
     switch (type) {
       case 'success':
-        return <Icon name={check} size="md" variant='bold' />
+        return <Icon name={check} size="md" variant="bold" />
       case 'error':
-        return <Icon name={error} size="md" variant='bold' />
+        return <Icon name={error} size="md" variant="bold" />
       case 'warning':
-        return <Icon name={warning} size="md" variant='bold' />
+        return <Icon name={warning} size="md" variant="bold" />
       case 'info':
-        return <Icon name={info} size="md" variant='bold' />
+        return <Icon name={info} size="md" variant="bold" />
       default:
-        return <Icon name={info} size="md" variant='bold' />
+        return <Icon name={info} size="md" variant="bold" />
     }
   }
 
   return (
-    <div className={`toast toast-${type} ${visible ? 'visible' : ''} ${isClosing ? 'closing' : ''}`}>
+    <div
+      className={`toast toast-${type} ${visible ? 'visible' : ''} ${isClosing ? 'closing' : ''}`}
+    >
       <div className="toast-icon">{getIcon()}</div>
       <div className="toast-content">
         {title && <h4 className="toast-title">{title}</h4>}

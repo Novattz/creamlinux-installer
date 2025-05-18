@@ -39,14 +39,14 @@ const ActionButton: FC<ActionButtonProps> = ({
   const getButtonVariant = (): ButtonVariant => {
     // For uninstall actions, use danger variant
     if (isInstalled) return 'danger'
-    // For install actions, use success variant 
+    // For install actions, use success variant
     return 'success'
   }
 
   // Select appropriate icon based on action type and state
   const getIconInfo = () => {
     const isCream = action.includes('cream')
-    
+
     if (isInstalled) {
       // Uninstall actions
       return { name: layers, variant: 'bold' }
@@ -66,13 +66,9 @@ const ActionButton: FC<ActionButtonProps> = ({
       disabled={disabled || isWorking}
       fullWidth
       className={`action-button ${className}`}
-      leftIcon={isWorking ? undefined : (
-        <Icon
-          name={iconInfo.name}
-          variant={iconInfo.variant}
-          size="md"
-        />
-      )}
+      leftIcon={
+        isWorking ? undefined : <Icon name={iconInfo.name} variant={iconInfo.variant} size="md" />
+      }
     >
       {getButtonText()}
     </Button>

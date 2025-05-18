@@ -9,17 +9,17 @@
  */
 export function formatTime(seconds: number): string {
   if (seconds < 60) {
-    return `${Math.round(seconds)}s`;
+    return `${Math.round(seconds)}s`
   }
-  
-  const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = Math.round(seconds % 60);
-  
+
+  const minutes = Math.floor(seconds / 60)
+  const remainingSeconds = Math.round(seconds % 60)
+
   if (remainingSeconds === 0) {
-    return `${minutes}m`;
+    return `${minutes}m`
   }
-  
-  return `${minutes}m ${remainingSeconds}s`;
+
+  return `${minutes}m ${remainingSeconds}s`
 }
 
 /**
@@ -31,10 +31,10 @@ export function formatTime(seconds: number): string {
  */
 export function truncateString(str: string, maxLength: number, suffix: string = '...'): string {
   if (str.length <= maxLength) {
-    return str;
+    return str
   }
-  
-  return str.substring(0, maxLength - suffix.length) + suffix;
+
+  return str.substring(0, maxLength - suffix.length) + suffix
 }
 
 /**
@@ -47,17 +47,17 @@ export function debounce<T extends (...args: unknown[]) => unknown>(
   fn: T,
   delay: number
 ): (...args: Parameters<T>) => void {
-  let timer: NodeJS.Timeout | null = null;
-  
-  return function(...args: Parameters<T>) {
+  let timer: NodeJS.Timeout | null = null
+
+  return function (...args: Parameters<T>) {
     if (timer) {
-      clearTimeout(timer);
+      clearTimeout(timer)
     }
-    
+
     timer = setTimeout(() => {
-      fn(...args);
-    }, delay);
-  };
+      fn(...args)
+    }, delay)
+  }
 }
 
 /**
@@ -70,16 +70,16 @@ export function throttle<T extends (...args: unknown[]) => unknown>(
   fn: T,
   limit: number
 ): (...args: Parameters<T>) => void {
-  let lastCall = 0;
-  
-  return function(...args: Parameters<T>) {
-    const now = Date.now();
-    
+  let lastCall = 0
+
+  return function (...args: Parameters<T>) {
+    const now = Date.now()
+
     if (now - lastCall < limit) {
-      return;
+      return
     }
-    
-    lastCall = now;
-    return fn(...args);
-  };
+
+    lastCall = now
+    return fn(...args)
+  }
 }
