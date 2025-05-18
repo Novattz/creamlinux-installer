@@ -16,7 +16,7 @@ CreamLinux is a GUI application for Linux that simplifies the management of DLC 
 
 ### AppImage (Recommended)
 
-1. Download the latest `CreamLinux.AppImage` from the [Releases](https://github.com/yourusername/creamlinux/releases) page
+1. Download the latest `CreamLinux.AppImage` from the [Releases](https://github.com/novattz/creamlinux/releases) page
 2. Make it executable:
    ```bash
    chmod +x CreamLinux.AppImage
@@ -39,7 +39,7 @@ CreamLinux is a GUI application for Linux that simplifies the management of DLC 
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/yourusername/creamlinux.git
+   git clone https://github.com/novattz/creamlinux.git
    cd creamlinux
    ```
 
