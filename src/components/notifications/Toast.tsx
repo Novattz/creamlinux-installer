@@ -1,4 +1,5 @@
-import { ReactNode, useState, useEffect } from 'react'
+import { ReactNode, useState, useEffect, useCallback } from 'react'
+import { Icon, check, info, warning, error } from '@/components/icons'
 
 export interface ToastProps {
   id: string;
@@ -23,6 +24,13 @@ const Toast = ({
 }: ToastProps) => {
   const [visible, setVisible] = useState(false)
 
+  // Use useCallback to memoize the handleDismiss function
+  const handleDismiss = useCallback(() => {
+    setVisible(false)
+    // Give time for exit animation
+    setTimeout(() => onDismiss(id), 300)
+  }, [id, onDismiss])
+
   // Handle animation on mount/unmount
   useEffect(() => {
     // Start the enter animation
@@ -42,28 +50,22 @@ const Toast = ({
       clearTimeout(enterTimer)
       if (dismissTimer) clearTimeout(dismissTimer)
     }
-  }, [duration])
+  }, [duration, handleDismiss])
 
   // Get icon based on toast type
   const getIcon = (): ReactNode => {
     switch (type) {
       case 'success':
-        return '✓'
+        return <Icon name={check} size="md" variant='bold' />
       case 'error':
-        return '✗'
+        return <Icon name={error} size="md" variant='bold' />
       case 'warning':
-        return '⚠'
+        return <Icon name={warning} size="md" variant='bold' />
       case 'info':
-        return 'ℹ'
+        return <Icon name={info} size="md" variant='bold' />
       default:
-        return ''
+        return <Icon name={info} size="md" variant='bold' />
     }
-  }
-
-  const handleDismiss = () => {
-    setVisible(false)
-    // Give time for exit animation
-    setTimeout(() => onDismiss(id), 300)
   }
 
   return (

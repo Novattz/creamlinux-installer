@@ -1,4 +1,5 @@
 import { Button } from '@/components/buttons'
+import { Icon, info, refresh, search } from '@/components/icons'
 
 interface HeaderProps {
   onRefresh: () => void
@@ -19,23 +20,30 @@ const Header = ({
 }: HeaderProps) => {
   return (
     <header className="app-header">
-      <h1>CreamLinux</h1>
+      <div className="app-title">
+        <Icon name={info} variant="bold" size="md" className="app-logo-icon" />
+        <h1>CreamLinux</h1>
+      </div>
       <div className="header-controls">
         <Button 
           variant="primary"
           onClick={onRefresh} 
           disabled={refreshDisabled}
           className="refresh-button"
+          leftIcon={<Icon name={refresh} variant="bold" size="md" />}
         >
           Refresh
         </Button>
-        <input
-          type="text"
-          placeholder="Search games..."
-          className="search-input"
-          value={searchQuery}
-          onChange={(e) => onSearch(e.target.value)}
-        />
+        <div className="search-container">
+          <input
+            type="text"
+            placeholder="Search games..."
+            className="search-input"
+            value={searchQuery}
+            onChange={(e) => onSearch(e.target.value)}
+          />
+          <Icon name={search} variant="bold" size="md" className="search-icon" />
+        </div>
       </div>
     </header>
   )

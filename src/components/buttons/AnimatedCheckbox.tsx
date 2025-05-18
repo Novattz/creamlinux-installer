@@ -1,3 +1,5 @@
+import { Icon, check } from '@/components/icons'
+
 interface AnimatedCheckboxProps {
   checked: boolean;
   onChange: () => void;
@@ -26,17 +28,14 @@ const AnimatedCheckbox = ({
       />
       
       <span className={`checkbox-custom ${checked ? 'checked' : ''}`}>
-        <svg viewBox="0 0 24 24" className="checkmark-icon" aria-hidden="true">
-          <path
-            className={`checkmark ${checked ? 'checked' : ''}`}
-            d="M5 12l5 5L20 7"
-            stroke="#fff"
-            strokeWidth="2.5"
-            fill="none"
-            strokeLinecap="round"
-            strokeLinejoin="round"
+        {checked && (
+          <Icon
+            name={check}
+            variant="bold"
+            size="sm"
+            className="checkbox-icon"
           />
-        </svg>
+        )}
       </span>
       
       {(label || sublabel) && (

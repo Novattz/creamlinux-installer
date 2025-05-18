@@ -16,12 +16,23 @@
   z-index: var(--z-header);
   height: var(--header-height);
 
-  h1 {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    letter-spacing: 0.5px;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.7);
+  .app-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      letter-spacing: 0.5px;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.7);
+    }
+
+    .app-logo-icon {
+      color: var(--primary-color);
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+    }
   }
 
   &::after {
@@ -57,12 +68,25 @@
   align-items: center;
 }
 
+.search-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  .search-icon {
+    position: absolute;
+    left: 0.8rem;
+    color: rgba(255, 255, 255, 0.4);
+    pointer-events: none;
+  }
+}
+
 .search-input {
   background-color: var(--border-dark);
   border: 1px solid var(--border-soft);
   border-radius: 4px;
   color: var(--text-primary);
-  padding: 0.6rem 1rem;
+  padding: 0.6rem 1rem 0.6rem 2.5rem;
   font-size: 0.9rem;
   transition: all var(--duration-normal) var(--easing-ease-out);
   box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.2);
@@ -73,6 +97,10 @@
     background-color: rgba(255, 255, 255, 0.1);
     outline: none;
     box-shadow: 0 0 0 2px rgba(var(--primary-color), 0.3), inset 0 2px 5px rgba(0, 0, 0, 0.2);
+
+    & + .search-icon {
+      color: var(--primary-color);
+    }
   }
 
   &::placeholder {

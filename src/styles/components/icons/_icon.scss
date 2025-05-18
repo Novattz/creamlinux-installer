@@ -1,0 +1,128 @@
+@use '../../themes/index' as *;
+@use '../../abstracts/index' as *;
+
+/* 
+  Icon component styles
+*/
+.icon {
+  display: inline-flex;
+  vertical-align: middle;
+
+  // Base icon styling
+  &.icon-xs {
+    width: 12px;
+    height: 12px;
+  }
+
+  &.icon-sm {
+    width: 16px;
+    height: 16px;
+  }
+
+  &.icon-md {
+    width: 24px;
+    height: 24px;
+  }
+
+  &.icon-lg {
+    width: 32px;
+    height: 32px;
+  }
+
+  &.icon-xl {
+    width: 48px;
+    height: 48px;
+  }
+
+  // Interactive icons
+  &.icon-clickable {
+    cursor: pointer;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+
+    &:hover {
+      opacity: 0.8;
+      transform: scale(1.1);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+  }
+
+  // Icon with background
+  &.icon-with-bg {
+    padding: 6px;
+    border-radius: 50%;
+    background-color: var(--border-soft);
+
+    &:hover {
+      background-color: var(--border);
+    }
+  }
+
+  // Color variations
+  &.icon-primary {
+    color: var(--primary-color);
+  }
+
+  &.icon-secondary {
+    color: var(--text-secondary);
+  }
+
+  &.icon-danger {
+    color: var(--danger);
+  }
+
+  &.icon-success {
+    color: var(--success);
+  }
+
+  &.icon-warning {
+    color: var(--warning);
+  }
+
+  &.icon-info {
+    color: var(--info);
+  }
+}
+
+// Icon in button
+.btn .icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+// Animated icons
+.icon-spin {
+  animation: icon-spin 2s linear infinite;
+}
+
+.icon-pulse {
+  animation: icon-pulse 1.5s ease-in-out infinite;
+}
+
+// Animations
+@keyframes icon-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes icon-pulse {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

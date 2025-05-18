@@ -42,23 +42,18 @@
     border-color: var(--primary-color, #ffc896);
     box-shadow: 0 0 10px rgba(255, 200, 150, 0.2);
   }
-}
 
-.checkmark-icon {
-  width: 18px;
-  height: 18px;
-}
+  .checkbox-icon {
+    color: var(--text-heavy);
+    opacity: 0;
+    transform: scale(0);
+    transition: all 0.3s var(--easing-bounce);
+  }
 
-.checkmark {
-  stroke-dasharray: 30;
-  stroke-dashoffset: 30;
-  opacity: 0;
-  transition: stroke-dashoffset 0.3s ease;
-
-  &.checked {
-    stroke-dashoffset: 0;
+  &.checked .checkbox-icon {
     opacity: 1;
-    animation: checkmarkAnimation 0.3s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+    transform: scale(1);
+    animation: checkbox-pop 0.3s var(--easing-bounce) forwards;
   }
 }
 
@@ -83,17 +78,18 @@
   color: var(--text-muted);
 }
 
-// Animation for the checkmark
-@keyframes checkmarkAnimation {
+// Animation for the checkbox
+@keyframes checkbox-pop {
   0% {
-    stroke-dashoffset: 30;
+    transform: scale(0);
     opacity: 0;
   }
-  40% {
+  70% {
+    transform: scale(1.2);
     opacity: 1;
   }
   100% {
-    stroke-dashoffset: 0;
+    transform: scale(1);
     opacity: 1;
   }
 }
