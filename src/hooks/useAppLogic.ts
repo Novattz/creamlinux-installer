@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { useAppContext } from '@/contexts/useAppContext'
 
 interface UseAppLogicOptions {
@@ -25,6 +25,7 @@ export function useAppLogic(options: UseAppLogicOptions = {}) {
   const [filter, setFilter] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
   const [isInitialLoad, setIsInitialLoad] = useState(true)
+  const isInitializedRef = useRef(false)
   const [scanProgress, setScanProgress] = useState({ 
     message: 'Initializing...', 
     progress: 0 
@@ -54,43 +55,32 @@ export function useAppLogic(options: UseAppLogicOptions = {}) {
   
   // Handle initial loading with simulated progress
   useEffect(() => {
-    if (autoLoad && isInitialLoad) {
-      const initialLoad = async () => {
-        try {
-          // Show scanning message
-          setScanProgress({ message: 'Scanning for games...', progress: 20 })
-          
-          // Small delay to show loading screen
-          await new Promise(resolve => setTimeout(resolve, 800))
-          
-          // Update progress
-          setScanProgress({ message: 'Loading game information...', progress: 50 })
-          
-          // Load games data
-          await loadGames()
-          
-          // Update progress
-          setScanProgress({ message: 'Finishing up...', progress: 90 })
-          
-          // Small delay for animation
-          await new Promise(resolve => setTimeout(resolve, 500))
-          
-          // Complete
-          setScanProgress({ message: 'Ready!', progress: 100 })
-          
-          // Exit loading screen after a moment
-          setTimeout(() => setIsInitialLoad(false), 500)
-        } catch (error) {
-          setScanProgress({ message: `Error: ${error}`, progress: 100 })
-          showToast(`Failed to load: ${error}`, 'error')
-          
-          // Allow exit even on error
-          setTimeout(() => setIsInitialLoad(false), 2000)
-        }
+    if (!autoLoad || !isInitialLoad || isInitializedRef.current) return
+  
+    isInitializedRef.current = true
+    console.log("[APP LOGIC #2] Starting initialization")
+  
+    const initialLoad = async () => {
+      try {
+        setScanProgress({ message: 'Scanning for games...', progress: 20 })
+        await new Promise(resolve => setTimeout(resolve, 800))
+  
+        setScanProgress({ message: 'Loading game information...', progress: 50 })
+        await loadGames()
+  
+        setScanProgress({ message: 'Finishing up...', progress: 90 })
+        await new Promise(resolve => setTimeout(resolve, 500))
+  
+        setScanProgress({ message: 'Ready!', progress: 100 })
+        setTimeout(() => setIsInitialLoad(false), 500)
+      } catch (error) {
+        setScanProgress({ message: `Error: ${error}`, progress: 100 })
+        showToast(`Failed to load: ${error}`, 'error')
+        setTimeout(() => setIsInitialLoad(false), 2000)
       }
-      
-      initialLoad()
     }
+  
+    initialLoad()
   }, [autoLoad, isInitialLoad, loadGames, showToast])
   
   // Force a refresh
