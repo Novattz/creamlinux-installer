@@ -34,6 +34,7 @@ function App() {
   const {
     dlcDialog,
     handleDlcDialogClose,
+    handleProgressDialogClose,
     progressDialog,
     handleGameAction,
     handleDlcConfirm,
@@ -91,7 +92,7 @@ function App() {
           progress={progressDialog.progress}
           showInstructions={progressDialog.showInstructions}
           instructions={progressDialog.instructions}
-          onClose={() => {}}
+          onClose={handleProgressDialogClose}
         />
 
         {/* DLC Selection Dialog */}

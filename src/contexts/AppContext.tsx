@@ -37,6 +37,7 @@ export interface AppContextType {
   isLoading: boolean;
   error: string | null;
   loadGames: () => Promise<boolean>;
+  handleProgressDialogClose: () => void;
   
   // DLC management
   dlcDialog: DlcDialogState;

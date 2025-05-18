@@ -33,6 +33,7 @@ export const AppProvider = ({ children }: AppProviderProps) => {
 
   const {
     progressDialog,
+    handleCloseProgressDialog,
     handleGameAction: executeGameAction,
     handleDlcConfirm: executeDlcConfirm,
   } = useGameActions()
@@ -55,8 +56,7 @@ export const AppProvider = ({ children }: AppProviderProps) => {
     }
     
     try {
-      await streamGameDlcs(gameId)
-      
+      // Open the dialog
       setDlcDialog({
         ...dlcDialog,
         visible: true,
@@ -64,8 +64,12 @@ export const AppProvider = ({ children }: AppProviderProps) => {
         gameTitle: game.title,
         isLoading: true,
         isEditMode: true,
+        dlcs: [], // start empty
+        progress: 0,
       })
-      
+
+      // Now fetch DLCs in the background
+      streamGameDlcs(gameId)
     } catch (error) {
       showError(`Failed to load DLCs: ${error}`)
     }
@@ -157,6 +161,7 @@ export const AppProvider = ({ children }: AppProviderProps) => {
     progressDialog,
     handleGameAction,
     handleDlcConfirm,
+    handleProgressDialogClose: handleCloseProgressDialog,
     
     // Toast notifications
     showToast,
