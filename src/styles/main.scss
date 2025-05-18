@@ -4,42 +4,27 @@
 */
 
 /* Basic variables and mixins */
-@use './variables' as *;
-@use './mixins' as *;
-@use './fonts' as *;
+@use 'abstracts/index' as *;
 
-/* Reset & global styles */
-@use './reset';
-@use './layout';
+@use 'themes/index' as *;
 
 /* Layout components */
-@use 'components/layout/header';
-@use 'components/layout/sidebar';
-@use 'components/layout/background';
-@use 'components/layout/loading_screen';
+@use 'components/layout/index' as *;
 
 /* Game components */
-@use 'components/games/gamecard';
-@use 'components/games/gamelist';
+@use 'components/games/index' as *;
 
 /* Button components */
-@use 'components/buttons/button';
-@use 'components/buttons/action_button';
-@use 'components/buttons/animated_checkbox';
+@use 'components/buttons/index' as *;
 
 /* Dialog components */
-@use 'components/dialogs/dialog';
-@use 'components/dialogs/progress_dialog';
-@use 'components/dialogs/dlc_dialog';
+@use 'components/dialogs/index' as *;
 
 /* Notification components */
-@use 'components/notifications/toast';
+@use 'components/notifications/index' as *;
 
 /* Common components */
-@use 'components/common/loading';
+@use 'components/common/index' as *;
 
 /* Page-specific styles */
 //@use 'pages/home';
-
-/* Theme */
-@use 'themes/dark';
