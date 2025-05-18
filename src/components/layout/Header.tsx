@@ -1,5 +1,5 @@
 import { Button } from '@/components/buttons'
-import { Icon, info, refresh, search } from '@/components/icons'
+import { Icon, diamond, refresh, search } from '@/components/icons'
 
 interface HeaderProps {
   onRefresh: () => void
@@ -21,7 +21,7 @@ const Header = ({
   return (
     <header className="app-header">
       <div className="app-title">
-        <Icon name={info} variant="bold" size="md" className="app-logo-icon" />
+        <Icon name={diamond} variant="bold" size="lg" className="app-logo-icon" />
         <h1>CreamLinux</h1>
       </div>
       <div className="header-controls">

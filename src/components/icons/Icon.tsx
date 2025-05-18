@@ -102,7 +102,7 @@ const Icon: React.FC<IconProps> = ({
     if (BRAND_ICON_NAMES.has(name)) {
       defaultVariant = 'brand'
     } else {
-      defaultVariant = 'bold' // Default to outline for non-brand icons
+      defaultVariant = 'bold' // Default to bold for non-brand icons
     }
   }
   

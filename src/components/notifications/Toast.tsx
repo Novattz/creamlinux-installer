@@ -23,13 +23,17 @@ const Toast = ({
   onDismiss 
 }: ToastProps) => {
   const [visible, setVisible] = useState(false)
+  const [isClosing, setIsClosing] = useState(false);
 
   // Use useCallback to memoize the handleDismiss function
   const handleDismiss = useCallback(() => {
-    setVisible(false)
+    setIsClosing(true);
     // Give time for exit animation
-    setTimeout(() => onDismiss(id), 300)
-  }, [id, onDismiss])
+    setTimeout(() => {
+      setVisible(false);
+      setTimeout(() => onDismiss(id), 50);
+    }, 300);
+  }, [id, onDismiss]);
 
   // Handle animation on mount/unmount
   useEffect(() => {
@@ -69,7 +73,7 @@ const Toast = ({
   }
 
   return (
-    <div className={`toast toast-${type} ${visible ? 'visible' : ''}`}>
+    <div className={`toast toast-${type} ${visible ? 'visible' : ''} ${isClosing ? 'closing' : ''}`}>
       <div className="toast-icon">{getIcon()}</div>
       <div className="toast-content">
         {title && <h4 className="toast-title">{title}</h4>}

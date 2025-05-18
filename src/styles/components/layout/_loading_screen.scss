@@ -69,6 +69,44 @@
       min-height: 3rem;
     }
 
+    .loading-status-log {
+      margin: 1rem 0;
+      text-align: left;
+      max-height: 100px;
+      overflow-y: auto;
+      background-color: rgba(0, 0, 0, 0.2);
+      border-radius: var(--radius-sm);
+      padding: 0.5rem;
+
+      .status-line {
+        margin: 0.5rem 0;
+        display: flex;
+        align-items: center;
+
+        .status-indicator {
+          color: var(--primary-color);
+          margin-right: 0.5rem;
+          font-size: 1.2rem;
+        }
+
+        .status-text {
+          color: var(--text-secondary);
+          font-size: 0.9rem;
+        }
+
+        &:last-child {
+          .status-indicator {
+            color: var(--success);
+          }
+
+          .status-text {
+            color: var(--text-primary);
+            font-weight: 600;
+          }
+        }
+      }
+    }
+
     .progress-bar-container {
       height: 8px;
       background-color: var(--border-soft);

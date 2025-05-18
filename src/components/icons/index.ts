@@ -27,11 +27,13 @@ export const search = 'Search'
 export const trash = 'Trash'
 export const warning = 'Warning'
 export const wine = 'Wine'
+export const diamond = 'Diamond'
 
 // Brand icons
 export const discord = 'Discord'
 export const github = 'GitHub'
 export const linux = 'Linux'
+export const proton = 'Proton'
 export const steam = 'Steam'
 export const windows = 'Windows'
 
@@ -54,11 +56,13 @@ export const IconNames = {
   Trash: trash,
   Warning: warning,
   Wine: wine,
+  Diamond: diamond,
   
   // Brand icons
   Discord: discord,
   GitHub: github,
   Linux: linux,
+  Proton: proton,
   Steam: steam,
   Windows: windows,
 } as const

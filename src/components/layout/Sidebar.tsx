@@ -1,4 +1,4 @@
-import { Icon, layers, linux, wine } from '@/components/icons'
+import { Icon, layers, linux, proton } from '@/components/icons'
 
 interface SidebarProps {
   setFilter: (filter: string) => void
@@ -22,7 +22,7 @@ const Sidebar = ({ setFilter, currentFilter }: SidebarProps) => {
   const filters: FilterItem[] = [
     { id: 'all', label: 'All Games', icon: layers, variant: 'bold' },
     { id: 'native', label: 'Native', icon: linux, variant: 'brand' },
-    { id: 'proton', label: 'Proton Required', icon: wine, variant: 'bold' }
+    { id: 'proton', label: 'Proton Required', icon: proton, variant: 'brand' }
   ]
   
   return (

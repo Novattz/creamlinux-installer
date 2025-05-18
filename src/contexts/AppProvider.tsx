@@ -107,15 +107,25 @@ export const AppProvider = ({ children }: AppProviderProps) => {
   
   // DLC confirmation wrapper
   const handleDlcConfirm = (selectedDlcs: DlcInfo[]) => {
-    closeDlcDialog()
     const { gameId, isEditMode } = dlcDialog
+    
+    // MODIFIED: Create a deep copy to ensure we don't have reference issues
+    const dlcsCopy = selectedDlcs.map(dlc => ({...dlc}))
+    
+    // Log detailed info before closing dialog
+    console.log(`Saving ${dlcsCopy.filter(d => d.enabled).length} enabled and ${
+      dlcsCopy.length - dlcsCopy.filter(d => d.enabled).length
+    } disabled DLCs`)
+    
+    // Close dialog FIRST to avoid UI state issues
+    closeDlcDialog()
     
     // Update game state to show it's installing
     setGames(prevGames =>
       prevGames.map(g => g.id === gameId ? { ...g, installing: true } : g)
     )
     
-    executeDlcConfirm(selectedDlcs, gameId, isEditMode, games)
+    executeDlcConfirm(dlcsCopy, gameId, isEditMode, games)
       .then(() => {
         success(isEditMode 
           ? "DLC configuration updated successfully" 

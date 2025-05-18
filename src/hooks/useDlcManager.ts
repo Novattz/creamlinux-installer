@@ -25,6 +25,7 @@ export function useDlcManager() {
   const [isFetchingDlcs, setIsFetchingDlcs] = useState(false)
   const dlcFetchController = useRef<AbortController | null>(null)
   const activeDlcFetchId = useRef<string | null>(null)
+  const [forceReload, setForceReload] = useState(false) // Add this state to force reloads
 
   // DLC selection dialog state
   const [dlcDialog, setDlcDialog] = useState<DlcDialogState>({
@@ -155,7 +156,7 @@ export function useDlcManager() {
     }
   }
 
-  // Handle game edit (show DLC management dialog)
+  // MODIFIED: Handle game edit (show DLC management dialog) with proper reloading
   const handleGameEdit = async (gameId: string, games: Game[]) => {
     const game = games.find((g) => g.id === gameId)
     if (!game || !game.cream_installed) return
@@ -172,7 +173,7 @@ export function useDlcManager() {
         visible: true,
         gameId,
         gameTitle: game.title,
-        dlcs: [],
+        dlcs: [], // Always start with empty DLCs to force a fresh load
         enabledDlcs: [],
         isLoading: true,
         isEditMode: true, // This is an edit operation
@@ -182,23 +183,33 @@ export function useDlcManager() {
         error: null,
       })
 
-      // Try to read all DLCs from the configuration file first (including disabled ones)
+      // MODIFIED: Always get a fresh copy from the config file
+      console.log('Loading DLC configuration from disk...')
       try {
         const allDlcs = await invoke<DlcInfo[]>('get_all_dlcs_command', {
           gamePath: game.path,
-        }).catch(() => [] as DlcInfo[])
+        }).catch((e) => {
+          console.error('Error loading DLCs:', e)
+          return [] as DlcInfo[]
+        })
 
         if (allDlcs.length > 0) {
-          // If we have DLCs from the config file, use them
+          // Log the fresh DLC config
           console.log('Loaded existing DLC configuration:', allDlcs)
+          
+          // IMPORTANT: Create a completely new array to avoid reference issues
+          const freshDlcs = allDlcs.map(dlc => ({...dlc}))
 
           setDlcDialog((prev) => ({
             ...prev,
-            dlcs: allDlcs,
+            dlcs: freshDlcs,
             isLoading: false,
             progress: 100,
             progressMessage: 'Loaded existing DLC configuration',
           }))
+          
+          // Reset force reload flag
+          setForceReload(false)
           return
         }
       } catch (error) {
@@ -245,7 +256,7 @@ export function useDlcManager() {
     }
   }
 
-  // Handle DLC selection dialog close
+  // MODIFIED: Handle DLC selection dialog close
   const handleDlcDialogClose = () => {
     // Cancel any in-progress DLC fetching
     if (isFetchingDlcs && activeDlcFetchId.current) {
@@ -267,8 +278,15 @@ export function useDlcManager() {
       dlcFetchController.current = null
     }
 
-    // Close dialog
-    setDlcDialog((prev) => ({ ...prev, visible: false }))
+    // Close dialog and reset state
+    setDlcDialog((prev) => ({ 
+      ...prev, 
+      visible: false,
+      dlcs: [], // Clear DLCs to force a reload next time
+    }))
+    
+    // Set flag to force reload next time
+    setForceReload(true)
   }
 
   // Update DLCs being streamed with enabled state
@@ -291,5 +309,6 @@ export function useDlcManager() {
     streamGameDlcs,
     handleGameEdit,
     handleDlcDialogClose,
+    forceReload,
   }
 }

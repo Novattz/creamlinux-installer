@@ -77,6 +77,11 @@
     transform: translateY(0);
   }
 
+  &.closing {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
   // Type-specific styling
   &.toast-success {
     border-color: var(--success);

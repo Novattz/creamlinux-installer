@@ -148,10 +148,12 @@ export function useGameActions() {
     // Find the game
     const game = games.find((g) => g.id === gameId)
     if (!game) return
-
+  
     try {
       if (isEditMode) {
-        // If in edit mode, we're updating existing cream_api.ini
+        // MODIFIED: Create a deep copy to ensure we don't have reference issues
+        const dlcsCopy = selectedDlcs.map(dlc => ({...dlc}));
+        
         // Show progress dialog for editing
         setProgressDialog({
           visible: true,
@@ -161,13 +163,15 @@ export function useGameActions() {
           showInstructions: false,
           instructions: undefined,
         })
-
+      
+        console.log('Saving DLC configuration:', dlcsCopy)
+        
         // Call the backend to update the DLC configuration
         await invoke('update_dlc_configuration_command', {
           gamePath: game.path,
-          dlcs: selectedDlcs,
+          dlcs: dlcsCopy,
         })
-
+      
         // Update progress dialog for completion
         setProgressDialog((prev) => ({
           ...prev,
@@ -175,7 +179,7 @@ export function useGameActions() {
           message: 'DLC configuration updated successfully!',
           progress: 100,
         }))
-
+      
         // Hide dialog after a delay
         setTimeout(() => {
           setProgressDialog((prev) => ({ ...prev, visible: false }))
@@ -191,7 +195,7 @@ export function useGameActions() {
           showInstructions: false,
           instructions: undefined,
         })
-
+      
         // Invoke the installation with the selected DLCs
         await invoke('install_cream_with_dlcs_command', {
           gameId,
@@ -202,14 +206,14 @@ export function useGameActions() {
       }
     } catch (error) {
       console.error('Error processing DLC selection:', error)
-
+    
       // Show error in progress dialog
       setProgressDialog((prev) => ({
         ...prev,
         message: `Error: ${error}`,
         progress: 100,
       }))
-
+    
       // Hide dialog after a delay
       setTimeout(() => {
         setProgressDialog((prev) => ({ ...prev, visible: false }))

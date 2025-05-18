@@ -117,8 +117,10 @@ const DlcSelectionDialog = ({
 
   // Submit selected DLCs to parent component
   const handleConfirm = useCallback(() => {
-    onConfirm(selectedDlcs)
-  }, [onConfirm, selectedDlcs])
+    // Create a deep copy to prevent reference issues
+    const dlcsCopy = JSON.parse(JSON.stringify(selectedDlcs));
+    onConfirm(dlcsCopy);
+  }, [onConfirm, selectedDlcs]);
 
   // Count selected DLCs
   const selectedCount = selectedDlcs.filter((dlc) => dlc.enabled).length
