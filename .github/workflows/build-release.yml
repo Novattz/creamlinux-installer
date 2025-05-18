@@ -3,6 +3,8 @@ name: 'Build and Release CreamLinux'
 on:
   push:
     branches: ['main']
+    tags:
+      - 'v*' # Run on any tag that starts with 'v', e.g., v0.1.0
   pull_request:
     branches: ['main']
 
@@ -15,7 +17,38 @@ env:
   TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
 
 jobs:
+  semantic-release:
+    runs-on: ubuntu-latest
+    # Skip if this is already a tag push
+    if: github.event_name == 'push' && !startsWith(github.ref, 'refs/tags/')
+    outputs:
+      new_release_published: ${{ steps.semantic.outputs.new_release_published }}
+      new_release_version: ${{ steps.semantic.outputs.new_release_version }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Required for semantic-release
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run semantic-release
+        id: semantic
+        run: npx semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   build-and-release:
+    needs: [semantic-release]
+    # Only run if a new release was published or if this is a tag push
+    if: needs.semantic-release.outputs.new_release_published == 'true' || startsWith(github.ref, 'refs/tags/')
     strategy:
       fail-fast: false
       matrix:
@@ -26,12 +59,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Required for semantic-release
-
-      - name: Set up semantic-release environment
-        run: |
-          echo "GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}" >> $GITHUB_ENV
-          # More environment setup for release if needed
+          fetch-depth: 0
+          # If this is a tag push, we need to check out that specific tag
+          ref: ${{ startsWith(github.ref, 'refs/tags/') && github.ref || github.event.repository.default_branch }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -71,16 +101,14 @@ jobs:
         run: |
           # Windows typically doesn't need additional dependencies
 
+      # Install glob for the updater script
+      - name: Install glob for updater
+        if: matrix.platform == 'ubuntu-latest'
+        run: npm install -g glob
+
       # Sync package version
       - name: Sync Version
         run: npm run sync-version
-
-      # Run semantic-release only on the ubuntu runner to avoid conflicts
-      - name: Semantic Release
-        if: matrix.platform == 'ubuntu-latest' && github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: npx semantic-release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # Build the app with updater artifacts
       - name: Build the app
@@ -119,21 +147,73 @@ jobs:
             src-tauri/target/release/bundle/nsis/*.exe
             src-tauri/target/release/bundle/nsis/*.exe.sig
 
-      # Generate updater JSON file (run only on ubuntu)
-      - name: Generate updater JSON
-        if: matrix.platform == 'ubuntu-latest' && github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: |
-          node scripts/generate-updater-json.js
+  create-github-release:
+    needs: [semantic-release, build-and-release]
+    runs-on: ubuntu-latest
+    # Only run if we have a tag (either from semantic-release or a manual tag push)
+    if: needs.semantic-release.outputs.new_release_published == 'true' || startsWith(github.ref, 'refs/tags/')
 
-      # Create GitHub release with all artifacts
-      - name: Create Release
-        uses: softprops/action-gh-release@v1
-        if: matrix.platform == 'ubuntu-latest' && github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          files: |
-            latest.json
-            src-tauri/target/release/bundle/**/*.{AppImage,AppImage.sig,deb,dmg,app.tar.gz,app.tar.gz.sig,msi,msi.sig,exe,exe.sig}
-          draft: false
-          prerelease: false
-          token: ${{ secrets.GITHUB_TOKEN }}
+          node-version: 20
+
+      - name: Install glob
+        run: npm install -g glob
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      # Flatten the artifacts structure
+      - name: Prepare artifacts for release
+        run: |
+          mkdir -p release_assets
+          find artifacts -type f -name "*.deb" -o -name "*.AppImage" -o -name "*.AppImage.sig" -o -name "*.dmg" -o -name "*.app.tar.gz" -o -name "*.app.tar.gz.sig" -o -name "*.msi" -o -name "*.msi.sig" -o -name "*.exe" -o -name "*.exe.sig" | xargs -I{} cp {} release_assets/
+
+      # Generate updater JSON
+      - name: Generate updater JSON
+        run: |
+          npm install glob
+          # Get version from refs/tags/v1.0.0 format
+          VERSION="${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || needs.semantic-release.outputs.new_release_version }}"
+          VERSION="${VERSION#v}" # Remove 'v' prefix if it exists
+          echo "Release version: $VERSION"
+
+          # Create a simple updater JSON
+          cat > release_assets/latest.json << EOF
+          {
+            "version": "$VERSION",
+            "notes": "Release version $VERSION",
+            "pub_date": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
+            "platforms": {
+              "windows-x86_64": {
+                "url": "https://github.com/${{ github.repository }}/releases/download/v$VERSION/creamlinux_$VERSION_x64_en-US.msi",
+                "signature": "$(cat artifacts/creamlinux-windows/msi/*.msi.sig 2>/dev/null || echo '')"
+              },
+              "linux-x86_64": {
+                "url": "https://github.com/${{ github.repository }}/releases/download/v$VERSION/Creamlinux_${VERSION}_amd64.AppImage",
+                "signature": "$(cat artifacts/creamlinux-linux/appimage/*.AppImage.sig 2>/dev/null || echo '')"
+              },
+              "darwin-universal": {
+                "url": "https://github.com/${{ github.repository }}/releases/download/v$VERSION/creamlinux.app.tar.gz",
+                "signature": "$(cat artifacts/creamlinux-macos/macos/*.app.tar.gz.sig 2>/dev/null || echo '')"
+              }
+            }
+          }
+          EOF
+
+          cat release_assets/latest.json
+
+      # Create GitHub release
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: release_assets/*
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || format('v{0}', needs.semantic-release.outputs.new_release_version) }}
           generate_release_notes: true
+          token: ${{ secrets.GITHUB_TOKEN }}

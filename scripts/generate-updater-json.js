@@ -16,7 +16,7 @@ console.log(`Current version: ${version}`)
 const pubDate = new Date().toISOString()
 
 // Base URL where the assets will be available
-const baseUrl = 'https://github.com/tickbase/creamlinux/releases/download'
+const baseUrl = 'https://github.com/novattz/rust-gui-dev/releases/download'
 const releaseTag = `v${version}`
 const releaseUrl = `${baseUrl}/${releaseTag}`
 

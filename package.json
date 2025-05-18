@@ -42,6 +42,7 @@
     "eslint": "^9.22.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.19",
+    "glob": "^11.0.2",
     "globals": "^16.0.0",
     "sass-embedded": "^1.86.3",
     "semantic-release": "^24.2.4",
