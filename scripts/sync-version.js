@@ -1,9 +1,15 @@
 import fs from 'node:fs'
 import path from 'node:path'
+import { execSync } from 'node:child_process'
+import { fileURLToPath } from 'node:url'
+
+// Recreate __dirname
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 // Read current version from package.json
 const packageJsonPath = path.join(__dirname, '..', 'package.json')
-const packageJson = require(packageJsonPath)
+const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'))
 const version = packageJson.version
 
 console.log(`Current version: ${version}`)
