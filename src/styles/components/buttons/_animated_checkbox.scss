@@ -1,0 +1,95 @@
+@use '../../themes/index' as *;
+@use '../../abstracts/index' as *;
+
+/* 
+  Animated checkbox component styles
+*/
+.animated-checkbox {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  width: 100%;
+  position: relative;
+
+  &:hover .checkbox-custom {
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+}
+
+.checkbox-original {
+  position: absolute;
+  opacity: 0;
+  height: 0;
+  width: 0;
+}
+
+.checkbox-custom {
+  width: 22px;
+  height: 22px;
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 2px solid var(--border-soft, #323232);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s var(--easing-bounce);
+  margin-right: 15px;
+  flex-shrink: 0;
+  position: relative;
+
+  &.checked {
+    background-color: var(--primary-color, #ffc896);
+    border-color: var(--primary-color, #ffc896);
+    box-shadow: 0 0 10px rgba(255, 200, 150, 0.2);
+  }
+
+  .checkbox-icon {
+    color: var(--text-heavy);
+    opacity: 0;
+    transform: scale(0);
+    transition: all 0.3s var(--easing-bounce);
+  }
+
+  &.checked .checkbox-icon {
+    opacity: 1;
+    transform: scale(1);
+    animation: checkbox-pop 0.3s var(--easing-bounce) forwards;
+  }
+}
+
+.checkbox-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0; // Ensures text-overflow works properly
+}
+
+.checkbox-label {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.checkbox-sublabel {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+// Animation for the checkbox
+@keyframes checkbox-pop {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}

@@ -1,0 +1,151 @@
+@use '../../themes/index' as *;
+@use '../../abstracts/index' as *;
+
+/* 
+  Initial loading screen styles
+*/
+.initial-loading-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--primary-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-modal) + 1;
+
+  .loading-content {
+    text-align: center;
+    padding: 2rem;
+    max-width: 500px;
+    width: 90%;
+
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 2rem;
+      font-weight: var(--bold);
+      color: var(--primary-color);
+      text-shadow: 0 2px 10px rgba(var(--primary-color), 0.4);
+    }
+
+    .loading-animation {
+      margin-bottom: 2rem;
+    }
+
+    .loading-circles {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+
+      .circle {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        animation: bounce 1.4s infinite ease-in-out both;
+
+        &.circle-1 {
+          background-color: var(--primary-color);
+          animation-delay: -0.32s;
+        }
+
+        &.circle-2 {
+          background-color: var(--cream-color);
+          animation-delay: -0.16s;
+        }
+
+        &.circle-3 {
+          background-color: var(--smoke-color);
+        }
+      }
+    }
+
+    .loading-message {
+      font-size: 1.1rem;
+      color: var(--text-secondary);
+      margin-bottom: 1.5rem;
+      min-height: 3rem;
+    }
+
+    .loading-status-log {
+      margin: 1rem 0;
+      text-align: left;
+      max-height: 100px;
+      overflow-y: auto;
+      background-color: rgba(0, 0, 0, 0.2);
+      border-radius: var(--radius-sm);
+      padding: 0.5rem;
+
+      .status-line {
+        margin: 0.5rem 0;
+        display: flex;
+        align-items: center;
+
+        .status-indicator {
+          color: var(--primary-color);
+          margin-right: 0.5rem;
+          font-size: 1.2rem;
+        }
+
+        .status-text {
+          color: var(--text-secondary);
+          font-size: 0.9rem;
+        }
+
+        &:last-child {
+          .status-indicator {
+            color: var(--success);
+          }
+
+          .status-text {
+            color: var(--text-primary);
+            font-weight: 600;
+          }
+        }
+      }
+    }
+
+    .progress-bar-container {
+      height: 8px;
+      background-color: var(--border-soft);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 0.5rem;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background-color: var(--primary-color);
+      border-radius: 4px;
+      transition: width 0.5s ease;
+      background: linear-gradient(
+        to right,
+        var(--cream-color),
+        var(--primary-color),
+        var(--smoke-color)
+      );
+      box-shadow: 0px 0px 10px rgba(255, 200, 150, 0.4);
+    }
+
+    .progress-percentage {
+      text-align: right;
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      margin-bottom: 1rem;
+    }
+  }
+}
+
+// Animation for the bouncing circles
+@keyframes bounce {
+  0%,
+  80%,
+  100% {
+    transform: scale(0);
+  }
+  40% {
+    transform: scale(1);
+  }
+}

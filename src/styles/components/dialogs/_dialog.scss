@@ -1,0 +1,137 @@
+@use '../../themes/index' as *;
+@use '../../abstracts/index' as *;
+
+/* 
+  Base dialog styles
+  Used for all dialog components
+*/
+
+// Dialog overlay
+.dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--modal-backdrop);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-modal);
+  opacity: 0;
+  cursor: pointer;
+  transition: opacity 0.2s ease-out;
+
+  &.visible {
+    opacity: 1;
+  }
+}
+
+// Dialog container
+.dialog {
+  background-color: var(--elevated-bg);
+  border-radius: var(--radius-md);
+  box-shadow: 0px 10px 25px rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--border-soft);
+  opacity: 0;
+  transform: scale(0.95);
+  transition: transform 0.2s var(--easing-bounce), opacity 0.2s ease-out;
+  cursor: default;
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+  overflow: hidden;
+
+  &.dialog-visible {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  // Sizing variants
+  &.dialog-small {
+    width: 450px;
+    max-width: 90vw;
+  }
+
+  &.dialog-medium {
+    width: 550px;
+    max-width: 90vw;
+  }
+
+  &.dialog-large {
+    width: 700px;
+    max-width: 90vw;
+  }
+}
+
+// Dialog header
+.dialog-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--border-soft);
+  position: relative;
+
+  h3 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+  }
+
+  // Close button
+  .dialog-close-button {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: 32px;
+    height: 32px;
+    background: var(--border-soft);
+    border-radius: 50%;
+    color: var(--text-primary);
+    font-size: 1.5rem;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: var(--border);
+      transform: rotate(90deg);
+    }
+  }
+}
+
+// Dialog body
+.dialog-body {
+  padding: 1rem 1.5rem;
+  overflow-y: auto;
+  flex: 1;
+  @include custom-scrollbar;
+
+  p {
+    margin-bottom: 1rem;
+  }
+}
+
+// Dialog footer
+.dialog-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--border-soft);
+}
+
+// Dialog actions
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+
+  &.justify-start {
+    justify-content: flex-start;
+  }
+
+  &.justify-center {
+    justify-content: center;
+  }
+}

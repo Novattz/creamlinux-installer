@@ -1,0 +1,210 @@
+@use '../../themes/index' as *;
+@use '../../abstracts/index' as *;
+
+/* 
+  Game card styles
+  For game items displayed in the grid
+*/
+.game-item-card {
+  position: relative;
+  height: var(--card-height);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  will-change: opacity, transform;
+  box-shadow: var(--shadow-standard);
+  transition: all var(--duration-normal) var(--easing-ease-out);
+  transform-origin: center;
+
+  // Simple image loading animation
+  opacity: 0;
+  animation: fadeIn 0.5s forwards;
+}
+
+// Hover effects for the card
+.game-item-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: var(--shadow-hover);
+  z-index: 5;
+
+  .status-badge.native {
+    box-shadow: 0 0 10px rgba(85, 224, 122, 0.5);
+  }
+
+  .status-badge.proton {
+    box-shadow: 0 0 10px rgba(255, 201, 150, 0.5);
+  }
+
+  .status-badge.cream {
+    box-shadow: 0 0 10px rgba(128, 181, 255, 0.5);
+  }
+
+  .status-badge.smoke {
+    box-shadow: 0 0 10px rgba(255, 239, 150, 0.5);
+  }
+}
+
+// Special styling for cards with different statuses
+.game-item-card:has(.status-badge.cream) {
+  box-shadow: var(--shadow-standard), 0 0 15px rgba(128, 181, 255, 0.15);
+}
+
+.game-item-card:has(.status-badge.smoke) {
+  box-shadow: var(--shadow-standard), 0 0 15px rgba(255, 239, 150, 0.15);
+}
+
+// Game item overlay
+.game-item-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.5) 0%,
+    rgba(0, 0, 0, 0.6) 50%,
+    rgba(0, 0, 0, 0.8) 100%
+  );
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 1rem;
+  box-sizing: border-box;
+  font-weight: var(--bold);
+  font-family: var(--family);
+  -webkit-font-smoothing: subpixel-antialiased;
+  text-rendering: geometricPrecision;
+  color: var(--text-heavy);
+  z-index: 1;
+}
+
+// Game badges
+.game-badges {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+  position: relative;
+  z-index: 2;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: var(--bold);
+  font-family: var(--family);
+  -webkit-font-smoothing: subpixel-antialiased;
+  text-rendering: geometricPrecision;
+  color: var(--text-heavy);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+  transition: all var(--duration-normal) var(--easing-ease-out);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.status-badge.native {
+  background-color: var(--native);
+  color: var(--text-heavy);
+}
+.status-badge.proton {
+  background-color: var(--proton);
+  color: var(--text-heavy);
+}
+
+.status-badge.cream {
+  background-color: var(--cream);
+  color: var(--text-heavy);
+}
+
+.status-badge.smoke {
+  background-color: var(--smoke);
+  color: var(--text-heavy);
+}
+
+// Game title
+.game-title {
+  padding: 0;
+  position: relative;
+}
+
+.game-title h3 {
+  color: var(--text-primary);
+  font-size: 1.6rem;
+  font-weight: var(--bold);
+  margin: 0;
+  -webkit-font-smoothing: subpixel-antialiased;
+  text-rendering: geometricPrecision;
+  transform: translateZ(0);
+  will-change: opacity, transform;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// Game actions
+.game-actions {
+  display: flex;
+  gap: 0.5rem;
+  position: relative;
+  z-index: 3;
+}
+
+// API not found message
+.api-not-found-message {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: rgba(255, 100, 100, 0.2);
+  border: 1px solid rgba(255, 100, 100, 0.3);
+  border-radius: var(--radius-sm);
+  padding: 0.4rem 0.8rem;
+  width: 100%;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+
+  span {
+    flex: 1;
+  }
+
+  .rescan-button {
+    background-color: var(--warning);
+    color: var(--text-heavy);
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 0.2rem 0.6rem;
+    font-size: 0.75rem;
+    font-weight: var(--bold);
+    margin-left: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background-color: var(--warning-light);
+      transform: translateY(-2px);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+  }
+}
+
+// Apply staggered delay to cards
+@for $i from 1 through 12 {
+  .game-grid .game-item-card:nth-child(#{$i}) {
+    animation-delay: #{$i * 0.05}s;
+  }
+}
+
+// Simple animations
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

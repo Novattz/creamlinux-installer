@@ -1,0 +1,106 @@
+@use '../../themes/index' as *;
+@use '../../abstracts/index' as *;
+
+/* 
+  Action button styles
+  Used specifically for game installation/uninstallation 
+*/
+.action-button {
+  flex: 1;
+  padding: 0.5rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-weight: var(--bold);
+  -webkit-font-smoothing: subpixel-antialiased;
+  text-rendering: geometricPrecision;
+  color: var(--text-heavy);
+  min-width: 0;
+  white-space: nowrap;
+  transition: all var(--duration-normal) var(--easing-ease-out);
+
+  &.install {
+    background-color: var(--success);
+
+    &:hover {
+      background-color: var(--success-light);
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0px 0px 12px rgba(140, 200, 147, 0.3);
+    }
+  }
+
+  &.uninstall {
+    background-color: var(--danger);
+
+    &:hover {
+      background-color: var(--danger-light);
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0px 0px 12px rgba(217, 107, 107, 0.3);
+    }
+  }
+
+  &:active {
+    transform: scale(0.97);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+  }
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    background-color: var(--disabled);
+    transform: none;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    position: relative;
+    overflow: hidden;
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 50%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+      animation: button-loading 1.5s infinite;
+    }
+  }
+}
+
+// Edit button appearing on game cards
+.edit-button {
+  padding: 0 0.7rem;
+  background-color: rgba(255, 255, 255, 0.2);
+  font-weight: var(--bold);
+  -webkit-font-smoothing: subpixel-antialiased;
+  text-rendering: geometricPrecision;
+  color: var(--text-primary);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  letter-spacing: 1px;
+  transition: all var(--duration-normal) var(--easing-ease-out);
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 7px 15px rgba(0, 0, 0, 0.3);
+  }
+
+  &:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+}
+
+// Animation for loading state
+@keyframes button-loading {
+  to {
+    left: 100%;
+  }
+}

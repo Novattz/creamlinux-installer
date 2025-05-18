@@ -1,0 +1,62 @@
+/* 
+  Variables for consistent styling
+*/
+
+:root {
+  // Animation durations
+  --duration-fast: 100ms;
+  --duration-normal: 200ms;
+  --duration-slow: 300ms;
+
+  // Animation easings
+  --easing-ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --easing-ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --easing-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --easing-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  // Layout values
+  --header-height: 64px;
+  --sidebar-width: 250px;
+  --card-height: 200px;
+
+  // Border radius
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  // Font weights
+  --thin: 100;
+  --extralight: 200;
+  --light: 300;
+  --normal: 400;
+  --medium: 500;
+  --semibold: 600;
+  --bold: 700;
+  --extrabold: 800;
+
+  --family: 'Satoshi';
+
+  // Shadows
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -4px rgba(0, 0, 0, 0.3);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+  --shadow-inner: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+  --shadow-standard: 0 10px 25px rgba(0, 0, 0, 0.5);
+  --shadow-hover: 0 15px 30px rgba(0, 0, 0, 0.7);
+
+  // Z-index levels
+  --z-bg: 0;
+  --z-elevate: 1;
+  --z-header: 100;
+  --z-modal: 1000;
+  --z-tooltip: 1500;
+}
+
+// Color variables for SCSS usage
+$success-color: #55e07a;
+$danger-color: #ff5252;
+$primary-color: #4a76c4;
+$cream-color: #9b7dff;
+$smoke-color: #fbb13c;
+$warning-color: #fbb13c;

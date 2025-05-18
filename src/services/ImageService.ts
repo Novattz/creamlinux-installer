@@ -2,16 +2,16 @@
  * Game image sources from Steam's CDN
  */
 export const SteamImageType = {
-  HEADER: 'header', // 460x215
-  CAPSULE: 'capsule_616x353', // 616x353
-  LOGO: 'logo', // Game logo with transparency
-  LIBRARY_HERO: 'library_hero', // 1920x620
+  HEADER: 'header',                 // 460x215
+  CAPSULE: 'capsule_616x353',       // 616x353
+  LOGO: 'logo',                     // Game logo with transparency
+  LIBRARY_HERO: 'library_hero',     // 1920x620
   LIBRARY_CAPSULE: 'library_600x900', // 600x900
 } as const
 
 export type SteamImageTypeKey = keyof typeof SteamImageType
 
-// Cache for images to prevent flickering
+// Cache for images to prevent flickering during re-renders
 const imageCache: Map<string, string> = new Map()
 
 /**
@@ -23,7 +23,7 @@ const imageCache: Map<string, string> = new Map()
 export const getSteamImageUrl = (
   appId: string,
   type: (typeof SteamImageType)[SteamImageTypeKey]
-) => {
+): string => {
   return `https://cdn.cloudflare.steamstatic.com/steam/apps/${appId}/${type}.jpg`
 }
 
@@ -68,11 +68,16 @@ export const findBestGameImage = async (appId: string): Promise<string | null> =
   }
 
   // Try these image types in order of preference
-  const typesToTry = [SteamImageType.HEADER, SteamImageType.CAPSULE, SteamImageType.LIBRARY_CAPSULE]
+  const typesToTry = [
+    SteamImageType.HEADER, 
+    SteamImageType.CAPSULE, 
+    SteamImageType.LIBRARY_CAPSULE
+  ]
 
   for (const type of typesToTry) {
     const url = getSteamImageUrl(appId, type)
     const exists = await checkImageExists(url)
+    
     if (exists) {
       try {
         // Preload the image to prevent flickering
@@ -88,6 +93,6 @@ export const findBestGameImage = async (appId: string): Promise<string | null> =
     }
   }
 
-  // If we've reached here, no valid image was found
+  // If no valid image was found
   return null
 }

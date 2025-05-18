@@ -1,0 +1,150 @@
+@use '../../themes/index' as *;
+@use '../../abstracts/index' as *;
+
+/* 
+  Game list styles
+  For game list container and grid
+*/
+.game-list {
+  padding: 1.5rem;
+  flex: 1;
+  overflow-y: auto;
+  height: 100%;
+  width: 100%;
+  @include custom-scrollbar;
+  position: relative;
+
+  h2 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    color: var(--text-primary);
+    letter-spacing: 0.5px;
+    position: relative;
+    display: inline-block;
+    padding-bottom: 0.5rem;
+
+    &:after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: linear-gradient(90deg, var(--primary-color), transparent);
+      border-radius: 3px;
+    }
+  }
+}
+
+// Game grid
+.game-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 2rem;
+  width: 100%;
+  padding: 0.5rem 0.5rem 2rem 0.5rem;
+  scroll-behavior: smooth;
+  align-items: stretch;
+  opacity: 0;
+  transform: translateY(10px);
+  animation: fadeIn 0.5s forwards;
+}
+
+// Loading and empty state
+.loading-indicator,
+.no-games-message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 250px;
+  width: 100%;
+  font-size: 1.2rem;
+  color: var(--text-secondary);
+  text-align: center;
+  border-radius: var(--radius-lg);
+  background-color: rgba(255, 255, 255, 0.03);
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(5px);
+}
+
+.loading-indicator {
+  position: relative;
+  overflow: hidden;
+
+  &:after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+    animation: loading-shimmer 2s infinite;
+  }
+}
+
+// Responsive adjustments
+@include media-sm {
+  .game-grid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  }
+}
+
+@include media-lg {
+  .game-grid {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  }
+}
+
+@include media-xl {
+  .game-grid {
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  }
+}
+
+// Scroll to top button
+.scroll-top-button {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(
+    135deg,
+    var(--primary-color),
+    color-mix(in srgb, black 10%, var(--primary-color))
+  );
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all var(--duration-normal) var(--easing-ease-out);
+  z-index: var(--z-header);
+
+  &.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(var(--primary-color), 0.4);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+// Loading shimmer animation
+@keyframes loading-shimmer {
+  to {
+    left: 100%;
+  }
+}

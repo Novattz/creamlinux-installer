@@ -8,16 +8,20 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "optimize-svg": "node scripts/optimize-svg.js"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.5.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "sass": "^1.89.0"
+    "sass": "^1.89.0",
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.22.0",
+    "@svgr/core": "^8.1.0",
+    "@svgr/webpack": "^8.1.0",
     "@tauri-apps/cli": "^2.5.0",
     "@types/node": "^20.10.0",
     "@types/react": "^19.0.10",
@@ -30,6 +34,7 @@
     "sass-embedded": "^1.86.3",
     "typescript": "~5.7.2",
     "typescript-eslint": "^8.26.1",
-    "vite": "^6.3.1"
+    "vite": "^6.3.1",
+    "vite-plugin-svgr": "^4.3.0"
   }
 }

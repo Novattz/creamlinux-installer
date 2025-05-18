@@ -1,19 +1,33 @@
-// Import variables and mixins first
-@use './variables' as *;
-@use './mixins' as *;
-@use './fonts' as *;
+/* 
+  Main SCSS entry point
+  Import all partials in the correct order
+*/
 
-// Reset
-@use './reset';
+/* Basic variables and mixins */
+@use 'abstracts/index' as *;
 
-// Layout
-@use './layout';
+@use 'themes/index' as *;
 
-// Components
-@use './components/gamecard';
-@use './components/dialog';
-@use './components/background';
-@use './components/sidebar';
-@use './components/dlc_dialog';
-@use './components/loading_screen';
-@use './components/animated_checkbox';
+/* Layout components */
+@use 'components/layout/index' as *;
+
+/* Game components */
+@use 'components/games/index' as *;
+
+/* Button components */
+@use 'components/buttons/index' as *;
+
+/* Dialog components */
+@use 'components/dialogs/index' as *;
+
+/* Notification components */
+@use 'components/notifications/index' as *;
+
+/* Icon components */
+@use 'components/icons/index' as *;
+
+/* Common components */
+@use 'components/common/index' as *;
+
+/* Page-specific styles */
+//@use 'pages/home';

@@ -1,0 +1,195 @@
+@use '../../themes/index' as *;
+@use '../../abstracts/index' as *;
+
+/* 
+  DLC Selection Dialog styles
+  For managing game DLCs
+*/
+
+// DLC dialog search bar
+.dlc-dialog-search {
+  padding: 0.75rem 1.5rem;
+  background-color: rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid var(--border-soft);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.dlc-search-input {
+  flex: 1;
+  background-color: var(--border-dark);
+  border: 1px solid var(--border-soft);
+  border-radius: 4px;
+  color: var(--text-primary);
+  padding: 0.6rem 1rem;
+  font-size: 0.9rem;
+  transition: all var(--duration-normal) var(--easing-ease-out);
+
+  &:focus {
+    border-color: var(--primary-color);
+    outline: none;
+    box-shadow: 0px 0px 6px rgba(245, 150, 130, 0.2);
+  }
+
+  &::placeholder {
+    color: var(--text-muted);
+  }
+}
+
+// Select all container
+.select-all-container {
+  display: flex;
+  align-items: center;
+  min-width: 100px;
+
+  .animated-checkbox {
+    margin-left: auto;
+  }
+
+  .checkbox-label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+  }
+}
+
+// Loading progress indicator
+.dlc-loading-progress {
+  padding: 0.75rem 1.5rem;
+  background-color: rgba(0, 0, 0, 0.05);
+  border-bottom: 1px solid var(--border-soft);
+
+  .loading-details {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+
+    .time-left {
+      color: var(--text-muted);
+    }
+  }
+}
+
+// DLC list container
+.dlc-list-container {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 200px;
+  @include custom-scrollbar;
+  padding: 0;
+}
+
+.dlc-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+// DLC item
+.dlc-item {
+  padding: 0.75rem 1.5rem;
+  border-bottom: 1px solid var(--border-soft);
+  transition: all var(--duration-normal) var(--easing-ease-out);
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.03);
+  }
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &.dlc-item-loading {
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .loading-pulse {
+      width: 70%;
+      height: 20px;
+      background: linear-gradient(
+        90deg,
+        var(--border-soft) 0%,
+        var(--border) 50%,
+        var(--border-soft) 100%
+      );
+      background-size: 200% 100%;
+      border-radius: 4px;
+      animation: loading-pulse 1.5s infinite;
+    }
+  }
+}
+
+// DLC loading state
+.dlc-loading {
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 1rem;
+
+  .loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(255, 255, 255, 0.1);
+    border-top-color: var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+
+  p {
+    color: var(--text-secondary);
+  }
+}
+
+.no-dlcs-message {
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+}
+
+// Game information in DLC dialog
+.dlc-game-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.5rem;
+
+  .game-title {
+    font-weight: 500;
+    color: var(--text-secondary);
+  }
+
+  .dlc-count {
+    font-size: 0.9rem;
+    padding: 0.3rem 0.6rem;
+    background-color: var(--info-soft);
+    color: var(--info);
+    border-radius: 4px;
+  }
+}
+
+// Loading animations
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes loading-pulse {
+  0% {
+    background-position: 200% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}

@@ -1,0 +1,151 @@
+/* 
+  Layout styles
+  Main layout structure for the application
+*/
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--primary-bg);
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: radial-gradient(
+        circle at 20% 30%,
+        rgba(var(--primary-color), 0.05) 0%,
+        transparent 70%
+      ),
+      radial-gradient(circle at 80% 70%, rgba(var(--cream-color), 0.05) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: var(--z-bg);
+  }
+}
+
+// Main content area
+.main-content {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  width: 100%;
+  position: relative;
+  z-index: var(--z-elevate);
+}
+
+// Error message container
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  margin: 2rem auto;
+  max-width: 600px;
+  border-radius: var(--radius-lg);
+  background-color: rgba(var(--danger), 0.05);
+  border: 1px solid rgb(var(--danger), 0.2);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(5px);
+  text-align: center;
+
+  h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  details {
+    margin: 1rem 0;
+    width: 100%;
+
+    summary {
+      cursor: pointer;
+      color: var(--text-secondary);
+      margin-bottom: 0.5rem;
+    }
+
+    p {
+      padding: 1rem;
+      background-color: rgba(0, 0, 0, 0.2);
+      border-radius: var(--radius-sm);
+      color: var(--text-secondary);
+      font-family: monospace;
+      overflow-x: auto;
+      white-space: pre-wrap;
+    }
+  }
+
+  button {
+    background-color: var(--primary-color);
+    color: var(--text-heavy);
+    border: none;
+    padding: 0.7rem 1.5rem;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    transition: all var(--duration-normal) var(--easing-ease-out);
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 14px rgba(var(--primary-color), 0.4);
+    }
+  }
+}
+
+// Error message styling in the game list
+.error-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  margin: 2rem auto;
+  max-width: 600px;
+  border-radius: var(--radius-lg);
+  background-color: rgba(var(--danger), 0.05);
+  border: 1px solid rgb(var(--danger), 0.2);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(5px);
+  text-align: center;
+
+  h3 {
+    color: var(--danger);
+    font-weight: 700;
+    margin-bottom: 1rem;
+  }
+
+  p {
+    margin-bottom: 1.5rem;
+    color: var(--text-secondary);
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  button {
+    background-color: var(--primary-color);
+    color: var(--text-primary);
+    border: none;
+    padding: 0.7rem 1.5rem;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    transition: all var(--duration-normal) var(--easing-ease-out);
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 14px rgba(var(--primary-color), 0.4);
+    }
+  }
+}

@@ -1,0 +1,170 @@
+@use '../../themes/index' as *;
+@use '../../abstracts/index' as *;
+
+/* 
+  Loading indicator component styles
+*/
+.loading-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+
+  // Size variations
+  &.loading-small {
+    .loading-spinner {
+      width: 20px;
+      height: 20px;
+      border-width: 2px;
+    }
+
+    .loading-dots {
+      .dot {
+        width: 8px;
+        height: 8px;
+      }
+    }
+
+    .loading-message {
+      font-size: 0.8rem;
+      margin-top: 0.5rem;
+    }
+
+    .progress-bar-container {
+      height: 6px;
+      width: 100px;
+    }
+  }
+
+  &.loading-medium {
+    .loading-spinner {
+      width: 30px;
+      height: 30px;
+      border-width: 3px;
+    }
+
+    .loading-dots {
+      .dot {
+        width: 10px;
+        height: 10px;
+      }
+    }
+
+    .loading-message {
+      font-size: 0.9rem;
+      margin-top: 0.75rem;
+    }
+
+    .progress-bar-container {
+      height: 8px;
+      width: 200px;
+    }
+  }
+
+  &.loading-large {
+    .loading-spinner {
+      width: 50px;
+      height: 50px;
+      border-width: 4px;
+    }
+
+    .loading-dots {
+      .dot {
+        width: 14px;
+        height: 14px;
+      }
+    }
+
+    .loading-message {
+      font-size: 1.1rem;
+      margin-top: 1rem;
+    }
+
+    .progress-bar-container {
+      height: 10px;
+      width: 300px;
+    }
+  }
+}
+
+// Spinner styles
+.loading-spinner {
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-top-color: var(--primary-color);
+  animation: spin 1s linear infinite;
+}
+
+// Loading dots animation
+.loading-dots {
+  display: flex;
+  gap: 0.4rem;
+
+  .dot {
+    background-color: var(--primary-color);
+    border-radius: 50%;
+    animation: bounce 1.4s infinite ease-in-out both;
+
+    &.dot-1 {
+      animation-delay: -0.32s;
+    }
+
+    &.dot-2 {
+      animation-delay: -0.16s;
+    }
+  }
+}
+
+// Progress bar styles
+.loading-progress {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.progress-bar-container {
+  background-color: var(--border-soft);
+  border-radius: 4px;
+  overflow: hidden;
+  width: 100%;
+  margin-bottom: 0.5rem;
+}
+
+.progress-bar {
+  height: 100%;
+  background-color: var(--primary-color);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.progress-percentage {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.loading-message {
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+// Animations
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes bounce {
+  0%,
+  80%,
+  100% {
+    transform: scale(0);
+  }
+  40% {
+    transform: scale(1);
+  }
+}

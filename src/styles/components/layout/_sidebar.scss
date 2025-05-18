@@ -1,0 +1,88 @@
+@use '../../themes/index' as *;
+@use '../../abstracts/index' as *;
+
+/* 
+  Sidebar component styles
+*/
+.sidebar {
+  width: var(--sidebar-width);
+  min-width: var(--sidebar-width);
+  background-color: var(--secondary-bg);
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: inset -5px 0 15px rgba(0, 0, 0, 0.2);
+  padding: 1.5rem 1rem;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow-y: auto;
+  z-index: var(--z-elevate) + 1;
+  @include custom-scrollbar;
+}
+
+.sidebar-header {
+  margin-bottom: 1.5rem;
+
+  h2 {
+    color: var(--text-primary);
+    font-size: 1.1rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    opacity: 0.9;
+  }
+}
+
+.filter-list {
+  list-style: none;
+  margin-bottom: 1.5rem;
+
+  li {
+    transition: all var(--duration-normal) var(--easing-ease-out);
+    border-radius: var(--radius-sm);
+    padding: 0.7rem 1rem;
+    margin-bottom: 0.3rem;
+    font-weight: 500;
+    cursor: pointer;
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.07);
+    }
+
+    &.active {
+      background: linear-gradient(
+        135deg,
+        var(--primary-color),
+        color-mix(in srgb, black 10%, var(--primary-color))
+      );
+      box-shadow: 0 4px 10px rgba(var(--primary-color), 0.3);
+      color: var(--elevated-bg);
+
+      .filter-icon {
+        color: var(--elevated-bg);
+      }
+    }
+  }
+}
+
+.filter-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+
+  .filter-icon {
+    flex-shrink: 0;
+  }
+}
+
+// App logo styles
+.app-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  svg {
+    width: 28px;
+    height: 28px;
+    fill: var(--text-primary);
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+  }
+}
