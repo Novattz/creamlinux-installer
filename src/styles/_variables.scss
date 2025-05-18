@@ -1,54 +1,8 @@
-@use './fonts' as *;
+/* 
+  Variables for consistent styling
+*/
 
-// Color palette
 :root {
-  // Primary colors
-  --primary-color: #ffc896;
-  --secondary-color: #ffb278;
-
-  // Background
-  --primary-bg: #0f0f0f;
-  --secondary-bg: #151515;
-  --tertiary-bg: #121212;
-  --elevated-bg: #1a1a1a;
-  --disabled: #5e5e5e;
-
-  // Text
-  --text-primary: #f0f0f0;
-  --text-secondary: #c8c8c8;
-  --text-soft: #afafaf;
-  --text-heavy: #1a1a1a;
-  --text-muted: #4b4b4b;
-
-  // Borders
-  --border-dark: #1a1a1a;
-  --border-soft: #282828;
-  --border: #323232;
-
-  // Status colors
-  --success: #8cc893;
-  --warning: #ffc896;
-  --danger: #d96b6b;
-  --info: #80b4ff;
-
-  --success-light: #b0e0a9;
-  --warning-light: #ffdcb9;
-  --danger-light: #e69691;
-  --info-light: #a8d2ff;
-
-  --success-soft: rgba(176, 224, 169, 0.15);
-  --warning-soft: rgba(247, 200, 111, 0.15);
-  --danger-soft: rgba(230, 150, 145, 0.15);
-  --info-soft: rgba(168, 210, 255, 0.15);
-
-  // Feature colors
-  --native: #8cc893;
-  --proton: #ffc896;
-  --cream: #80b4ff;
-  --smoke: #fff096;
-
-  --modal-backdrop: rgba(30, 30, 30, 0.95);
-
   // Animation durations
   --duration-fast: 100ms;
   --duration-normal: 200ms;
@@ -99,6 +53,7 @@
   --z-tooltip: 1500;
 }
 
+// Color variables for SCSS usage
 $success-color: #55e07a;
 $danger-color: #ff5252;
 $primary-color: #4a76c4;

@@ -1,0 +1,27 @@
+/* 
+  Home page specific styles
+*/
+
+// Currently empty since most styles are component-based
+// Will be used for any specific home page layouts or adjustments
+
+.home-page {
+  // Page-specific styles can be added here
+}
+
+// Page-specific media queries
+@include media-sm {
+  // Small screen adjustments
+}
+
+@include media-md {
+  // Medium screen adjustments
+}
+
+@include media-lg {
+  // Large screen adjustments
+}
+
+@include media-xl {
+  // Extra large screen adjustments
+}

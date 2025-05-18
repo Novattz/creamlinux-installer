@@ -1,0 +1,114 @@
+/* 
+  Progress dialog styles
+  For installation/uninstallation progress display
+*/
+
+// Progress bar
+.progress-bar-container {
+  height: 8px;
+  background-color: var(--border-soft);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.progress-bar {
+  height: 100%;
+  background-color: var(--primary-color);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+  background: var(--primary-color);
+  box-shadow: 0px 0px 6px rgba(245, 150, 130, 0.3);
+}
+
+.progress-percentage {
+  text-align: right;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+}
+
+// Instruction container
+.instruction-container {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-soft);
+
+  h4 {
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+  }
+}
+
+.instruction-text {
+  line-height: 1.6;
+  margin-bottom: 1rem;
+  color: var(--text-secondary);
+}
+
+.dlc-count {
+  display: inline-block;
+  margin-bottom: 0.75rem;
+  padding: 0.4rem 0.8rem;
+  background-color: var(--info-soft);
+  color: var(--info);
+  border-radius: 4px;
+  font-size: 0.8rem;
+
+  &::before {
+    content: '';
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--info);
+    margin-right: 8px;
+  }
+}
+
+// Command box
+.command-box {
+  background-color: var(--border-dark);
+  border: 1px solid var(--border-soft);
+  border-radius: 4px;
+  padding: 1rem;
+  margin-bottom: 1.2rem;
+  font-family: monospace;
+  position: relative;
+  overflow: hidden;
+
+  &.command-box-smoke {
+    font-size: 0.9rem;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    white-space: pre-wrap;
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+// Selectable text
+.selectable-text {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  user-select: text;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  cursor: text;
+  margin: 0;
+  color: var(--text-primary);
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+// Animation for progress bar
+@keyframes progress-shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}

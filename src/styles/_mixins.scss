@@ -1,4 +1,6 @@
-@use './variables' as *;
+/* 
+  Mixins for reusable style patterns
+*/
 
 // Basic flex helpers
 @mixin flex-center {
@@ -83,7 +85,7 @@
 @mixin card {
   background-color: var(--secondary-bg);
   border-radius: var(--radius-sm);
-  @include shadow;
+  @include shadow-standard;
   overflow: hidden;
   position: relative;
 }

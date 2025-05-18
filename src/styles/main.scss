@@ -1,19 +1,45 @@
-// Import variables and mixins first
+/* 
+  Main SCSS entry point
+  Import all partials in the correct order
+*/
+
+/* Basic variables and mixins */
 @use './variables' as *;
 @use './mixins' as *;
 @use './fonts' as *;
 
-// Reset
+/* Reset & global styles */
 @use './reset';
-
-// Layout
 @use './layout';
 
-// Components
-@use './components/gamecard';
-@use './components/dialog';
-@use './components/background';
-@use './components/sidebar';
-@use './components/dlc_dialog';
-@use './components/loading_screen';
-@use './components/animated_checkbox';
+/* Layout components */
+@use 'components/layout/header';
+@use 'components/layout/sidebar';
+@use 'components/layout/background';
+@use 'components/layout/loading_screen';
+
+/* Game components */
+@use 'components/games/gamecard';
+@use 'components/games/gamelist';
+
+/* Button components */
+@use 'components/buttons/button';
+@use 'components/buttons/action_button';
+@use 'components/buttons/animated_checkbox';
+
+/* Dialog components */
+@use 'components/dialogs/dialog';
+@use 'components/dialogs/progress_dialog';
+@use 'components/dialogs/dlc_dialog';
+
+/* Notification components */
+@use 'components/notifications/toast';
+
+/* Common components */
+@use 'components/common/loading';
+
+/* Page-specific styles */
+//@use 'pages/home';
+
+/* Theme */
+@use 'themes/dark';
