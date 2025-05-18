@@ -1,7 +1,7 @@
 {
   "name": "creamlinux",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.2",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -14,7 +14,7 @@
     "generate-updater": "node scripts/generate-updater-json.js",
     "update-tauri-config": "node scripts/update-tauri-config.js",
     "update-api-changelog": "node scripts/api-changelog.js",
-    "prepare-release": "npm run sync-version && npm run update-api-changelog && npm run update-tauri-config",
+    "prepare-release": "node scripts/prepare-release.js",
     "release": "semantic-release",
     "install-updater": "npm install --save @tauri-apps/plugin-updater @tauri-apps/plugin-process"
   },
