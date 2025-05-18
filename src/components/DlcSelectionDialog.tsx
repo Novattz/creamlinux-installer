@@ -31,13 +31,10 @@ const DlcSelectionDialog: React.FC<DlcSelectionDialogProps> = ({
   estimatedTimeLeft = '',
 }) => {
   const [selectedDlcs, setSelectedDlcs] = useState<DlcInfo[]>([])
-  // Use a simple string for animation state - keep it simple
-  const [animationState, setAnimationState] = useState('closed')
+  const [showContent, setShowContent] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectAll, setSelectAll] = useState(true)
   const [initialized, setInitialized] = useState(false)
-  // Track previous visibility to detect changes
-  const [prevVisible, setPrevVisible] = useState(false)
 
   // Initialize selected DLCs when DLC list changes
   useEffect(() => {
@@ -53,33 +50,19 @@ const DlcSelectionDialog: React.FC<DlcSelectionDialogProps> = ({
     }
   }, [visible, dlcs, initialized])
 
-  // Handle animations on visibility changes
+  // Handle visibility changes
   useEffect(() => {
-    // Only respond to actual changes in visibility
-    if (visible !== prevVisible) {
-      if (visible) {
-        // Show animation
-        setAnimationState('visible')
-      } else {
-        // Hide animation - but only if we're currently visible
-        if (animationState === 'visible') {
-          setAnimationState('hiding')
-          // After animation completes, set to closed
-          const timer = setTimeout(() => {
-            setAnimationState('closed')
-            // Also reset initialization when fully closed
-            if (!visible) {
-              setInitialized(false)
-            }
-          }, 200) // Match animation duration
-          
-          return () => clearTimeout(timer)
-        }
-      }
-      // Update previous visibility
-      setPrevVisible(visible)
+    if (visible) {
+      // Show content immediately for better UX
+      const timer = setTimeout(() => {
+        setShowContent(true)
+      }, 50)
+      return () => clearTimeout(timer)
+    } else {
+      setShowContent(false)
+      setInitialized(false) // Reset initialized state when dialog closes
     }
-  }, [visible, prevVisible, animationState])
+  }, [visible])
 
   // Memoize filtered DLCs to avoid unnecessary recalculations
   const filteredDlcs = useMemo(() => {
@@ -132,11 +115,10 @@ const DlcSelectionDialog: React.FC<DlcSelectionDialogProps> = ({
   }
 
   const handleConfirm = () => {
-    // Just call onConfirm directly
     onConfirm(selectedDlcs)
   }
 
-  // Handle overlay click
+  // Modified to prevent closing when loading
   const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
     // Prevent clicks from propagating through the overlay
     e.stopPropagation()
@@ -145,11 +127,6 @@ const DlcSelectionDialog: React.FC<DlcSelectionDialogProps> = ({
     if (e.target === e.currentTarget && !isLoading) {
       onClose()
     }
-  }
-
-  // Handle the close button click
-  const handleClose = () => {
-    onClose()
   }
 
   // Count selected DLCs
@@ -165,19 +142,14 @@ const DlcSelectionDialog: React.FC<DlcSelectionDialogProps> = ({
     return ''
   }
 
-  // Don't render anything if we're in closed state
-  if (animationState === 'closed') return null
-
-  // Generate appropriate classes based on animation state
-  const dialogClasses = `dlc-dialog-overlay ${animationState === 'hiding' ? 'exiting' : 'visible'}`
-  const contentClasses = `dlc-selection-dialog dialog-${animationState === 'hiding' ? 'exiting' : 'visible'}`
+  if (!visible) return null
 
   return (
     <div
-      className={dialogClasses}
+      className={`dlc-dialog-overlay ${showContent ? 'visible' : ''}`}
       onClick={handleOverlayClick}
     >
-      <div className={contentClasses}>
+      <div className={`dlc-selection-dialog ${showContent ? 'dialog-visible' : ''}`}>
         <div className="dlc-dialog-header">
           <h3>{isEditMode ? 'Edit DLCs' : 'Select DLCs to Enable'}</h3>
           <div className="dlc-game-info">
@@ -250,7 +222,7 @@ const DlcSelectionDialog: React.FC<DlcSelectionDialogProps> = ({
         <div className="dlc-dialog-actions">
           <button
             className="cancel-button"
-            onClick={handleClose}
+            onClick={onClose}
             disabled={isLoading && loadingProgress < 10} // Briefly disable to prevent accidental closing at start
           >
             Cancel

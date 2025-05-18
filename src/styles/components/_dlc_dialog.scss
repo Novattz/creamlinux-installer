@@ -13,18 +13,10 @@
   z-index: var(--z-modal);
   opacity: 0;
   cursor: pointer;
-  pointer-events: auto; // Ensure clicks work
 
-  // When visible, fade in
   &.visible {
     opacity: 1;
-    animation: modal-appear 0.2s ease-out forwards;
-  }
-
-  // When exiting, fade out
-  &.exiting {
-    animation: modal-disappear 0.2s ease-out forwards;
-    pointer-events: none; // Prevent clicks during exit animation
+    animation: modal-appear 0.2s ease-out;
   }
 }
 
@@ -42,18 +34,12 @@
   opacity: 0;
   transform: scale(0.95);
 
-  // When visible, show the dialog
   &.dialog-visible {
-    opacity: 1;
     transform: scale(1);
-    transition: transform 0.2s var(--easing-bounce), opacity 0.2s ease-out;
-  }
-
-  // When exiting, hide the dialog
-  &.dialog-exiting {
-    opacity: 0;
-    transform: scale(0.95);
-    transition: transform 0.2s ease-in, opacity 0.2s ease-in;
+    opacity: 1;
+    transition:
+      transform 0.2s var(--easing-bounce),
+      opacity 0.2s ease-out;
   }
 }
 

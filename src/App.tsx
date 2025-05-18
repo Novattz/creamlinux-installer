@@ -126,7 +126,7 @@ function App() {
         // Listen for progress updates from the backend
         const unlistenProgress = await listen('installation-progress', (event) => {
           console.log('Received installation-progress event:', event)
-        
+
           const { title, message, progress, complete, show_instructions, instructions } =
             event.payload as {
               title: string
@@ -136,30 +136,32 @@ function App() {
               show_instructions?: boolean
               instructions?: InstructionInfo
             }
-        
-          // Always update progress dialog
-          setProgressDialog({
-            visible: true, // Always set to visible - our ProgressDialog component handles exit animation
-            title,
-            message,
-            progress,
-            showInstructions: show_instructions || false,
-            instructions,
-          })
-          
-          // If complete and no instructions, we need to schedule a game list refresh
-          // The dialog will auto-close with animation, but we still need to refresh the games
+
           if (complete && !show_instructions) {
-            // Schedule a refresh for after the dialog closes
-            if (!refreshInProgress.current) {
-              refreshInProgress.current = true
-              // Wait for dialog animation + close delay (about 1.2s total)
-              setTimeout(() => {
-                loadGames().then(() => {
-                  refreshInProgress.current = false
-                })
-              }, 1300)
-            }
+            // Hide dialog when complete if no instructions
+            setTimeout(() => {
+              setProgressDialog((prev) => ({ ...prev, visible: false }))
+
+              // Only refresh games list if dialog is closing without instructions
+              if (!refreshInProgress.current) {
+                refreshInProgress.current = true
+                setTimeout(() => {
+                  loadGames().then(() => {
+                    refreshInProgress.current = false
+                  })
+                }, 100)
+              }
+            }, 1000)
+          } else {
+            // Update progress dialog
+            setProgressDialog({
+              visible: true,
+              title,
+              message,
+              progress,
+              showInstructions: show_instructions || false,
+              instructions,
+            })
           }
         })
 
@@ -377,9 +379,9 @@ function App() {
   }, [])
 
   const handleCloseProgressDialog = () => {
-    // Set dialog to not visible - animation is handled by the component
+    // Just hide the dialog without refreshing game list
     setProgressDialog((prev) => ({ ...prev, visible: false }))
-  
+
     // Only refresh if we need to (instructions didn't trigger update)
     if (progressDialog.showInstructions === false && !refreshInProgress.current) {
       refreshInProgress.current = true
@@ -648,42 +650,41 @@ function App() {
     // Cancel any in-progress DLC fetching
     if (isFetchingDlcs && activeDlcFetchId.current) {
       console.log(`Aborting DLC fetch for game ${activeDlcFetchId.current}`)
-  
+
       // This will signal to the Rust backend that we want to stop the process
       invoke('abort_dlc_fetch', { gameId: activeDlcFetchId.current }).catch((err) =>
         console.error('Error aborting DLC fetch:', err)
       )
-  
+
       // Reset state
       activeDlcFetchId.current = null
       setIsFetchingDlcs(false)
     }
-  
+
     // Clear controller
     if (dlcFetchController.current) {
       dlcFetchController.current.abort()
       dlcFetchController.current = null
     }
-  
-    // Close dialog - animation is handled in DlcSelectionDialog
+
+    // Close dialog
     setDlcDialog((prev) => ({ ...prev, visible: false }))
   }
 
   // Handle DLC selection confirmation
   const handleDlcConfirm = async (selectedDlcs: DlcInfo[]) => {
-    // The dialog has already started its exit animation
-    // Just make sure it's marked as invisible
+    // Close the dialog first
     setDlcDialog((prev) => ({ ...prev, visible: false }))
-  
+
     const gameId = dlcDialog.gameId
     const game = games.find((g) => g.id === gameId)
     if (!game) return
-  
+
     // Update local state to show installation in progress
     setGames((prevGames) =>
       prevGames.map((g) => (g.id === gameId ? { ...g, installing: true } : g))
     )
-  
+
     try {
       if (dlcDialog.isEditMode) {
         // If in edit mode, we're updating existing cream_api.ini
@@ -696,13 +697,13 @@ function App() {
           showInstructions: false,
           instructions: undefined,
         })
-  
+
         // Call the backend to update the DLC configuration
         await invoke('update_dlc_configuration_command', {
           gamePath: game.path,
           dlcs: selectedDlcs,
         })
-  
+
         // Update progress dialog for completion
         setProgressDialog((prev) => ({
           ...prev,
@@ -710,12 +711,10 @@ function App() {
           message: 'DLC configuration updated successfully!',
           progress: 100,
         }))
-  
-        // The ProgressDialog component will now handle the exit animation
-        // when progress reaches 100% after a delay
-        
-        // But we still need to reset installing state with a delay
+
+        // Hide dialog after a delay
         setTimeout(() => {
+          setProgressDialog((prev) => ({ ...prev, visible: false }))
           // Reset installing state
           setGames((prevGames) =>
             prevGames.map((g) => (g.id === gameId ? { ...g, installing: false } : g))
@@ -732,7 +731,7 @@ function App() {
           showInstructions: false,
           instructions: undefined,
         })
-  
+
         // Invoke the installation with the selected DLCs
         await invoke('install_cream_with_dlcs_command', {
           gameId,
@@ -741,26 +740,29 @@ function App() {
           console.error(`Error installing CreamLinux with selected DLCs:`, err)
           throw err
         })
-  
+
         // We don't need to manually close the dialog or update the game state
         // because the backend will emit progress events that handle this
       }
     } catch (error) {
       console.error('Error processing DLC selection:', error)
-  
+
       // Show error in progress dialog
       setProgressDialog((prev) => ({
         ...prev,
         message: `Error: ${error}`,
         progress: 100,
       }))
-  
+
       // Reset installing state
       setGames((prevGames) =>
         prevGames.map((g) => (g.id === gameId ? { ...g, installing: false } : g))
       )
-  
-      // ProgressDialog will handle exit animation automatically
+
+      // Hide dialog after a delay
+      setTimeout(() => {
+        setProgressDialog((prev) => ({ ...prev, visible: false }))
+      }, 3000)
     }
   }
 
