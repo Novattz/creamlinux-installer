@@ -1,4 +1,5 @@
 import { useAppContext } from '@/contexts/useAppContext'
+import { UpdateChecker } from '@/components/updater'
 import { useAppLogic } from '@/hooks'
 import './styles/main.scss'
 
@@ -104,6 +105,7 @@ function App() {
           onClose={handleDlcDialogClose}
           onConfirm={handleDlcConfirm}
         />
+        <UpdateChecker />
       </div>
     </ErrorBoundary>
   )
