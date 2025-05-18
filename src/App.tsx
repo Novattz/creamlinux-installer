@@ -381,21 +381,15 @@ function App() {
     setProgressDialog((prev) => ({ ...prev, visible: false }))
   
     // Only refresh if we need to (instructions didn't trigger update)
-    if (
-      progressDialog.showInstructions === false && 
-      !progressDialog.title.includes("DLC") && 
-      !progressDialog.title.includes("Updating") &&
-      !progressDialog.title.includes("Update") &&
-      !refreshInProgress.current
-    ) {
-      refreshInProgress.current = true;
+    if (progressDialog.showInstructions === false && !refreshInProgress.current) {
+      refreshInProgress.current = true
       setTimeout(() => {
         loadGames().then(() => {
-          refreshInProgress.current = false;
-        });
-      }, 100);
+          refreshInProgress.current = false
+        })
+      }, 100)
     }
-  };
+  }
 
   // Function to fetch DLCs for a game with streaming updates
   const streamGameDlcs = async (gameId: string): Promise<void> => {
@@ -678,20 +672,22 @@ function App() {
   // Handle DLC selection confirmation
   const handleDlcConfirm = async (selectedDlcs: DlcInfo[]) => {
     // The dialog has already started its exit animation
-    setDlcDialog((prev) => ({ ...prev, visible: false }));
-    
-    const gameId = dlcDialog.gameId;
-    const game = games.find((g) => g.id === gameId);
-    if (!game) return;
-    
+    // Just make sure it's marked as invisible
+    setDlcDialog((prev) => ({ ...prev, visible: false }))
+  
+    const gameId = dlcDialog.gameId
+    const game = games.find((g) => g.id === gameId)
+    if (!game) return
+  
     // Update local state to show installation in progress
     setGames((prevGames) =>
       prevGames.map((g) => (g.id === gameId ? { ...g, installing: true } : g))
-    );
-    
+    )
+  
     try {
       if (dlcDialog.isEditMode) {
         // If in edit mode, we're updating existing cream_api.ini
+        // Show progress dialog for editing
         setProgressDialog({
           visible: true,
           title: `Updating DLCs for ${game.title}`,
@@ -699,36 +695,35 @@ function App() {
           progress: 30,
           showInstructions: false,
           instructions: undefined,
-        });
-        
+        })
+  
         // Call the backend to update the DLC configuration
         await invoke('update_dlc_configuration_command', {
           gamePath: game.path,
           dlcs: selectedDlcs,
-        });
-        
+        })
+  
         // Update progress dialog for completion
         setProgressDialog((prev) => ({
           ...prev,
           title: `Update Complete: ${game.title}`,
           message: 'DLC configuration updated successfully!',
           progress: 100,
-        }));
+        }))
+  
+        // The ProgressDialog component will now handle the exit animation
+        // when progress reaches 100% after a delay
         
-        // Most importantly: directly update the local state instead of waiting for a full scan
-        // This is what prevents the need for a full scan
+        // But we still need to reset installing state with a delay
         setTimeout(() => {
-          // Reset installing state and update the game in the local state
+          // Reset installing state
           setGames((prevGames) =>
-            prevGames.map((g) => (g.id === gameId ? { 
-              ...g, 
-              installing: false,
-              // No other properties should need updating for a DLC config change
-            } : g))
-          );
-        }, 2000);
+            prevGames.map((g) => (g.id === gameId ? { ...g, installing: false } : g))
+          )
+        }, 2000)
       } else {
-        // We're doing a fresh install with selected DLCs - original code unchanged
+        // We're doing a fresh install with selected DLCs
+        // Show progress dialog for installation right away
         setProgressDialog({
           visible: true,
           title: `Installing CreamLinux for ${game.title}`,
@@ -736,32 +731,38 @@ function App() {
           progress: 0,
           showInstructions: false,
           instructions: undefined,
-        });
-        
+        })
+  
+        // Invoke the installation with the selected DLCs
         await invoke('install_cream_with_dlcs_command', {
           gameId,
           selectedDlcs,
         }).catch((err) => {
-          console.error(`Error installing CreamLinux with selected DLCs:`, err);
-          throw err;
-        });
+          console.error(`Error installing CreamLinux with selected DLCs:`, err)
+          throw err
+        })
+  
+        // We don't need to manually close the dialog or update the game state
+        // because the backend will emit progress events that handle this
       }
     } catch (error) {
-      console.error('Error processing DLC selection:', error);
-      
+      console.error('Error processing DLC selection:', error)
+  
       // Show error in progress dialog
       setProgressDialog((prev) => ({
         ...prev,
         message: `Error: ${error}`,
         progress: 100,
-      }));
-      
+      }))
+  
       // Reset installing state
       setGames((prevGames) =>
         prevGames.map((g) => (g.id === gameId ? { ...g, installing: false } : g))
-      );
+      )
+  
+      // ProgressDialog will handle exit animation automatically
     }
-  };
+  }
 
   // Update DLCs being streamed with enabled state
   useEffect(() => {
