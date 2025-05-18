@@ -51,6 +51,7 @@
         color-mix(in srgb, black 10%, var(--primary-color))
       );
       box-shadow: 0 4px 10px rgba(var(--primary-color), 0.3);
+      color: var(--elevated-bg);
     }
   }
 }
