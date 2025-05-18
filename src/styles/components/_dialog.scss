@@ -1,6 +1,29 @@
 @use '../variables' as *;
 @use '../mixins' as *;
 
+// Shared keyframes for both enter and exit animations
+@keyframes modal-appear {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes modal-disappear {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+
 // Progress Dialog
 .progress-dialog-overlay {
   position: fixed;
@@ -13,22 +36,19 @@
   @include flex-center;
   z-index: var(--z-modal);
   opacity: 0;
-  animation: modal-appear 0.2s ease-out;
   cursor: pointer;
+  pointer-events: auto; // Ensure clicks work
 
+  // When visible, fade in
   &.visible {
     opacity: 1;
+    animation: modal-appear 0.2s ease-out forwards;
   }
 
-  @keyframes modal-appear {
-    0% {
-      opacity: 0;
-      transform: scale(0.95);
-    }
-    100% {
-      opacity: 1;
-      transform: scale(1);
-    }
+  // When exiting, fade out
+  &.exiting {
+    animation: modal-disappear 0.2s ease-out forwards;
+    pointer-events: none; // Prevent clicks during exit animation
   }
 }
 
@@ -36,31 +56,30 @@
   background-color: var(--elevated-bg);
   border-radius: 8px;
   padding: 1.5rem;
-  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.3); // shadow-glow
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.3);
   width: 450px;
   max-width: 90vw;
   border: 1px solid var(--border-soft);
   opacity: 0;
+  transform: scale(0.95);
   cursor: default;
 
+  // When visible, show the dialog
   &.dialog-visible {
-    transform: scale(1);
     opacity: 1;
+    transform: scale(1);
+    transition: transform 0.2s var(--easing-bounce), opacity 0.2s ease-out;
+  }
+
+  // When exiting, hide the dialog
+  &.dialog-exiting {
+    opacity: 0;
+    transform: scale(0.95);
+    transition: transform 0.2s ease-in, opacity 0.2s ease-in;
   }
 
   &.with-instructions {
     width: 500px;
-  }
-
-  h3 {
-    font-weight: 700;
-    margin-bottom: 1rem;
-    color: var(--text-primary);
-  }
-
-  p {
-    margin-bottom: 1rem;
-    color: var(--text-secondary);
   }
 }
 

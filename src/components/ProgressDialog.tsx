@@ -27,24 +27,56 @@ const ProgressDialog: React.FC<ProgressDialogProps> = ({
   onClose,
 }) => {
   const [copySuccess, setCopySuccess] = useState(false)
-  const [showContent, setShowContent] = useState(false)
-
-  // Reset copy state when dialog visibility changes
+  // Use a simple string for animation state - keep it simple
+  const [animationState, setAnimationState] = useState('closed')
+  // Track previous visibility to detect changes
+  const [prevVisible, setPrevVisible] = useState(false)
+  
+  // Handle animations on visibility changes
   useEffect(() => {
-    if (!visible) {
-      setCopySuccess(false)
-      setShowContent(false)
-    } else {
-      // Add a small delay to trigger the entrance animation
+    // Only respond to actual changes in visibility
+    if (visible !== prevVisible) {
+      if (visible) {
+        // Show animation
+        setAnimationState('visible')
+      } else {
+        // Hide animation - but only if we're currently visible
+        if (animationState === 'visible') {
+          setAnimationState('hiding')
+          // After animation completes, set to closed
+          const timer = setTimeout(() => {
+            setAnimationState('closed')
+          }, 200) // Match animation duration
+          
+          return () => clearTimeout(timer)
+        }
+      }
+      // Update previous visibility
+      setPrevVisible(visible)
+    }
+  }, [visible, prevVisible, animationState])
+  
+  // Auto-close on progress completion
+  useEffect(() => {
+    // Only auto-close if showing and progress reaches 100% and not showing instructions
+    if (visible && progress >= 100 && !showInstructions && animationState === 'visible') {
+      // Wait a moment before closing
       const timer = setTimeout(() => {
-        setShowContent(true)
-      }, 50)
+        // Only proceed if we're still in visible state
+        if (animationState === 'visible' && onClose) {
+          onClose() // Call the onClose function directly
+        }
+      }, 1000) // Wait 1 second after completion
+      
       return () => clearTimeout(timer)
     }
-  }, [visible])
-
-  if (!visible) return null
-
+  }, [progress, showInstructions, animationState, visible, onClose])
+  
+  // Don't render if state is closed
+  if (animationState === 'closed') {
+    return null
+  }
+  
   const handleCopyCommand = () => {
     if (instructions?.command) {
       navigator.clipboard.writeText(instructions.command)
@@ -58,13 +90,10 @@ const ProgressDialog: React.FC<ProgressDialogProps> = ({
   }
 
   const handleClose = () => {
-    setShowContent(false)
-    // Delay closing to allow exit animation
-    setTimeout(() => {
-      if (onClose) {
-        onClose()
-      }
-    }, 300)
+    // If we can close, just call onClose directly
+    if (onClose) {
+      onClose()
+    }
   }
 
   // Prevent closing when in progress
@@ -146,13 +175,17 @@ const ProgressDialog: React.FC<ProgressDialogProps> = ({
   // Determine if close button should be enabled
   const isCloseButtonEnabled = showInstructions || progress >= 100
 
+  // Generate appropriate classes based on animation state
+  const dialogClasses = `progress-dialog-overlay ${animationState === 'hiding' ? 'exiting' : 'visible'}`
+  const contentClasses = `progress-dialog ${showInstructions ? 'with-instructions' : ''} dialog-${animationState === 'hiding' ? 'exiting' : 'visible'}`
+
   return (
     <div
-      className={`progress-dialog-overlay ${showContent ? 'visible' : ''}`}
+      className={dialogClasses}
       onClick={handleOverlayClick}
     >
       <div
-        className={`progress-dialog ${showInstructions ? 'with-instructions' : ''} ${showContent ? 'dialog-visible' : ''}`}
+        className={contentClasses}
       >
         <h3>{title}</h3>
         <p>{message}</p>
