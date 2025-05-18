@@ -2,191 +2,132 @@
 @use '../../mixins' as *;
 
 /* 
-  DLC Selection Dialog styles
-  For managing game DLCs
+  Base dialog styles
+  Used for all dialog components
 */
 
-// DLC dialog search bar
-.dlc-dialog-search {
-  padding: 0.75rem 1.5rem;
-  background-color: rgba(0, 0, 0, 0.1);
-  border-bottom: 1px solid var(--border-soft);
+// Dialog overlay
+.dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--modal-backdrop);
+  backdrop-filter: blur(5px);
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  gap: 1rem;
+  justify-content: center;
+  z-index: var(--z-modal);
+  opacity: 0;
+  cursor: pointer;
+  transition: opacity 0.2s ease-out;
+
+  &.visible {
+    opacity: 1;
+  }
 }
 
-.dlc-search-input {
-  flex: 1;
-  background-color: var(--border-dark);
+// Dialog container
+.dialog {
+  background-color: var(--elevated-bg);
+  border-radius: var(--radius-md);
+  box-shadow: 0px 10px 25px rgba(0, 0, 0, 0.4);
   border: 1px solid var(--border-soft);
-  border-radius: 4px;
-  color: var(--text-primary);
-  padding: 0.6rem 1rem;
-  font-size: 0.9rem;
-  transition: all var(--duration-normal) var(--easing-ease-out);
-
-  &:focus {
-    border-color: var(--primary-color);
-    outline: none;
-    box-shadow: 0px 0px 6px rgba(245, 150, 130, 0.2);
-  }
-
-  &::placeholder {
-    color: var(--text-muted);
-  }
-}
-
-// Select all container
-.select-all-container {
+  opacity: 0;
+  transform: scale(0.95);
+  transition: transform 0.2s var(--easing-bounce), opacity 0.2s ease-out;
+  cursor: default;
   display: flex;
-  align-items: center;
-  min-width: 100px;
+  flex-direction: column;
+  max-height: 90vh;
+  overflow: hidden;
 
-  .animated-checkbox {
-    margin-left: auto;
+  &.dialog-visible {
+    transform: scale(1);
+    opacity: 1;
   }
 
-  .checkbox-label {
-    font-size: 0.9rem;
-    color: var(--text-secondary);
+  // Sizing variants
+  &.dialog-small {
+    width: 450px;
+    max-width: 90vw;
+  }
+
+  &.dialog-medium {
+    width: 550px;
+    max-width: 90vw;
+  }
+
+  &.dialog-large {
+    width: 700px;
+    max-width: 90vw;
   }
 }
 
-// Loading progress indicator
-.dlc-loading-progress {
-  padding: 0.75rem 1.5rem;
-  background-color: rgba(0, 0, 0, 0.05);
+// Dialog header
+.dialog-header {
+  padding: 1.5rem;
   border-bottom: 1px solid var(--border-soft);
+  position: relative;
 
-  .loading-details {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.8rem;
-    color: var(--text-secondary);
-
-    .time-left {
-      color: var(--text-muted);
-    }
-  }
-}
-
-// DLC list container
-.dlc-list-container {
-  flex: 1;
-  overflow-y: auto;
-  min-height: 200px;
-  @include custom-scrollbar;
-}
-
-.dlc-list {
-  padding: 0.5rem 0;
-}
-
-// DLC item
-.dlc-item {
-  padding: 0.75rem 1.5rem;
-  border-bottom: 1px solid var(--border-soft);
-  transition: all var(--duration-normal) var(--easing-ease-out);
-
-  &:hover {
-    background-color: rgba(255, 255, 255, 0.03);
+  h3 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
   }
 
-  &:last-child {
-    border-bottom: none;
-  }
-
-  &.dlc-item-loading {
-    height: 30px;
+  // Close button
+  .dialog-close-button {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: 32px;
+    height: 32px;
+    background: var(--border-soft);
+    border-radius: 50%;
+    color: var(--text-primary);
+    font-size: 1.5rem;
+    line-height: 1;
     display: flex;
     align-items: center;
     justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
 
-    .loading-pulse {
-      width: 70%;
-      height: 20px;
-      background: linear-gradient(
-        90deg,
-        var(--border-soft) 0%,
-        var(--border) 50%,
-        var(--border-soft) 100%
-      );
-      background-size: 200% 100%;
-      border-radius: 4px;
-      animation: loading-pulse 1.5s infinite;
+    &:hover {
+      background: var(--border);
+      transform: rotate(90deg);
     }
   }
 }
 
-// DLC loading state
-.dlc-loading {
-  height: 200px;
+// Dialog body
+.dialog-body {
+  padding: 1rem 1.5rem;
+  overflow-y: auto;
+  flex: 1;
+  @include custom-scrollbar;
+}
+
+// Dialog footer
+.dialog-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--border-soft);
+}
+
+// Dialog actions
+.dialog-actions {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  gap: 1rem;
+  justify-content: flex-end;
+  gap: 0.75rem;
 
-  .loading-spinner {
-    width: 40px;
-    height: 40px;
-    border: 3px solid rgba(255, 255, 255, 0.1);
-    border-top-color: var(--primary-color);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
+  &.justify-start {
+    justify-content: flex-start;
   }
 
-  p {
-    color: var(--text-secondary);
-  }
-}
-
-.no-dlcs-message {
-  height: 200px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-secondary);
-}
-
-// Game information in DLC dialog
-.dlc-game-info {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 0.5rem;
-
-  .game-title {
-    font-weight: 500;
-    color: var(--text-secondary);
-  }
-
-  .dlc-count {
-    font-size: 0.9rem;
-    padding: 0.3rem 0.6rem;
-    background-color: var(--info-soft);
-    color: var(--info);
-    border-radius: 4px;
-  }
-}
-
-// Loading animations
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes loading-pulse {
-  0% {
-    background-position: 200% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
+  &.justify-center {
+    justify-content: center;
   }
 }
