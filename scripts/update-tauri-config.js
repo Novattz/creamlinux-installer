@@ -1,5 +1,5 @@
-const fs = require('fs')
-const path = require('path')
+import fs from 'node:fs'
+import path from 'node:path'
 
 // Path to your tauri.conf.json file
 const tauriConfigPath = path.join(__dirname, '..', 'src-tauri', 'tauri.conf.json')

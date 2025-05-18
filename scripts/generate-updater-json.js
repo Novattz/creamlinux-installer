@@ -1,6 +1,5 @@
-const fs = require('fs')
-const path = require('path')
-const { execSync } = require('child_process')
+import fs from 'node:fs'
+import path from 'node:path'
 
 // Read the current version from package.json
 const packageJson = require('../package.json')
