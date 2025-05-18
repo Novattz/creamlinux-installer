@@ -1,12 +1,7 @@
-name: 'Build and Release CreamLinux'
+name: Release
 
 on:
-  push:
-    branches: ['main']
-    tags:
-      - 'v*' # Run on any tag that starts with 'v', e.g., v0.1.0
-  pull_request:
-    branches: ['main']
+  workflow_dispatch:
 
 env:
   CARGO_TERM_COLOR: always

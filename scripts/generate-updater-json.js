@@ -2,86 +2,56 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-// Recreate __dirname
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-// Read the current version from package.json
-const packageJsonPath = path.join(__dirname, '..', 'package.json')
-const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'))
+const packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'))
 const version = packageJson.version
-console.log(`Current version: ${version}`)
-
-// Get the current date in RFC 3339 format for pub_date
 const pubDate = new Date().toISOString()
 
-// Base URL where the assets will be available
 const baseUrl = 'https://github.com/novattz/rust-gui-dev/releases/download'
 const releaseTag = `v${version}`
 const releaseUrl = `${baseUrl}/${releaseTag}`
 
-// Create the updater JSON structure
+function findSigFile(dir, baseName) {
+  const files = fs.readdirSync(dir)
+  const sigFile = files.find((f) => f.startsWith(baseName) && f.endsWith('.sig'))
+  return sigFile ? fs.readFileSync(path.join(dir, sigFile), 'utf8').trim() : null
+}
+
+function addPlatform(platformKey, folder, baseName, ext) {
+  const dir = path.join('src-tauri', 'target', 'release', 'bundle', folder)
+  const fileName = `${baseName}${ext}`
+  const filePath = path.join(dir, fileName)
+
+  if (fs.existsSync(filePath)) {
+    const signature = findSigFile(dir, baseName)
+    if (!signature) {
+      console.warn(`⚠️  Signature not found for ${fileName}`)
+      return
+    }
+
+    updaterJson.platforms[platformKey] = {
+      url: `${releaseUrl}/${fileName}`,
+      signature,
+    }
+  } else {
+    console.warn(`⚠️  File not found: ${filePath}`)
+  }
+}
+
 const updaterJson = {
   version,
   notes: `Release version ${version}`,
   pub_date: pubDate,
-  platforms: {
-    // Windows x64
-    'windows-x86_64': {
-      url: `${releaseUrl}/creamlinux-setup.exe`,
-      signature: readSignature('windows', 'creamlinux-setup.exe'),
-    },
-    // Linux x64
-    'linux-x86_64': {
-      url: `${releaseUrl}/creamlinux.AppImage`,
-      signature: readSignature('linux', 'creamlinux.AppImage'),
-    },
-    // macOS x64 and arm64 (universal)
-    'darwin-universal': {
-      url: `${releaseUrl}/creamlinux.app.tar.gz`,
-      signature: readSignature('macos', 'creamlinux.app.tar.gz'),
-    },
-  },
+  platforms: {},
 }
 
-// Write the updater JSON file
+addPlatform('linux-x86_64', 'appimage', `Creamlinux_${version}_amd64`, '.AppImage')
+addPlatform('linux-deb', 'deb', `Creamlinux_${version}_amd64`, '.deb')
+addPlatform('linux-rpm', 'rpm', `Creamlinux-${version}-1.x86_64`, '.rpm')
+
+// Optional: Windows/macOS can still be supported later
+
 fs.writeFileSync('latest.json', JSON.stringify(updaterJson, null, 2))
-console.log('Created latest.json updater file')
-
-// Helper function to read signature files
-function readSignature(platform, filename) {
-  try {
-    // Determine path based on platform
-    let sigPath
-
-    switch (platform) {
-      case 'windows':
-        // Check both NSIS and MSI
-        try {
-          sigPath = path.join('src-tauri', 'target', 'release', 'bundle', 'nsis', `${filename}.sig`)
-          return fs.readFileSync(sigPath, 'utf8').trim()
-        } catch (e) {
-          sigPath = path.join('src-tauri', 'target', 'release', 'bundle', 'msi', `${filename}.sig`)
-          return fs.readFileSync(sigPath, 'utf8').trim()
-        }
-      case 'linux':
-        sigPath = path.join(
-          'src-tauri',
-          'target',
-          'release',
-          'bundle',
-          'appimage',
-          `${filename}.sig`
-        )
-        return fs.readFileSync(sigPath, 'utf8').trim()
-      case 'macos':
-        sigPath = path.join('src-tauri', 'target', 'release', 'bundle', 'macos', `${filename}.sig`)
-        return fs.readFileSync(sigPath, 'utf8').trim()
-      default:
-        throw new Error(`Unknown platform: ${platform}`)
-    }
-  } catch (error) {
-    console.error(`Error reading signature for ${platform}/${filename}:`, error.message)
-    return ''
-  }
-}
+console.log('✅ Created latest.json updater file')

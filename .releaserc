@@ -29,6 +29,18 @@
           {
             "path": "latest.json",
             "label": "Updater manifest file"
+          },
+          {
+            "path": "src-tauri/target/release/bundle/appimage/Creamlinux_*.AppImage",
+            "label": "Linux AppImage"
+          },
+          {
+            "path": "src-tauri/target/release/bundle/deb/Creamlinux_*.deb",
+            "label": "Linux DEB package"
+          },
+          {
+            "path": "src-tauri/target/release/bundle/rpm/Creamlinux-*.rpm",
+            "label": "Linux RPM package"
           }
         ],
         "successComment": ":tada: This ${issue.pull_request ? 'PR is included' : 'issue has been resolved'} in version ${nextRelease.version} :tada:\n\nThe release is available on [GitHub release](https://github.com/${process.env.GITHUB_REPOSITORY}/releases/tag/${nextRelease.gitTag})"
