@@ -1,19 +1,19 @@
 {
-  "version": "0.1.5",
-  "notes": "Release version 0.1.5",
-  "pub_date": "2025-05-18T21:56:18.183Z",
+  "version": "0.1.10",
+  "notes": "Release version 0.1.10",
+  "pub_date": "2025-05-18T22:37:23.761Z",
   "platforms": {
     "linux-x86_64": {
-      "url": "https://github.com/novattz/rust-gui-dev/releases/download/v0.1.5/Creamlinux_0.1.5_amd64.AppImage",
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVUeFJ4alZDbGRMTExkSTN0MjBsSDhNeFVNU2RXM2syOS9pZTVEZnV1RlpvTzlIR2lKc2JvSjhGdUVhQWNyeFVCZDZYQk1nSVNRUUJxVFpzNzhYdXFMMmZwLzVBdnZWWWdrPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzQ3NjA1Mzc4CWZpbGU6Q3JlYW1saW51eF8wLjEuNV9hbWQ2NC5BcHBJbWFnZQpBL1p2MmI2WjdLdlVNakJPcHgvcVR2TmEzNW12OW1ZUFlPN2daeUI1SkQveFZkNXdSZnp1b1FkZllNUFhkTHByaU1VWjltQWl1RkcyZVVhd09OMDlDUT09Cg=="
+      "url": "https://github.com/novattz/rust-gui-dev/releases/download/v0.1.10/Creamlinux_0.1.10_amd64.AppImage",
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVUeFJ4alZDbGRMTE5KeUdrVkZnSE1hMzhHVGpJSWNuckpXcmJIY1Z5eDZpZEZOeW51aURuOW1CdHo5em5ubkRlamw2MTVmY00zemFoN1R6UGw2bjM3SjhlRkh1RGxKYVFzPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzQ3NjA3ODQzCWZpbGU6Q3JlYW1saW51eF8wLjEuMTBfYW1kNjQuQXBwSW1hZ2UKU1NmeXN4UHlQa08zWE5UTW92V2lLN2lwbC95djJwaEc0Y0JUY0Q2YjZDc1hLUlBwZ3h1SXVYRm9Yd1puRmZaVDhEdXk1b2FmWTE1S1lXSGkvUlFQQlE9PQo="
     },
     "linux-deb": {
-      "url": "https://github.com/novattz/rust-gui-dev/releases/download/v0.1.5/Creamlinux_0.1.5_amd64.deb",
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVUeFJ4alZDbGRMTEJmQnpTbDlpa0dsSDArNzRvb0dwN3MweklGMjZsSkpiMDgzM3Y0Qlhxb0JPNzF2TjhEZ1lVWXk0OVZuVWsyRm5FMXdIOE5VL0RVWFVZT2JMUGFqTkFrPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzQ3NjA1Mzc4CWZpbGU6Q3JlYW1saW51eF8wLjEuNV9hbWQ2NC5kZWIKQjJjendIQmJPai9WaWV2YXQyQ1Q0Ny9hRmljK08xR0dMaEgyeE1zQ0ViSXZjZEdlallZM1lZa2RGdlJlenhsblpLelhGL2Z6dkxCQ3pPVlR5a2JsRFE9PQo="
+      "url": "https://github.com/novattz/rust-gui-dev/releases/download/v0.1.10/Creamlinux_0.1.10_amd64.deb",
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVUeFJ4alZDbGRMTE1wbnRVTXN3em9JMXJqYXJXQm1NNDhldmhBbGFWbzlyZWUzY1g2MFcxaUc5N2o4b0VGWEhmMDc2cEJuUXhOYkh2SVdzQUcvZEZ2bjdOTmcwSSttTFF3PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzQ3NjA3ODQzCWZpbGU6Q3JlYW1saW51eF8wLjEuMTBfYW1kNjQuZGViCklaczZ5ZnhlWGtMdmx6UG9hVnpGbVF1ZUd5aURndStIRWJGZFczSFRqakpmNEl6blpLcUtIRU82bExsRzdGdWJYckNCWFg2dDZOZktlUlhsN1BzakFnPT0K"
     },
     "linux-rpm": {
-      "url": "https://github.com/novattz/rust-gui-dev/releases/download/v0.1.5/Creamlinux-0.1.5-1.x86_64.rpm",
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVUeFJ4alZDbGRMTE82T1puckY4bUl4dmxQdjhEQzVPODRPZm9Vd29ncldBZ1llVjg1QkpvZkJJOVFpbFhiTmdETThsQ3kyYnREWDZFSDlqZHBLT0U5Y1h6TE11cisycXdjPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzQ3NjA1Mzc4CWZpbGU6Q3JlYW1saW51eC0wLjEuNS0xLng4Nl82NC5ycG0KTmRVRmx0clZYTVNCc0k5bjZyT3F1bk5TTWJsa2k2QkRTY3pSRlI5NlBPTFlRMlB3SnhvWWZ6LytCYzhMYXY5a3oxU0RCWGdRQjNjL0Q2MkFybk5GQUE9PQo="
+      "url": "https://github.com/novattz/rust-gui-dev/releases/download/v0.1.10/Creamlinux-0.1.10-1.x86_64.rpm",
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVUeFJ4alZDbGRMTE5uTGp5dWhFeDFoZHpua1ZxZ1E3TURZMkc5ckJsdlVSc0dNN2ZpanBRakRoY2tjaGx6SXhiNGJhdnp5U3VMMm95SHFocDFrTGd1d1AxYzc0MGR1VlFnPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzQ3NjA3ODQzCWZpbGU6Q3JlYW1saW51eC0wLjEuMTAtMS54ODZfNjQucnBtCnRGZ29yYnU2T3E5RTJ2dmVGc1pRaXNCOUlxWDhzQTVlVG9icUhTeDIwSDk2TFpxdlJlTVhVTWNIWU5oSkVzSEhrOThBb2tJWU8rYVNrRm9lbmZhbUFRPT0K"
     }
   }
 }

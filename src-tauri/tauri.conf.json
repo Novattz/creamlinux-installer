@@ -4,7 +4,7 @@
     "frontendDist": "../dist",
     "devUrl": "http://localhost:1420",
     "beforeDevCommand": "npm run dev",
-    "beforeBuildCommand": "npm run sync-version && npm run build"
+    "beforeBuildCommand": "npm run build"
   },
   "bundle": {
     "active": true,
@@ -19,7 +19,7 @@
   },
   "productName": "Creamlinux",
   "mainBinaryName": "creamlinux",
-  "version": "0.1.5",
+  "version": "0.1.10",
   "identifier": "com.creamlinux.dev",
   "plugins": {
     "updater": {
