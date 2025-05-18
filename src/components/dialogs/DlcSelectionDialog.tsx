@@ -41,12 +41,21 @@ const DlcSelectionDialog = ({
   const [selectAll, setSelectAll] = useState(true)
   const [initialized, setInitialized] = useState(false)
 
+  // Reset dialog state when it opens or closes
+  useEffect(() => {
+    if (!visible) {
+      setInitialized(false)
+      setSelectedDlcs([])
+      setSearchQuery('')
+    }
+  }, [visible])
+
   // Initialize selected DLCs when DLC list changes
   useEffect(() => {
     if (dlcs.length > 0) {
       if (!initialized) {
-        // Initial setup - preserve the enabled state from incoming DLCs
-        setSelectedDlcs(dlcs)
+        // Create a new array to ensure we don't share references
+        setSelectedDlcs([...dlcs])
         
         // Determine initial selectAll state based on if all DLCs are enabled
         const allSelected = dlcs.every((dlc) => dlc.enabled)
@@ -110,15 +119,6 @@ const DlcSelectionDialog = ({
   const handleConfirm = useCallback(() => {
     onConfirm(selectedDlcs)
   }, [onConfirm, selectedDlcs])
-
-  // Reset dialog state when it opens or closes
-  useEffect(() => {
-    if (!visible) {
-      setInitialized(false)
-      setSelectedDlcs([])
-      setSearchQuery('')
-    }
-  }, [visible])
 
   // Count selected DLCs
   const selectedCount = selectedDlcs.filter((dlc) => dlc.enabled).length
@@ -218,7 +218,7 @@ const DlcSelectionDialog = ({
           <Button
             variant="secondary"
             onClick={onClose}
-            disabled={isLoading && loadingProgress < 10} // Briefly disable to prevent accidental closing at start
+            disabled={isLoading && loadingProgress < 10}
           >
             Cancel
           </Button>
