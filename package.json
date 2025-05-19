@@ -1,8 +1,11 @@
 {
   "name": "creamlinux",
   "private": true,
-  "version": "0.1.13",
+  "version": "1.0.0",
   "type": "module",
+  "author": "Tickbase",
+  "repository": "https://github.com/Novattz/creamlinux-installer",
+  "license": "MIT",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

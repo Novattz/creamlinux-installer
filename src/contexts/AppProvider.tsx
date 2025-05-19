@@ -100,7 +100,7 @@ export const AppProvider = ({ children }: AppProviderProps) => {
   const handleDlcConfirm = (selectedDlcs: DlcInfo[]) => {
     const { gameId, isEditMode } = dlcDialog
 
-    // MODIFIED: Create a deep copy to ensure we don't have reference issues
+    // Create a deep copy to ensure we don't have reference issues
     const dlcsCopy = selectedDlcs.map((dlc) => ({ ...dlc }))
 
     // Log detailed info before closing dialog

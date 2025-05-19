@@ -123,7 +123,7 @@ const ProgressDialog = ({
       size="medium"
       preventBackdropClose={!isCloseButtonEnabled}
     >
-      <DialogHeader>
+      <DialogHeader onClose={onClose} hideCloseButton={true}>
         <h3>{title}</h3>
       </DialogHeader>
 

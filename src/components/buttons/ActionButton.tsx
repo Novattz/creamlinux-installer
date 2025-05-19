@@ -35,7 +35,7 @@ const ActionButton: FC<ActionButtonProps> = ({
     return isInstalled ? `Uninstall ${product}` : `Install ${product}`
   }
 
-  // Map to our button variant
+  // Map to button variant
   const getButtonVariant = (): ButtonVariant => {
     // For uninstall actions, use danger variant
     if (isInstalled) return 'danger'

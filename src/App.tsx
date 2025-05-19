@@ -1,5 +1,5 @@
 import { useAppContext } from '@/contexts/useAppContext'
-import { UpdateChecker } from '@/components/updater'
+import { UpdateNotifier } from '@/components/updater'
 import { useAppLogic } from '@/hooks'
 import './styles/main.scss'
 
@@ -105,7 +105,9 @@ function App() {
           onClose={handleDlcDialogClose}
           onConfirm={handleDlcConfirm}
         />
-        <UpdateChecker />
+        
+        {/* Simple update notifier that uses toast - no UI component */}
+        <UpdateNotifier />
       </div>
     </ErrorBoundary>
   )

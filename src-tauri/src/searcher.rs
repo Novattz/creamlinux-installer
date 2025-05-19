@@ -558,7 +558,6 @@ pub async fn find_installed_games(steamapps_paths: &[PathBuf]) -> Vec<GameInfo> 
 
         // Every 10 files, yield to allow progress updates
         if manifest_idx % 10 == 0 {
-            // We would update progress here in a full implementation
             tokio::task::yield_now().await;
         }
     }

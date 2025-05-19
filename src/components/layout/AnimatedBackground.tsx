@@ -36,7 +36,7 @@ const AnimatedBackground = () => {
       color: string
     }
 
-    // Color palette matching our theme
+    // Color palette matching theme
     const colors = [
       'rgba(74, 118, 196, 0.5)', // primary blue
       'rgba(155, 125, 255, 0.5)', // purple

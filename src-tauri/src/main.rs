@@ -275,7 +275,7 @@ async fn fetch_game_dlcs(
                 })
                 .collect::<Vec<_>>();
 
-            // Cache in memory for this session (but not on disk)
+            // Cache in memory for this session
             let state = app_handle.state::<AppState>();
             let mut cache = state.dlc_cache.lock();
             cache.insert(
@@ -323,7 +323,7 @@ async fn stream_game_dlcs(game_id: String, app_handle: tauri::AppHandle) -> Resu
                 game_id
             );
 
-            // Convert to DLCInfoWithState for in-memory caching only
+            // Convert to DLCInfoWithState for in-memory caching
             let dlcs_with_state = dlcs
                 .into_iter()
                 .map(|dlc| DlcInfoWithState {
@@ -333,7 +333,7 @@ async fn stream_game_dlcs(game_id: String, app_handle: tauri::AppHandle) -> Resu
                 })
                 .collect::<Vec<_>>();
 
-            // Update in-memory cache without storing to disk
+            // Update in-memory
             let state = app_handle.state::<AppState>();
             let mut dlc_cache = state.dlc_cache.lock();
             dlc_cache.insert(

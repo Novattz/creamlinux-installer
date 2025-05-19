@@ -150,7 +150,7 @@ export function useGameActions() {
 
       try {
         if (isEditMode) {
-          // MODIFIED: Create a deep copy to ensure we don't have reference issues
+          // Create a deep copy to ensure we don't have reference issues
           const dlcsCopy = selectedDlcs.map((dlc) => ({ ...dlc }))
 
           // Show progress dialog for editing
@@ -201,7 +201,7 @@ export function useGameActions() {
             selectedDlcs,
           })
 
-          // Note: The progress dialog will be updated through the installation-progress event listener
+          // The progress dialog will be updated through the installation-progress event listener
         }
       } catch (error) {
         console.error('Error processing DLC selection:', error)

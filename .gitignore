@@ -10,11 +10,13 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+docs
 *.local
 *.lock
 .env
 CHANGELOG.md
 scripts/prepare-release.js
+scripts/update-server.js
 
 # Editor directories and files
 .vscode/*

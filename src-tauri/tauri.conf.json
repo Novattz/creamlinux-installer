@@ -11,22 +11,21 @@
     "targets": "all",
     "category": "Utility",
     "createUpdaterArtifacts": true,
-    "icon": [
-      "icons/128x128.png",
-      "icons/128x128@2x.png",
-      "icons/icon.png"
-    ]
+    "icon": ["icons/128x128.png", "icons/128x128@2x.png", "icons/icon.png"]
   },
   "productName": "Creamlinux",
   "mainBinaryName": "creamlinux",
-  "version": "0.1.13",
+  "version": "1.0.0",
   "identifier": "com.creamlinux.dev",
   "plugins": {
     "updater": {
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDJDNEI1NzBBRDUxODQ3RjEKUldUeFJ4alZDbGRMTE5Vc241NG5yL080UklnaW1iUGdUWElPRXloRGtKZ3M2SWkzK0RGSDh3Q2kK",
       "endpoints": [
-        "https://github.com/Novattz/rust-gui-dev/releases/latest/download/latest.json"
-      ]
+        "https://github.com/Novattz/creamlinux-installer/releases/latest/download/latest.json"
+      ],
+      "windows": {
+        "installMode": "passive"
+      }
     }
   },
   "app": {

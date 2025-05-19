@@ -141,7 +141,7 @@ const DlcSelectionDialog = ({
 
   return (
     <Dialog visible={visible} onClose={onClose} size="large" preventBackdropClose={isLoading}>
-      <DialogHeader onClose={onClose}>
+      <DialogHeader onClose={onClose} hideCloseButton={true}>
         <h3>{dialogTitle}</h3>
         <div className="dlc-game-info">
           <span className="game-title">{gameTitle}</span>

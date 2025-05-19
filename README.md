@@ -4,6 +4,17 @@ CreamLinux is a GUI application for Linux that simplifies the management of DLC 
 
 ![Screenshot](./src/assets/screenshot.png)
 
+## Beta Status
+
+⚠️ **IMPORTANT**: CreamLinux is currently in BETA. This means:
+
+- Some features may be incomplete or subject to change
+- You might encounter bugs or unexpected behavior
+- The application is under active development
+- Your feedback and bug reports are invaluable
+
+While the core functionality is working, please be aware that this is an early release. Im continuously working to improve stability, add features, and enhance the user experience. Please report any issues you encounter on [GitHub Issues page](https://github.com/Novattz/creamlinux-installer/issues).
+
 ## Features
 
 - **Auto-discovery**: Automatically finds Steam games installed on your system
@@ -16,7 +27,7 @@ CreamLinux is a GUI application for Linux that simplifies the management of DLC 
 
 ### AppImage (Recommended)
 
-1. Download the latest `CreamLinux.AppImage` from the [Releases](https://github.com/novattz/creamlinux/releases) page
+1. Download the latest `CreamLinux.AppImage` from the [Releases](https://github.com/Novattz/creamlinux-installer/releases) page
 2. Make it executable:
    ```bash
    chmod +x CreamLinux.AppImage
@@ -91,27 +102,11 @@ update-desktop-database ~/.local/share/applications
 
 - **Game doesn't load**: Make sure the launch options are correctly set in Steam
 - **DLCs not showing up**: Try refreshing the game list and reinstalling
-- **Cannot find Steam**: Ensure Steam is installed and you've launched it at least once
+- **Cannot find Steam**: Ensure Steam is installed and you've launched it at least once (Flatpak is not supported yet)
 
 ### Debug Logs
 
 Logs are stored at: `~/.cache/creamlinux/creamlinux.log`
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-### Development Setup
-
-1. Clone this repository
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-3. Start the development server:
-   ```bash
-   npm run tauri dev
-   ```
 
 ## License
 
