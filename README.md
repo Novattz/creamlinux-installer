@@ -37,6 +37,11 @@ While the core functionality is working, please be aware that this is an early r
    ./CreamLinux.AppImage
    ```
 
+   For Nvidia users use this command:
+   ```
+   WEBKIT_DISABLE_DMABUF_RENDERER=1 ./creamlinux.appimage
+   ```
+
 ### Building from Source
 
 #### Prerequisites
