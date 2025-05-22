@@ -3,7 +3,7 @@ name: Feature Request
 about: Suggest an idea for CreamLinux
 title: '[FEATURE] '
 labels: enhancement
-assignees: ''
+assignees: 'Novattz'
 ---
 
 ## Feature Description
