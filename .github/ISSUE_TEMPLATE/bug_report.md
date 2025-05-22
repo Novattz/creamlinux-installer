@@ -3,7 +3,7 @@ name: Bug Report
 about: Create a report to help improve CreamLinux
 title: '[BUG] '
 labels: bug
-assignees: ''
+assignees: 'Novattz'
 ---
 
 ## Bug Description
