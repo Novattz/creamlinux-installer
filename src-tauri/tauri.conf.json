@@ -15,7 +15,7 @@
   },
   "productName": "Creamlinux",
   "mainBinaryName": "creamlinux",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "identifier": "com.creamlinux.dev",
   "plugins": {
     "updater": {
