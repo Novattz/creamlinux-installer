@@ -284,7 +284,14 @@ fn check_smokeapi_installed(game_path: &Path, api_files: &[String]) -> bool {
 fn scan_game_directory(game_path: &Path) -> (bool, Vec<String>) {
     let mut found_exe = false;
     let mut found_linux_binary = false;
+    let mut found_main_executable = false;
     let mut steam_api_files = Vec::new();
+
+    // Strong indicators for native Linux games
+    let mut has_libsteam_api = false;
+    let mut has_linux_steam_libs = false;
+    let mut linux_binary_count = 0;
+    let mut windows_exe_count = 0;
 
     // Directories to skip for better performance
     let skip_dirs = [
@@ -312,6 +319,11 @@ fn scan_game_directory(game_path: &Path) -> (bool, Vec<String>) {
     let exe_extensions = ["exe", "bat", "cmd", "msi"];
     let binary_extensions = ["so", "bin", "sh", "x86", "x86_64"];
 
+    // Files that indicate this is likely a launcher/installer
+    let installer_patterns = [
+      "setup", "install", "launcher", "uninstall", "redist", "vcredist", "directx", "_commonredist", "dotnet", "PhysX"
+    ];
+
     // Recursively walk through the game directory
     for entry in WalkDir::new(game_path)
         .max_depth(MAX_DEPTH) // Limit depth to avoid traversing too deep
@@ -335,22 +347,46 @@ fn scan_game_directory(game_path: &Path) -> (bool, Vec<String>) {
             continue;
         }
 
+        let filename = path.file_name()
+            .unwrap_or_default()
+            .to_string_lossy()
+            .to_lowercase();
+        
+        // Check for strong Linux indicators first
+        if filename == "libsteam_api.so" {
+            has_libsteam_api = true;
+            debug!("Found strong Linux indicator: {}", path.display());
+        }
+
+        // Check for other Linux Steam libraries
+        if filename.starts_with("lib") && filename.contains("steam") && filename.ends_with(".so") {
+            has_linux_steam_libs = true;
+            debug!("Found Linux Steam library: {}", path.display());
+        }
+
         // Check file extension
         if let Some(ext) = path.extension() {
             let ext_str = ext.to_string_lossy().to_lowercase();
 
             // Check for Windows executables
             if exe_extensions.iter().any(|&e| ext_str == e) {
-                found_exe = true;
+                // Check if this looks like an installer/utility rather than main game
+                let is_likely_installer = installer_patterns.iter()
+                    .any(|&pattern| filename.contains(pattern));
+                
+                if !is_likely_installer {
+                    found_exe = true;
+                    windows_exe_count += 1;
+
+                    // If its in the root directory and not an installer, its likely the main executable
+                    if path.parent() == Some(game_path) {
+                        found_main_executable = true;
+                    }
+                }
             }
 
             // Check for Steam API DLLs
             if ext_str == "dll" {
-                let filename = path
-                    .file_name()
-                    .unwrap_or_default()
-                    .to_string_lossy()
-                    .to_lowercase();
                 if filename == "steam_api.dll" || filename == "steam_api64.dll" {
                     if let Ok(rel_path) = path.strip_prefix(game_path) {
                         let rel_path_str = rel_path.to_string_lossy().to_string();
@@ -363,6 +399,7 @@ fn scan_game_directory(game_path: &Path) -> (bool, Vec<String>) {
             // Check for Linux binary files
             if binary_extensions.iter().any(|&e| ext_str == e) {
                 found_linux_binary = true;
+                linux_binary_count += 1;
 
                 // Check if it's actually an ELF binary for more certainty
                 if ext_str == "so" && is_elf_binary(path) {
@@ -382,27 +419,83 @@ fn scan_game_directory(game_path: &Path) -> (bool, Vec<String>) {
                 // Check executable permission and ELF format
                 if is_executable && is_elf_binary(path) {
                     found_linux_binary = true;
+                    linux_binary_count += 1;
                 }
             }
         }
-
-        // If we've found enough evidence for both platforms and Steam API DLLs, we can stop
-        if found_exe && found_linux_binary && !steam_api_files.is_empty() {
-            debug!("Found sufficient evidence, breaking scan early");
-            break;
-        }
     }
 
-    // A game is considered native if it has Linux binaries but no Windows executables
-    let is_native = found_linux_binary && !found_exe;
+    // Detection logic with priority system
+    let is_native = determine_platform(
+      has_libsteam_api,
+      has_linux_steam_libs,
+      found_linux_binary,
+      found_exe,
+      found_main_executable,
+      linux_binary_count,
+      windows_exe_count,
+    );
 
     debug!(
-        "Game scan results: native={}, exe={}, api_dlls={}",
+        "Game scan results: native={}, libsteam_api={}, linux_libs={}, linux_binaries={}, exe_files={}, api_dlls={}",
         is_native,
-        found_exe,
+        has_libsteam_api,
+        has_linux_steam_libs,
+        linux_binary_count,
+        windows_exe_count,
         steam_api_files.len()
     );
+
     (is_native, steam_api_files)
+}
+
+// Priority-based platform detection
+fn determine_platform(
+  has_libsteam_api: bool,
+  has_linux_steam_libs: bool,
+  found_linux_binary: bool,
+  found_exe: bool,
+  found_main_executable: bool,
+  linux_binary_count: usize,
+  windows_exe_count: usize,
+) -> bool {
+  // Priority 1: Strong Linux indicators
+  if has_libsteam_api {
+      debug!("Detected as native: libsteam_api.so found");
+      return true;
+  }
+
+  if has_linux_steam_libs {
+      debug!("Detected as native: Linux steam libraries found");
+      return true;
+  }
+
+  // Priority 2: High confidence Linux indicators
+  if found_linux_binary && linux_binary_count >= 3 && !found_main_executable {
+      debug!("Detected as native: Multiple Linux binaries, no main Windows executable");
+      return true;
+  }
+
+  // Priority 3: Balanced assessment
+  if found_linux_binary && !found_main_executable && windows_exe_count <= 2 {
+      debug!("Detected as native: Linux binaries present, only installer/utility Windows files");
+      return true;
+  }
+
+  // Priority 4: Windows indicators
+  if found_main_executable || (found_exe && !found_linux_binary) {
+      debug!("Detected as Windows/Proton: Main executable or only Windows files found");
+      return false;
+  }
+
+  // Priority 5: Default fallback
+  if found_linux_binary {
+      debug!("Detected as native: Linux binaries found (default fallback)");
+      return true;
+  }
+
+  debug!("Detected as Windows/Proton: No strong indicators found");
+  false
 }
 
 // Find all installed Steam games from library folders
