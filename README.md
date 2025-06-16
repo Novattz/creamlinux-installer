@@ -48,6 +48,7 @@ While the core functionality is working, please be aware that this is an early r
 
 - Rust 1.77.2 or later
 - Node.js 18 or later
+- webkit2gtk-4.1
 - npm or yarn
 
 #### Steps
