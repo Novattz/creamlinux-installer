@@ -11,11 +11,12 @@
     "targets": "all",
     "category": "Utility",
     "createUpdaterArtifacts": true,
-    "icon": ["icons/128x128.png", "icons/128x128@2x.png", "icons/icon.png"]
+    "icon": ["icons/128x128.png", "icons/128x128@2x.png", "icons/icon.png"],
+    "resources": ["resources/libs/*"]
   },
   "productName": "Creamlinux",
   "mainBinaryName": "creamlinux",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "identifier": "com.creamlinux.dev",
   "plugins": {
     "updater": {
