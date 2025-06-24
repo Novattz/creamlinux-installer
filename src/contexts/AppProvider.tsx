@@ -1,4 +1,4 @@
-import { ReactNode } from 'react'
+import { ReactNode, useState } from 'react'
 import { AppContext, AppContextType } from './AppContext'
 import { useGames, useDlcManager, useGameActions, useToasts } from '@/hooks'
 import { DlcInfo } from '@/types'
@@ -34,6 +34,18 @@ export const AppProvider = ({ children }: AppProviderProps) => {
   } = useGameActions()
 
   const { toasts, removeToast, success, error: showError, warning, info } = useToasts()
+
+  // Settings dialog state
+  const [settingsDialog, setSettingsDialog] = useState({ visible: false })
+
+  // Settings handlers
+  const handleSettingsOpen = () => {
+    setSettingsDialog({ visible: true })
+  }
+
+  const handleSettingsClose = () => {
+    setSettingsDialog({ visible: false })
+  }
 
   // Game action handler with proper error reporting
   const handleGameAction = async (gameId: string, action: ActionType) => {
@@ -179,6 +191,11 @@ export const AppProvider = ({ children }: AppProviderProps) => {
     handleGameAction,
     handleDlcConfirm,
     handleProgressDialogClose: handleCloseProgressDialog,
+
+    // Settings
+    settingsDialog,
+    handleSettingsOpen,
+    handleSettingsClose,
 
     // Toast notifications
     showToast,

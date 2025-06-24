@@ -1,0 +1,162 @@
+@use '../../themes/index' as *;
+@use '../../abstracts/index' as *;
+
+/* 
+  Settings dialog styles
+*/
+
+.settings-header {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.settings-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.settings-section {
+  h4 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-soft);
+  }
+
+  .settings-description {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+    line-height: 1.4;
+  }
+}
+
+.settings-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 2rem;
+  background-color: var(--border-dark);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-soft);
+
+  .placeholder-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.7;
+  }
+
+  .placeholder-text {
+    h5 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 0.75rem;
+    }
+
+    p {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      line-height: 1.4;
+      margin-bottom: 1rem;
+    }
+
+    ul {
+      text-align: left;
+      color: var(--text-soft);
+      font-size: 0.85rem;
+      line-height: 1.6;
+      max-width: 300px;
+
+      li {
+        margin-bottom: 0.25rem;
+
+        &::before {
+          content: '•';
+          color: var(--primary-color);
+          margin-right: 0.5rem;
+        }
+      }
+    }
+  }
+}
+
+.app-info {
+  background-color: var(--border-dark);
+  border-radius: var(--radius-sm);
+  padding: 1rem;
+  border: 1px solid var(--border-soft);
+
+  .info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+
+    &:not(:last-child) {
+      border-bottom: 1px solid var(--border-soft);
+    }
+
+    .info-label {
+      font-weight: 500;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+
+    .info-value {
+      color: var(--text-primary);
+      font-size: 0.9rem;
+      font-family: monospace;
+    }
+
+    .info-link {
+      color: var(--primary-color);
+      text-decoration: none;
+      font-size: 0.9rem;
+      transition: color 0.2s ease;
+
+      &:hover {
+        color: var(--secondary-color);
+        text-decoration: underline;
+      }
+    }
+  }
+}
+
+// Settings button in sidebar
+.settings-button {
+  margin-top: auto;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-sm);
+  transition: all var(--duration-normal) var(--easing-ease-out);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+  border: 1px solid transparent;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+    border-color: var(--border-soft);
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+
+  .settings-icon {
+    flex-shrink: 0;
+    transition: transform 0.3s ease;
+  }
+
+  &:hover .settings-icon {
+    transform: rotate(45deg);
+  }
+}

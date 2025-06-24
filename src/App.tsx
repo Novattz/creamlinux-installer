@@ -8,7 +8,7 @@ import { Header, Sidebar, InitialLoadingScreen, ErrorBoundary } from '@/componen
 import AnimatedBackground from '@/components/layout/AnimatedBackground'
 
 // Dialog components
-import { ProgressDialog, DlcSelectionDialog } from '@/components/dialogs'
+import { ProgressDialog, DlcSelectionDialog, SettingsDialog } from '@/components/dialogs'
 
 // Game components
 import { GameList } from '@/components/games'
@@ -40,6 +40,9 @@ function App() {
     handleGameAction,
     handleDlcConfirm,
     handleGameEdit,
+    settingsDialog,
+    handleSettingsOpen,
+    handleSettingsClose,
   } = useAppContext()
 
   // Show loading screen during initial load
@@ -63,7 +66,7 @@ function App() {
 
         <div className="main-content">
           {/* Sidebar for filtering */}
-          <Sidebar setFilter={setFilter} currentFilter={filter} />
+          <Sidebar setFilter={setFilter} currentFilter={filter} onSettingsClick={handleSettingsOpen} />
 
           {/* Show error or game list */}
           {error ? (
@@ -104,6 +107,12 @@ function App() {
           estimatedTimeLeft={dlcDialog.timeLeft}
           onClose={handleDlcDialogClose}
           onConfirm={handleDlcConfirm}
+        />
+
+        {/* Settings Dialog */}
+        <SettingsDialog 
+          visible ={settingsDialog.visible}
+          onClose={handleSettingsClose}
         />
         
         {/* Simple update notifier that uses toast - no UI component */}

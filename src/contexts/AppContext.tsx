@@ -49,6 +49,11 @@ export interface AppContextType {
   handleGameAction: (gameId: string, action: ActionType) => Promise<void>
   handleDlcConfirm: (selectedDlcs: DlcInfo[]) => void
 
+  // Settings
+  settingsDialog: { visible: boolean }
+  handleSettingsOpen: () => void
+  handleSettingsClose: () => void
+
   // Toast notifications
   showToast: (
     message: string,
