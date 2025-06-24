@@ -1,9 +1,11 @@
 # CreamLinux
 
-CreamLinux is a GUI application for Linux that simplifies the management of DLC in Steam games. It provides a user-friendly interface to install and configure CreamAPI (for native Linux games) and SmokeAPI (for Windows games running through Proton). 
+CreamLinux is a GUI application for Linux that simplifies the management of DLC in Steam games. It provides a user-friendly interface to install and configure CreamAPI (for native Linux games) and SmokeAPI (for Windows games running through Proton).
 
 ## Watch the demo here:
+
 [![Watch the demo](./src/assets/screenshot.png)](https://www.youtube.com/watch?v=ZunhZnKFLlg)
+
 ## Beta Status
 
 ⚠️ **IMPORTANT**: CreamLinux is currently in BETA. This means:
@@ -33,11 +35,13 @@ While the core functionality is working, please be aware that this is an early r
    chmod +x CreamLinux.AppImage
    ```
 3. Run it:
+
    ```bash
    ./CreamLinux.AppImage
    ```
 
    For Nvidia users use this command:
+
    ```
    WEBKIT_DISABLE_DMABUF_RENDERER=1 ./creamlinux.appimage
    ```
@@ -108,7 +112,7 @@ update-desktop-database ~/.local/share/applications
 
 - **Game doesn't load**: Make sure the launch options are correctly set in Steam
 - **DLCs not showing up**: Try refreshing the game list and reinstalling
-- **Cannot find Steam**: Ensure Steam is installed and you've launched it at least once (Flatpak is not supported yet)
+- **Cannot find Steam**: Ensure Steam is installed and you've launched it at least once
 
 ### Debug Logs
 
