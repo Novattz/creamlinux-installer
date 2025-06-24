@@ -1,8 +1,9 @@
-import { Icon, layers, linux, proton } from '@/components/icons'
+import { Icon, layers, linux, proton, settings } from '@/components/icons'
 
 interface SidebarProps {
   setFilter: (filter: string) => void
   currentFilter: string
+  onSettingsClick: () => void
 }
 
 // Define a type for filter items that makes variant optional
@@ -17,7 +18,7 @@ type FilterItem = {
  * Application sidebar component
  * Contains filters for game types
  */
-const Sidebar = ({ setFilter, currentFilter }: SidebarProps) => {
+const Sidebar = ({ setFilter, currentFilter, onSettingsClick }: SidebarProps) => {
   // Available filter options with icons
   const filters: FilterItem[] = [
     { id: 'all', label: 'All Games', icon: layers, variant: 'bold' },
@@ -45,6 +46,12 @@ const Sidebar = ({ setFilter, currentFilter }: SidebarProps) => {
           </li>
         ))}
       </ul>
+
+      <div className="settings-button" onClick={onSettingsClick}>
+        <Icon name={settings} variant="bold" size="md" className="settings-icon" />
+        <span>Settings</span>
+      </div>
+
     </div>
   )
 }
