@@ -31,6 +31,7 @@ If applicable, add screenshots to help explain your problem.
 - Desktop Environment: [e.g. GNOME, KDE, etc.]
 - CreamLinux Version: [e.g. 0.1.0]
 - Steam Version: [e.g. latest]
+- Graphics card: [e.g. 2060 rtx]
 
 ## Game Information
 
