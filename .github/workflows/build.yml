@@ -13,7 +13,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - platform: 'ubuntu-20.04'
+          - platform: 'ubuntu-20.04' # Stable Debian-based release
+            args: ''
+          - platform: 'ubuntu-22.04' # Alternative stable option
             args: ''
 
     runs-on: ${{ matrix.platform }}
@@ -79,7 +81,7 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: creamlinux-${{ matrix.platform }}-artifacts
+          name: creamlinux-ubuntu-20.04-artifacts
           path: |
             src-tauri/target/release/bundle/
             src-tauri/target/release/creamlinux
@@ -89,9 +91,8 @@ jobs:
 
       - name: Upload AppImage (if exists)
         uses: actions/upload-artifact@v4
-        if: matrix.platform == 'ubuntu-20.04' || matrix.platform == 'ubuntu-22.04'
         with:
-          name: creamlinux-appimage-${{ matrix.platform }}
+          name: creamlinux-appimage
           path: |
             src-tauri/target/release/bundle/appimage/*.AppImage
           retention-days: 30
@@ -99,9 +100,8 @@ jobs:
 
       - name: Upload DEB package (if exists)
         uses: actions/upload-artifact@v4
-        if: matrix.platform == 'ubuntu-20.04' || matrix.platform == 'ubuntu-22.04'
         with:
-          name: creamlinux-deb-${{ matrix.platform }}
+          name: creamlinux-deb
           path: |
             src-tauri/target/release/bundle/deb/*.deb
           retention-days: 30
