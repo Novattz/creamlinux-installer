@@ -15,8 +15,6 @@ jobs:
         include:
           - platform: 'ubuntu-20.04'
             args: ''
-          - platform: 'ubuntu-22.04' # Alternative stable option
-            args: ''
 
     runs-on: ${{ matrix.platform }}
 
