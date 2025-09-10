@@ -9,6 +9,5 @@
     "main"
   ],
   "permissions": [
-    "updater:default"
   ]
 }
