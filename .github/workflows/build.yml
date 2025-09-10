@@ -58,10 +58,10 @@ jobs:
 
       - name: Build Tauri app
         uses: tauri-apps/tauri-action@v0
-        env:
-          # No GITHUB_TOKEN since we're not creating releases
-          TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
-          TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
+        # env:
+        # No GITHUB_TOKEN since we're not creating releases
+        # TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
+        # TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
         with:
           # Build configuration
           projectPath: '.'
