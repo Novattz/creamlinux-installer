@@ -13,9 +13,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - platform: 'ubuntu-20.04' # Stable Debian-based release
-            args: ''
-          - platform: 'ubuntu-22.04' # Alternative stable option
+          - platform: 'ubuntu-22.04' # Stable Debian-based release
             args: ''
 
     runs-on: ${{ matrix.platform }}

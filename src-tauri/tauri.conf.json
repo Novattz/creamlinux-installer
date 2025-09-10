@@ -11,8 +11,7 @@
     "targets": "all",
     "category": "Utility",
     "createUpdaterArtifacts": true,
-    "icon": ["icons/128x128.png", "icons/128x128@2x.png", "icons/icon.png"],
-    "resources": ["resources/libs/*"]
+    "icon": ["icons/128x128.png", "icons/128x128@2x.png", "icons/icon.png"]
   },
   "productName": "Creamlinux",
   "mainBinaryName": "creamlinux",
