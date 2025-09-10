@@ -17,17 +17,6 @@
   "mainBinaryName": "creamlinux",
   "version": "1.0.2",
   "identifier": "com.creamlinux.dev",
-  "plugins": {
-    "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDJDNEI1NzBBRDUxODQ3RjEKUldUeFJ4alZDbGRMTE5Vc241NG5yL080UklnaW1iUGdUWElPRXloRGtKZ3M2SWkzK0RGSDh3Q2kK",
-      "endpoints": [
-        "https://github.com/Novattz/creamlinux-installer/releases/latest/download/latest.json"
-      ],
-      "windows": {
-        "installMode": "passive"
-      }
-    }
-  },
   "app": {
     "withGlobalTauri": false,
     "windows": [
