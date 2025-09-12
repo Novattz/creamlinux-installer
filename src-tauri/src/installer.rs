@@ -1001,15 +1001,27 @@ where
             info!("Created backup: {}", backup_path.display());
         }
 
-        // Extract the appropriate DLL directly to the game directory
-        if let Ok(mut file) = archive.by_name(&api_name.to_string_lossy()) {
+        // Map the Steam API DLL name to the corresponding SmokeAPI DLL name
+        let smoke_dll_name = match api_name.to_string_lossy().as_ref() {
+            "steam_api.dll" => "SmokeAPI32.dll",
+            "steam_api64.dll" => "SmokeAPI64.dll",
+            _ => {
+                return Err(InstallerError::InstallationError(format!(
+                    "Unknown Steam API DLL: {}",
+                    api_name.to_string_lossy()
+                )));
+            }
+        };
+
+        // Extract the appropriate SmokeAPI DLL and rename it to the original Steam API DLL name
+        if let Ok(mut file) = archive.by_name(smoke_dll_name) {
             let mut outfile = fs::File::create(&original_path)?;
             io::copy(&mut file, &mut outfile)?;
-            info!("Installed SmokeAPI as: {}", original_path.display());
+            info!("Installed {} as: {}", smoke_dll_name, original_path.display());
         } else {
             return Err(InstallerError::InstallationError(format!(
                 "Could not find {} in the SmokeAPI zip file",
-                api_name.to_string_lossy()
+                smoke_dll_name
             )));
         }
     }
