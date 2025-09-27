@@ -1001,27 +1001,48 @@ where
             info!("Created backup: {}", backup_path.display());
         }
 
-        // Map the Steam API DLL name to the corresponding SmokeAPI DLL name
-        let smoke_dll_name = match api_name.to_string_lossy().as_ref() {
-            "steam_api.dll" => "SmokeAPI32.dll",
-            "steam_api64.dll" => "SmokeAPI64.dll",
-            _ => {
-                return Err(InstallerError::InstallationError(format!(
-                    "Unknown Steam API DLL: {}",
-                    api_name.to_string_lossy()
-                )));
-            }
-        };
+        // Determine if we need 32-bit or 64-bit SmokeAPI DLL based on the original Steam API DLL
+        let is_64bit = api_name.to_string_lossy().contains("64");
+        let target_arch = if is_64bit { "64" } else { "32" };
 
-        // Extract the appropriate SmokeAPI DLL and rename it to the original Steam API DLL name
-        if let Ok(mut file) = archive.by_name(smoke_dll_name) {
-            let mut outfile = fs::File::create(&original_path)?;
-            io::copy(&mut file, &mut outfile)?;
-            info!("Installed {} as: {}", smoke_dll_name, original_path.display());
-        } else {
+        // Search through all files in the archive to find the matching SmokeAPI DLL
+        let mut found_dll = false;
+        let mut tried_files = Vec::new();
+        let mut matching_dll_name: Option<String> = None;
+
+        // First pass: find the matching DLL name
+        for i in 0..archive.len() {
+            if let Ok(file) = archive.by_index(i) {
+                let file_name = file.name();
+                tried_files.push(file_name.to_string());
+
+                // Check if this is SmokeAPI DLL file with the correct architecture
+                if file_name.to_lowercase().ends_with(".dll")
+                    && file_name.to_lowercase().contains("smoke")
+                    && file_name.contains(target_arch) {
+
+                      matching_dll_name = Some(file_name.to_string());
+                      break;
+                }
+            }
+        }
+
+        // Second pass: extract the matching DLL if found
+        if let Some(dll_name) = matching_dll_name {
+            if let Ok(mut smoke_file) = archive.by_name(&dll_name) {
+                let mut outfile = fs::File::create(&original_path)?;
+                io::copy(&mut smoke_file, &mut outfile)?;
+                info!("Installed {} as: {}", dll_name, original_path.display());
+                found_dll = true;
+            }
+        }
+
+        if !found_dll {
             return Err(InstallerError::InstallationError(format!(
-                "Could not find {} in the SmokeAPI zip file",
-                smoke_dll_name
+                "Could not find {}-bit SmokeAPI DLL for {} in the zip file. Archive contains: {}",
+                target_arch,
+                api_name.to_string_lossy(),
+                tried_files.join(", ")
             )));
         }
     }
