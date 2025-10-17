@@ -1,10 +1,6 @@
 name: 'Build CreamLinux'
 
 on:
-  push:
-    branches: [main, master, develop]
-  pull_request:
-    branches: [main, master, develop]
   workflow_dispatch: # Allows manual triggering
 
 jobs:
