@@ -59,7 +59,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({ visible, onClose }) => 
             <div className="app-info">
               <div className="info-row">
                 <span className="info-label">Version:</span>
-                <span className="info-value">1.0.2</span>
+                <span className="info-value">1.0.6</span>
               </div>
               <div className="info-row">
                 <span className="info-label">Build:</span>

@@ -10,31 +10,27 @@ interface InitialLoadingScreenProps {
  * Initial loading screen displayed when the app first loads
  */
 const InitialLoadingScreen = ({ message, progress }: InitialLoadingScreenProps) => {
-  const [detailedStatus, setDetailedStatus] = useState<string[]>([
-    'Initializing application...',
-    'Setting up Steam integration...',
-    'Preparing DLC management...',
-  ])
+  const [currentStep, setCurrentStep] = useState(0)
 
-  // Use a sequence of messages based on progress
+  // Define the loading steps
+  const steps = [
+    'Checking system requirements...',
+    'Scanning Steam libraries...',
+    'Discovering games...',
+    'Preparing user interface...',
+  ]
+
+  // Update current step based on progress
   useEffect(() => {
-    const messages = [
-      { threshold: 10, message: 'Checking system requirements...' },
-      { threshold: 30, message: 'Scanning Steam libraries...' },
-      { threshold: 50, message: 'Discovering games...' },
-      { threshold: 70, message: 'Analyzing game configurations...' },
-      { threshold: 90, message: 'Preparing user interface...' },
-      { threshold: 100, message: 'Ready to launch!' },
-    ]
-
-    // Find current status message based on progress
-    const currentMessage = messages.find((m) => progress <= m.threshold)?.message || 'Loading...'
-
-    // Add new messages to the log as progress increases
-    if (currentMessage && !detailedStatus.includes(currentMessage)) {
-      setDetailedStatus((prev) => [...prev, currentMessage])
+    const stepThresholds = [25, 50, 75, 100]
+    const newStep = stepThresholds.findIndex(threshold => progress < threshold)
+    
+    if (newStep !== -1 && newStep !== currentStep) {
+      setCurrentStep(newStep)
+    } else if (newStep === -1 && currentStep !== steps.length - 1) {
+      setCurrentStep(steps.length - 1)
     }
-  }, [progress, detailedStatus])
+  }, [progress, currentStep, steps.length])
 
   return (
     <div className="initial-loading-screen">
@@ -42,31 +38,19 @@ const InitialLoadingScreen = ({ message, progress }: InitialLoadingScreenProps) 
         <h1>CreamLinux</h1>
 
         <div className="loading-animation">
-          {/* Enhanced animation with SVG or more elaborate CSS animation */}
-          <div className="loading-circles">
-            <div className="circle circle-1"></div>
-            <div className="circle circle-2"></div>
-            <div className="circle circle-3"></div>
-          </div>
+          {/* Spinner animation */}
+          <div className="loading-spinner"></div>
         </div>
 
         <p className="loading-message">{message}</p>
 
-        {/* Add a detailed status log that shows progress steps */}
+        {/* Single step display that changes */}
         <div className="loading-status-log">
-          {detailedStatus.slice(-4).map((status, index) => (
-            <div key={index} className="status-line">
-              <span className="status-indicator">○</span>
-              <span className="status-text">{status}</span>
-            </div>
-          ))}
+          <div className="status-line active">
+            <span className="status-step">[{currentStep + 1}/{steps.length}]</span>
+            <span className="status-text">{steps[currentStep]}</span>
+          </div>
         </div>
-
-        <div className="progress-bar-container">
-          <div className="progress-bar" style={{ width: `${progress}%` }} />
-        </div>
-
-        <div className="progress-percentage">{Math.round(progress)}%</div>
       </div>
     </div>
   )

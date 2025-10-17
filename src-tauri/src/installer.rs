@@ -1019,7 +1019,7 @@ where
                 // Check if this is SmokeAPI DLL file with the correct architecture
                 if file_name.to_lowercase().ends_with(".dll")
                     && file_name.to_lowercase().contains("smoke")
-                    && file_name.contains(target_arch) {
+                    && file_name.to_lowercase().contains(&format!("{}.dll", target_arch)) {
 
                       matching_dll_name = Some(file_name.to_string());
                       break;
