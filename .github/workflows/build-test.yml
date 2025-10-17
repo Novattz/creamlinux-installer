@@ -1,4 +1,4 @@
-name: 'Build CreamLinux'
+name: 'Test build'
 
 on:
   workflow_dispatch: # Allows manual triggering
