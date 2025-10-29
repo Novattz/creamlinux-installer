@@ -29,21 +29,21 @@ While the core functionality is working, please be aware that this is an early r
 
 ### AppImage (Recommended)
 
-1. Download the latest `CreamLinux.AppImage` from the [Releases](https://github.com/Novattz/creamlinux-installer/releases) page
+1. Download the latest `creamlinux.AppImage` from the [Releases](https://github.com/Novattz/creamlinux-installer/releases) page
 2. Make it executable:
    ```bash
-   chmod +x CreamLinux.AppImage
+   chmod +x creamlinux.AppImage
    ```
 3. Run it:
 
    ```bash
-   ./CreamLinux.AppImage
+   ./creamlinux.AppImage
    ```
 
    For Nvidia users use this command:
 
    ```
-   WEBKIT_DISABLE_DMABUF_RENDERER=1 ./creamlinux.appimage
+   WEBKIT_DISABLE_DMABUF_RENDERER=1 ./creamlinux.AppImage
    ```
 
 ### Building from Source
