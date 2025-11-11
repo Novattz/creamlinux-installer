@@ -426,6 +426,7 @@ fn scan_game_directory(game_path: &Path) -> (bool, Vec<String>) {
     }
 
     // Detection logic with priority system
+    let has_steam_api_dll = !steam_api_files.is_empty();
     let is_native = determine_platform(
       has_libsteam_api,
       has_linux_steam_libs,
@@ -434,6 +435,7 @@ fn scan_game_directory(game_path: &Path) -> (bool, Vec<String>) {
       found_main_executable,
       linux_binary_count,
       windows_exe_count,
+      has_steam_api_dll,
     );
 
     debug!(
@@ -458,6 +460,7 @@ fn determine_platform(
   found_main_executable: bool,
   linux_binary_count: usize,
   windows_exe_count: usize,
+  has_steam_api_dll: bool,
 ) -> bool {
   // Priority 1: Strong Linux indicators
   if has_libsteam_api {
@@ -470,25 +473,31 @@ fn determine_platform(
       return true;
   }
 
-  // Priority 2: High confidence Linux indicators
+  // Priority 2: Strong Windows indicators - DLL files are Windows-only
+  if has_steam_api_dll {
+      debug!("Detected as Windows/Proton: steam_api.dll or steam_api64.dll found");
+      return false;
+  }
+
+  // Priority 3: High confidence Linux indicators
   if found_linux_binary && linux_binary_count >= 3 && !found_main_executable {
       debug!("Detected as native: Multiple Linux binaries, no main Windows executable");
       return true;
   }
 
-  // Priority 3: Balanced assessment
+  // Priority 4: Balanced assessment
   if found_linux_binary && !found_main_executable && windows_exe_count <= 2 {
       debug!("Detected as native: Linux binaries present, only installer/utility Windows files");
       return true;
   }
 
-  // Priority 4: Windows indicators
+  // Priority 5: Windows indicators
   if found_main_executable || (found_exe && !found_linux_binary) {
       debug!("Detected as Windows/Proton: Main executable or only Windows files found");
       return false;
   }
 
-  // Priority 5: Default fallback
+  // Priority 6: Default fallback
   if found_linux_binary {
       debug!("Detected as native: Linux binaries found (default fallback)");
       return true;
