@@ -96,6 +96,17 @@
     transform: none;
     box-shadow: none;
   }
+
+  // Settings icon button variant
+  &.settings-icon-button {
+    svg {
+      transition: transform var(--duration-normal) var(--easing-ease-out);
+    }
+
+    &:hover svg {
+      transform: rotate(90deg);
+    }
+  }
 }
 
 // Animation for loading state

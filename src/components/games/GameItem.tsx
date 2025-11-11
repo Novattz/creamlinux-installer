@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { findBestGameImage } from '@/services/ImageService'
 import { Game } from '@/types'
 import { ActionButton, ActionType, Button } from '@/components/buttons'
+import { Icon } from '@/components/icons'
 
 interface GameItemProps {
   game: Game
@@ -150,9 +151,9 @@ const GameItem = ({ game, onAction, onEdit }: GameItemProps) => {
               onClick={handleEdit}
               disabled={!game.cream_installed || !!game.installing}
               title="Manage DLCs"
-              className="edit-button"
+              className="edit-button settings-icon-button"
             >
-              Manage DLCs
+              <Icon name="Settings" size="md" />
             </Button>
           )}
         </div>
