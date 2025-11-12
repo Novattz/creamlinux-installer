@@ -10,7 +10,8 @@
     "active": true,
     "targets": "all",
     "category": "Utility",
-    "icon": ["icons/128x128.png", "icons/128x128@2x.png", "icons/icon.png"]
+    "icon": ["icons/128x128.png", "icons/128x128@2x.png", "icons/icon.png"],
+    "createUpdaterArtifacts": true
   },
   "productName": "Creamlinux",
   "mainBinaryName": "creamlinux",
@@ -31,6 +32,14 @@
     ],
     "security": {
       "csp": null
+    }
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IERENzBFNjU0RTBBMUMyNzgKUldSNHdxSGdWT1p3M1liUE0vOGFCRkc2cEQwdWdRR2UyY2VmN3kzckNONCtsaGF0Y1d2WjdOWVEK",
+      "endpoints": [
+        "https://github.com/Novattz/creamlinux-installer/releases/latest/download/latest.json"
+      ]
     }
   }
 }
