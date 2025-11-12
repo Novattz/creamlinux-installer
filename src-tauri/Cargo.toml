@@ -1,6 +1,6 @@
 [package]
 name = "app"
-version = "1.0.7"
+version = "1.2.0"
 description = "DLC Manager for Steam games on Linux"
 authors = ["tickbase"]
 license = "MIT"
