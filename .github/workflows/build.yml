@@ -1,15 +1,60 @@
-name: 'Build CreamLinux'
+name: 'Build and Release'
 
 on:
   workflow_dispatch: # Allows manual triggering
 
 jobs:
-  build:
+  create-release:
+    permissions:
+      contents: write
+    runs-on: 'ubuntu-24.04'
+    outputs:
+      release_id: ${{ steps.create-release.outputs.result }}
+      version: ${{ steps.get-version.outputs.version }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: 'npm'
+
+      - name: get version
+        id: get-version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Package version: $VERSION"
+
+      - name: create draft release
+        id: create-release
+        uses: actions/github-script@v6
+        env:
+          VERSION: ${{ steps.get-version.outputs.version }}
+        with:
+          script: |
+            const { data } = await github.rest.repos.createRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag_name: `v${process.env.VERSION}`,
+              name: `CreamLinux v${process.env.VERSION}`,
+              body: 'Release.',
+              draft: true,
+              prerelease: false
+            })
+            return data.id
+
+  build-tauri:
+    needs: create-release
+    permissions:
+      contents: write
     strategy:
       fail-fast: false
       matrix:
         include:
-          - platform: 'ubuntu-22.04' # Stable Debian-based release
+          - platform: 'ubuntu-24.04'
             args: ''
 
     runs-on: ${{ matrix.platform }}
@@ -38,8 +83,13 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-            libwebkit2gtk-4.1-dev \
-            libayatana-appindicator3-dev \
+            libwebkit2gtk-4.1-0=2.44.0-2 \
+            libwebkit2gtk-4.1-dev=2.44.0-2 \
+            libjavascriptcoregtk-4.1-0=2.44.0-2 \
+            libjavascriptcoregtk-4.1-dev=2.44.0-2 \
+            gir1.2-javascriptcoregtk-4.1=2.44.0-2 \
+            gir1.2-webkit2-4.1=2.44.0-2 \
+            libappindicator3-dev \
             librsvg2-dev \
             patchelf \
             build-essential \
@@ -52,49 +102,17 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci
 
-      - name: Build Tauri app
+      - name: Build Tauri app with updater
         uses: tauri-apps/tauri-action@v0
-        # env:
-        # No GITHUB_TOKEN since we're not creating releases
-        # TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
-        # TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
-          # Build configuration
+          releaseId: ${{ needs.create-release.outputs.release_id }}
           projectPath: '.'
           includeDebug: false
           includeRelease: true
-          includeUpdaterJson: false
+          includeUpdaterJson: true
           tauriScript: 'npm run tauri'
           args: ${{ matrix.args }}
-
-          # No release configuration - just build artifacts
-          # Omitting tagName, releaseName, and releaseId means no release creation
-
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: creamlinux-ubuntu-20.04-artifacts
-          path: |
-            src-tauri/target/release/bundle/
-            src-tauri/target/release/creamlinux
-            src-tauri/target/release/creamlinux.exe
-          retention-days: 30
-          if-no-files-found: warn
-
-      - name: Upload AppImage (if exists)
-        uses: actions/upload-artifact@v4
-        with:
-          name: creamlinux-appimage
-          path: |
-            src-tauri/target/release/bundle/appimage/*.AppImage
-          retention-days: 30
-          if-no-files-found: ignore
-
-      - name: Upload DEB package (if exists)
-        uses: actions/upload-artifact@v4
-        with:
-          name: creamlinux-deb
-          path: |
-            src-tauri/target/release/bundle/deb/*.deb
-          retention-days: 30
-          if-no-files-found: ignore
