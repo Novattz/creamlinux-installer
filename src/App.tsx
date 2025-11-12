@@ -1,11 +1,10 @@
+import { useState } from 'react'
 import { useAppContext } from '@/contexts/useAppContext'
-import { UpdateNotifier } from '@/components/updater'
 import { useAppLogic } from '@/hooks'
 import './styles/main.scss'
 
 // Layout components
-import { Header, Sidebar, InitialLoadingScreen, ErrorBoundary } from '@/components/layout'
-import AnimatedBackground from '@/components/layout/AnimatedBackground'
+import { Header, Sidebar, InitialLoadingScreen, ErrorBoundary, UpdateScreen, AnimatedBackground } from '@/components/layout'
 
 // Dialog components
 import { ProgressDialog, DlcSelectionDialog, SettingsDialog } from '@/components/dialogs'
@@ -17,6 +16,7 @@ import { GameList } from '@/components/games'
  * Main application component
  */
 function App() {
+  const [updateComplete, setUpdateComplete] = useState(false)
   // Get application logic from hook
   const {
     filter,
@@ -29,7 +29,7 @@ function App() {
     handleRefresh,
     isLoading,
     error,
-  } = useAppLogic({ autoLoad: true })
+  } = useAppLogic({ autoLoad: updateComplete })
 
   // Get action handlers from context
   const {
@@ -45,7 +45,12 @@ function App() {
     handleSettingsClose,
   } = useAppContext()
 
-  // Show loading screen during initial load
+  // Show update screen first
+  if (!updateComplete) {
+    return <UpdateScreen onComplete={() => setUpdateComplete(true)} />
+  }
+
+  // Then show initial loading screen
   if (isInitialLoad) {
     return <InitialLoadingScreen message={scanProgress.message} progress={scanProgress.progress} />
   }
@@ -114,9 +119,6 @@ function App() {
           visible ={settingsDialog.visible}
           onClose={handleSettingsClose}
         />
-        
-        {/* Simple update notifier that uses toast - no UI component */}
-        <UpdateNotifier />
       </div>
     </ErrorBoundary>
   )
