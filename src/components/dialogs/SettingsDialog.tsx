@@ -1,4 +1,5 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
+import { getVersion } from '@tauri-apps/api/app'
 import {
   Dialog,
   DialogHeader,
@@ -19,6 +20,23 @@ interface SettingsDialogProps {
  * Contains application settings and configuration options
  */
 const SettingsDialog: React.FC<SettingsDialogProps> = ({ visible, onClose }) => {
+  const [appVersion, setAppVersion] = useState<string>('Loading...')
+
+  useEffect(() => {
+    // Fetch app version when component mounts
+    const fetchVersion = async () => {
+      try {
+        const version = await getVersion()
+        setAppVersion(version)
+      } catch (error) {
+        console.error('Failed to fetch app version:', error)
+        setAppVersion('Unknown')
+      }
+    }
+
+    fetchVersion()
+  }, [])
+
   return (
     <Dialog visible={visible} onClose={onClose} size="medium">
       <DialogHeader onClose={onClose} hideCloseButton={true}>
@@ -59,7 +77,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({ visible, onClose }) => 
             <div className="app-info">
               <div className="info-row">
                 <span className="info-label">Version:</span>
-                <span className="info-value">1.0.6</span>
+                <span className="info-value">{appVersion}</span>
               </div>
               <div className="info-row">
                 <span className="info-label">Build:</span>
