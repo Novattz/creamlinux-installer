@@ -8,6 +8,7 @@ mod installer;
 mod searcher;
 
 use dlc_manager::DlcInfoWithState;
+use tauri_plugin_updater::Builder as UpdaterBuilder;
 use installer::{Game, InstallerAction, InstallerType};
 use log::{debug, error, info, warn};
 use parking_lot::Mutex;
@@ -505,19 +506,12 @@ fn main() {
 
     info!("Initializing CreamLinux application");
 
-    let app_state = AppState {
-        games: Mutex::new(HashMap::new()),
-        dlc_cache: Mutex::new(HashMap::new()),
-        fetch_cancellation: Arc::new(AtomicBool::new(false)),
-    };
-
     tauri::Builder::default()
+        .plugin(UpdaterBuilder::new().build())
         .plugin(tauri_plugin_process::init())
-        // .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
-        .manage(app_state)
         .invoke_handler(tauri::generate_handler![
             scan_steam_games,
             get_game_info,
@@ -543,6 +537,16 @@ fn main() {
                     }
                 }
             }
+            
+            // Initialize and manage AppState
+            let app_handle = app.handle().clone();
+            let state = AppState {
+                games: Mutex::new(HashMap::new()),
+                dlc_cache: Mutex::new(HashMap::new()),
+                fetch_cancellation: Arc::new(AtomicBool::new(false)),
+            };
+            app.manage(state);
+            
             Ok(())
         })
         .run(tauri::generate_context!())
