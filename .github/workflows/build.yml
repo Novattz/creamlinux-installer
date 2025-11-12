@@ -39,7 +39,7 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               tag_name: `v${process.env.VERSION}`,
-              name: `CreamLinux v${process.env.VERSION}`,
+              name: `v${process.env.VERSION}`,
               body: 'Release.',
               draft: true,
               prerelease: false
