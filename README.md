@@ -60,7 +60,7 @@ While the core functionality is working, please be aware that this is an early r
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/novattz/creamlinux.git
+   git clone https://github.com/Novattz/creamlinux-installer.git
    cd creamlinux
    ```
 
