@@ -232,15 +232,15 @@ pub fn update_dlc_configuration(
                     }
                     processed_dlcs.insert(appid.to_string());
                 } else {
-                    // Not in our list keep the original line
+                    // Not in our list, keep the original line
                     new_contents.push(line.to_string());
                 }
             } else {
-                // Invalid format or not a DLC line keep as is
+                // Invalid format or not a DLC line, keep as is
                 new_contents.push(line.to_string());
             }
         } else if !in_dlc_section || trimmed.is_empty() {
-            // Not a DLC line or empty line keep as is
+            // Not a DLC line or empty line, keep as is
             new_contents.push(line.to_string());
         }
     }
@@ -274,18 +274,6 @@ pub fn update_dlc_configuration(
     }
 }
 
-// Get app ID from game path by reading cream_api.ini
-#[allow(dead_code)]
-fn extract_app_id_from_config(game_path: &str) -> Option<String> {
-    if let Ok(contents) = fs::read_to_string(Path::new(game_path).join("cream_api.ini")) {
-        let re = regex::Regex::new(r"APPID\s*=\s*(\d+)").unwrap();
-        if let Some(cap) = re.captures(&contents) {
-            return Some(cap[1].to_string());
-        }
-    }
-    None
-}
-
 // Create a custom installation with selected DLCs
 pub async fn install_cream_with_dlcs(
     game_id: String,
@@ -316,9 +304,6 @@ pub async fn install_cream_with_dlcs(
         game.title, game_id
     );
 
-    // Install CreamLinux first - but provide the DLCs directly instead of fetching them again
-    use crate::installer::install_creamlinux_with_dlcs;
-
     // Convert DlcInfoWithState to installer::DlcInfo for those that are enabled
     let enabled_dlcs = selected_dlcs
         .iter()
@@ -329,40 +314,40 @@ pub async fn install_cream_with_dlcs(
         })
         .collect::<Vec<_>>();
 
-    let app_handle_clone = app_handle.clone();
-    let game_title = game.title.clone();
+    // Install CreamLinux binaries from cache
+    use crate::unlockers::{CreamLinux, Unlocker};
 
-    // Use direct installation with provided DLCs instead of re-fetching
-    match install_creamlinux_with_dlcs(
-        &game.path,
-        &game_id,
-        enabled_dlcs,
-        move |progress, message| {
-            // Emit progress updates during installation
-            use crate::installer::emit_progress;
-            emit_progress(
-                &app_handle_clone,
-                &format!("Installing CreamLinux for {}", game_title),
-                message,
-                progress * 100.0, // Scale progress from 0 to 100%
-                false,
-                false,
-                None,
-            );
-        },
-    )
-    .await
-    {
-        Ok(_) => {
-            info!(
-                "CreamLinux installation completed successfully for game: {}",
-                game.title
-            );
-            Ok(())
-        }
-        Err(e) => {
-            error!("Failed to install CreamLinux: {}", e);
-            Err(format!("Failed to install CreamLinux: {}", e))
-        }
+    let game_path = game.path.clone();
+
+    // Install binaries
+    CreamLinux::install_to_game(&game.path, &game_id)
+        .await
+        .map_err(|e| format!("Failed to install CreamLinux binaries: {}", e))?;
+
+    // Write cream_api.ini with DLCs
+    let cream_api_path = Path::new(&game_path).join("cream_api.ini");
+    let mut config = String::new();
+
+    config.push_str(&format!("APPID = {}\n[config]\n", game_id));
+    config.push_str("issubscribedapp_on_false_use_real = true\n");
+    config.push_str("[methods]\n");
+    config.push_str("disable_steamapps_issubscribedapp = false\n");
+    config.push_str("[dlc]\n");
+
+    for dlc in &enabled_dlcs {
+        config.push_str(&format!("{} = {}\n", dlc.appid, dlc.name));
     }
+
+    fs::write(&cream_api_path, config)
+        .map_err(|e| format!("Failed to write cream_api.ini: {}", e))?;
+
+    // Update version manifest
+    let cached_versions = crate::cache::read_versions()?;
+    crate::cache::update_game_creamlinux_version(&game_path, cached_versions.creamlinux.latest)?;
+
+    info!(
+        "CreamLinux installation completed successfully for game: {}",
+        game.title
+    );
+    Ok(())
 }

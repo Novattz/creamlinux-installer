@@ -3,12 +3,13 @@
     windows_subsystem = "windows"
 )]
 
+mod cache;
 mod dlc_manager;
 mod installer;
 mod searcher;
+mod unlockers;
 
 use dlc_manager::DlcInfoWithState;
-use tauri_plugin_updater::Builder as UpdaterBuilder;
 use installer::{Game, InstallerAction, InstallerType};
 use log::{debug, error, info, warn};
 use parking_lot::Mutex;
@@ -19,6 +20,7 @@ use std::sync::atomic::Ordering;
 use std::sync::Arc;
 use tauri::State;
 use tauri::{Emitter, Manager};
+use tauri_plugin_updater::Builder as UpdaterBuilder;
 use tokio::time::Instant;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -27,7 +29,6 @@ pub struct GameAction {
     action: String,
 }
 
-// Mark fields with # to allow unused fields
 #[derive(Debug, Clone)]
 struct DlcCache {
     #[allow(dead_code)]
@@ -37,7 +38,7 @@ struct DlcCache {
 }
 
 // Structure to hold the state of installed games
-struct AppState {
+pub struct AppState {
     games: Mutex<HashMap<String, Game>>,
     dlc_cache: Mutex<HashMap<String, DlcCache>>,
     fetch_cancellation: Arc<AtomicBool>,
@@ -49,7 +50,6 @@ fn get_all_dlcs_command(game_path: String) -> Result<Vec<DlcInfoWithState>, Stri
     dlc_manager::get_all_dlcs(&game_path)
 }
 
-// Scan and get the list of Steam games
 #[tauri::command]
 async fn scan_steam_games(
     state: State<'_, AppState>,
@@ -58,14 +58,11 @@ async fn scan_steam_games(
     info!("Starting Steam games scan");
     emit_scan_progress(&app_handle, "Locating Steam libraries...", 10);
 
-    // Get default Steam paths
     let paths = searcher::get_default_steam_paths();
 
-    // Find Steam libraries
     emit_scan_progress(&app_handle, "Finding Steam libraries...", 15);
     let libraries = searcher::find_steam_libraries(&paths);
 
-    // Group libraries by path to avoid duplicates in logs
     let mut unique_libraries = std::collections::HashSet::new();
     for lib in &libraries {
         unique_libraries.insert(lib.to_string_lossy().to_string());
@@ -88,7 +85,6 @@ async fn scan_steam_games(
         20,
     );
 
-    // Find installed games
     let games_info = searcher::find_installed_games(&libraries).await;
 
     emit_scan_progress(
@@ -97,7 +93,6 @@ async fn scan_steam_games(
         90,
     );
 
-    // Log summary of games found
     info!("Games scan complete - Found {} games", games_info.len());
     info!(
         "Native games: {}",
@@ -116,12 +111,10 @@ async fn scan_steam_games(
         games_info.iter().filter(|g| g.smoke_installed).count()
     );
 
-    // Convert to our Game struct
     let mut result = Vec::new();
 
     info!("Processing games into application state...");
     for game_info in games_info {
-        // Only log detailed game info at Debug level to keep Info logs cleaner
         debug!(
             "Processing game: {}, Native: {}, CreamLinux: {}, SmokeAPI: {}",
             game_info.title, game_info.native, game_info.cream_installed, game_info.smoke_installed
@@ -139,8 +132,6 @@ async fn scan_steam_games(
         };
 
         result.push(game.clone());
-
-        // Store in state for later use
         state.games.lock().insert(game.id.clone(), game);
     }
 
@@ -154,9 +145,7 @@ async fn scan_steam_games(
     Ok(result)
 }
 
-// Helper function to emit scan progress events
 fn emit_scan_progress(app_handle: &tauri::AppHandle, message: &str, progress: u32) {
-    // Log first, then emit the event
     info!("Scan progress: {}% - {}", progress, message);
 
     let payload = serde_json::json!({
@@ -169,7 +158,6 @@ fn emit_scan_progress(app_handle: &tauri::AppHandle, message: &str, progress: u3
     }
 }
 
-// Fetch game info by ID - useful for single game updates
 #[tauri::command]
 fn get_game_info(game_id: String, state: State<AppState>) -> Result<Game, String> {
     let games = state.games.lock();
@@ -179,14 +167,12 @@ fn get_game_info(game_id: String, state: State<AppState>) -> Result<Game, String
         .ok_or_else(|| format!("Game with ID {} not found", game_id))
 }
 
-// Unified action handler for installation and uninstallation
 #[tauri::command]
 async fn process_game_action(
     game_action: GameAction,
     state: State<'_, AppState>,
     app_handle: tauri::AppHandle,
 ) -> Result<Game, String> {
-    // Clone the information we need from state to avoid lifetime issues
     let game = {
         let games = state.games.lock();
         games
@@ -195,7 +181,6 @@ async fn process_game_action(
             .ok_or_else(|| format!("Game with ID {} not found", game_action.game_id))?
     };
 
-    // Parse the action string to determine type and operation
     let (installer_type, action) = match game_action.action.as_str() {
         "install_cream" => (InstallerType::Cream, InstallerAction::Install),
         "uninstall_cream" => (InstallerType::Cream, InstallerAction::Uninstall),
@@ -204,7 +189,6 @@ async fn process_game_action(
         _ => return Err(format!("Invalid action: {}", game_action.action)),
     };
 
-    // Execute the action
     installer::process_action(
         game_action.game_id.clone(),
         installer_type,
@@ -214,7 +198,6 @@ async fn process_game_action(
     )
     .await?;
 
-    // Update game status in state based on the action
     let updated_game = {
         let mut games_map = state.games.lock();
         let game = games_map.get_mut(&game_action.game_id).ok_or_else(|| {
@@ -224,7 +207,6 @@ async fn process_game_action(
             )
         })?;
 
-        // Update installation status
         match (installer_type, action) {
             (InstallerType::Cream, InstallerAction::Install) => {
                 game.cream_installed = true;
@@ -240,14 +222,10 @@ async fn process_game_action(
             }
         }
 
-        // Reset installing flag
         game.installing = false;
-
-        // Return updated game info
         game.clone()
     };
 
-    // Emit an event to update the UI for this specific game
     if let Err(e) = app_handle.emit("game-updated", &updated_game) {
         warn!("Failed to emit game-updated event: {}", e);
     }
@@ -255,18 +233,19 @@ async fn process_game_action(
     Ok(updated_game)
 }
 
-// Fetch DLC list for a game
 #[tauri::command]
 async fn fetch_game_dlcs(
     game_id: String,
-    app_handle: tauri::AppHandle,
+    state: State<'_, AppState>,
 ) -> Result<Vec<DlcInfoWithState>, String> {
-    info!("Fetching DLCs for game ID: {}", game_id);
+    info!("Fetching DLC list for game ID: {}", game_id);
 
-    // Fetch DLC data
+    // Fetch DLC data from API
     match installer::fetch_dlc_details(&game_id).await {
         Ok(dlcs) => {
-            // Convert to DlcInfoWithState
+            info!("Successfully fetched {} DLCs for game {}", dlcs.len(), game_id);
+
+            // Convert to DLCInfoWithState for in-memory caching
             let dlcs_with_state = dlcs
                 .into_iter()
                 .map(|dlc| DlcInfoWithState {
@@ -276,31 +255,31 @@ async fn fetch_game_dlcs(
                 })
                 .collect::<Vec<_>>();
 
-            // Cache in memory for this session
-            let state = app_handle.state::<AppState>();
-            let mut cache = state.dlc_cache.lock();
-            cache.insert(
+            // Update in-memory cache
+            let mut dlc_cache = state.dlc_cache.lock();
+            dlc_cache.insert(
                 game_id.clone(),
                 DlcCache {
                     data: dlcs_with_state.clone(),
-                    timestamp: Instant::now(),
+                    timestamp: tokio::time::Instant::now(),
                 },
             );
 
             Ok(dlcs_with_state)
         }
-        Err(e) => Err(format!("Failed to fetch DLC details: {}", e)),
+        Err(e) => {
+            error!("Failed to fetch DLC details: {}", e);
+            Err(format!("Failed to fetch DLC details: {}", e))
+        }
     }
 }
 
 #[tauri::command]
-fn abort_dlc_fetch(game_id: String, app_handle: tauri::AppHandle) -> Result<(), String> {
-    info!("Request to abort DLC fetch for game ID: {}", game_id);
-
-    let state = app_handle.state::<AppState>();
+fn abort_dlc_fetch(state: State<'_, AppState>, app_handle: tauri::AppHandle) -> Result<(), String> {
+    info!("Aborting DLC fetch request received");
     state.fetch_cancellation.store(true, Ordering::SeqCst);
 
-    // Reset after a short delay
+    // Reset cancellation flag after a short delay
     std::thread::spawn(move || {
         std::thread::sleep(std::time::Duration::from_millis(500));
         let state = app_handle.state::<AppState>();
@@ -310,7 +289,6 @@ fn abort_dlc_fetch(game_id: String, app_handle: tauri::AppHandle) -> Result<(), 
     Ok(())
 }
 
-// Fetch DLC list with progress updates (streaming)
 #[tauri::command]
 async fn stream_game_dlcs(game_id: String, app_handle: tauri::AppHandle) -> Result<(), String> {
     info!("Streaming DLCs for game ID: {}", game_id);
@@ -334,7 +312,7 @@ async fn stream_game_dlcs(game_id: String, app_handle: tauri::AppHandle) -> Resu
                 })
                 .collect::<Vec<_>>();
 
-            // Update in-memory
+            // Update in-memory cache
             let state = app_handle.state::<AppState>();
             let mut dlc_cache = state.dlc_cache.lock();
             dlc_cache.insert(
@@ -363,21 +341,18 @@ async fn stream_game_dlcs(game_id: String, app_handle: tauri::AppHandle) -> Resu
     }
 }
 
-// Clear caches command renamed to flush_data for clarity
 #[tauri::command]
 fn clear_caches() -> Result<(), String> {
     info!("Data flush requested - cleaning in-memory state only");
     Ok(())
 }
 
-// Get the list of enabled DLCs for a game
 #[tauri::command]
 fn get_enabled_dlcs_command(game_path: String) -> Result<Vec<String>, String> {
     info!("Getting enabled DLCs for: {}", game_path);
     dlc_manager::get_enabled_dlcs(&game_path)
 }
 
-// Update the DLC configuration for a game
 #[tauri::command]
 fn update_dlc_configuration_command(
     game_path: String,
@@ -387,7 +362,6 @@ fn update_dlc_configuration_command(
     dlc_manager::update_dlc_configuration(&game_path, dlcs)
 }
 
-// Install CreamLinux with selected DLCs
 #[tauri::command]
 async fn install_cream_with_dlcs_command(
     game_id: String,
@@ -460,7 +434,6 @@ async fn install_cream_with_dlcs_command(
     }
 }
 
-// Setup logging
 fn setup_logging() -> Result<(), Box<dyn std::error::Error>> {
     use log::LevelFilter;
     use log4rs::append::file::FileAppender;
@@ -468,30 +441,25 @@ fn setup_logging() -> Result<(), Box<dyn std::error::Error>> {
     use log4rs::encode::pattern::PatternEncoder;
     use std::fs;
 
-    // Get XDG cache directory
     let xdg_dirs = xdg::BaseDirectories::with_prefix("creamlinux")?;
     let log_path = xdg_dirs.place_cache_file("creamlinux.log")?;
 
-    // Clear the log file on startup
     if log_path.exists() {
         if let Err(e) = fs::write(&log_path, "") {
             eprintln!("Warning: Failed to clear log file: {}", e);
         }
     }
 
-    // Create a file appender
     let file = FileAppender::builder()
         .encoder(Box::new(PatternEncoder::new(
             "[{d(%Y-%m-%d %H:%M:%S)}] {l}: {m}\n",
         )))
         .build(log_path)?;
 
-    // Build the config
     let config = Config::builder()
         .appender(Appender::builder().build("file", Box::new(file)))
         .build(Root::builder().appender("file").build(LevelFilter::Info))?;
 
-    // Initialize log4rs with this config
     log4rs::init_config(config)?;
 
     info!("CreamLinux started with a clean log file");
@@ -499,7 +467,6 @@ fn setup_logging() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn main() {
-    // Set up logging first
     if let Err(e) = setup_logging() {
         eprintln!("Warning: Failed to initialize logging: {}", e);
     }
@@ -526,7 +493,6 @@ fn main() {
             abort_dlc_fetch,
         ])
         .setup(|app| {
-            // Add a setup handler to do any initialization work
             info!("Tauri application setup");
 
             #[cfg(debug_assertions)]
@@ -537,8 +503,7 @@ fn main() {
                     }
                 }
             }
-            
-            // Initialize and manage AppState
+
             let app_handle = app.handle().clone();
             let state = AppState {
                 games: Mutex::new(HashMap::new()),
@@ -546,7 +511,61 @@ fn main() {
                 fetch_cancellation: Arc::new(AtomicBool::new(false)),
             };
             app.manage(state);
-            
+
+            // Initialize cache on startup in a background task
+            tauri::async_runtime::spawn(async move {
+                info!("Starting cache initialization...");
+
+                // Step 1: Initialize cache if needed (downloads unlockers)
+                if let Err(e) = cache::initialize_cache().await {
+                    error!("Failed to initialize cache: {}", e);
+                    return;
+                }
+
+                info!("Cache initialized successfully");
+
+                // Step 2: Check for updates
+                match cache::check_and_update_cache().await {
+                    Ok(result) => {
+                        if result.any_updated() {
+                            info!(
+                                "Updates found - SmokeAPI: {:?}, CreamLinux: {:?}",
+                                result.new_smokeapi_version, result.new_creamlinux_version
+                            );
+
+                            // Step 3: Update outdated games
+                            let state_for_update = app_handle.state::<AppState>();
+                            let games = state_for_update.games.lock().clone();
+
+                            match cache::update_outdated_games(&games).await {
+                                Ok(stats) => {
+                                    info!(
+                                        "Game updates complete - {} games updated, {} failed",
+                                        stats.total_updated(),
+                                        stats.total_failed()
+                                    );
+
+                                    if stats.has_failures() {
+                                        warn!(
+                                            "Some game updates failed: SmokeAPI failed: {}, CreamLinux failed: {}",
+                                            stats.smokeapi_failed, stats.creamlinux_failed
+                                        );
+                                    }
+                                }
+                                Err(e) => {
+                                    error!("Failed to update games: {}", e);
+                                }
+                            }
+                        } else {
+                            info!("All unlockers are up to date");
+                        }
+                    }
+                    Err(e) => {
+                        error!("Failed to check for updates: {}", e);
+                    }
+                }
+            });
+
             Ok(())
         })
         .run(tauri::generate_context!())
