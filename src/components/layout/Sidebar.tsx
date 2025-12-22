@@ -1,4 +1,5 @@
 import { Icon, layers, linux, proton, settings } from '@/components/icons'
+import { Button } from '@/components/buttons'
 
 interface SidebarProps {
   setFilter: (filter: string) => void
@@ -21,7 +22,7 @@ type FilterItem = {
 const Sidebar = ({ setFilter, currentFilter, onSettingsClick }: SidebarProps) => {
   // Available filter options with icons
   const filters: FilterItem[] = [
-    { id: 'all', label: 'All Games', icon: layers, variant: 'bold' },
+    { id: 'all', label: 'All Games', icon: layers, variant: 'solid' },
     { id: 'native', label: 'Native', icon: linux, variant: 'brand' },
     { id: 'proton', label: 'Proton Required', icon: proton, variant: 'brand' },
   ]
@@ -47,10 +48,16 @@ const Sidebar = ({ setFilter, currentFilter, onSettingsClick }: SidebarProps) =>
         ))}
       </ul>
 
-      <div className="settings-button" onClick={onSettingsClick}>
-        <Icon name={settings} variant="bold" size="md" className="settings-icon" />
-        <span>Settings</span>
-      </div>
+      <Button
+        variant="secondary"
+        size="medium"
+        onClick={onSettingsClick}
+        className="settings-button"
+        leftIcon={<Icon name={settings} variant="solid" size="md" className="settings-icon" />}
+        fullWidth
+      >
+        Settings
+      </Button>
 
     </div>
   )

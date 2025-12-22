@@ -16,7 +16,7 @@ const Header = ({ onRefresh, refreshDisabled = false, onSearch, searchQuery }: H
   return (
     <header className="app-header">
       <div className="app-title">
-        <Icon name={diamond} variant="bold" size="lg" className="app-logo-icon" />
+        <Icon name={diamond} variant="solid" size="lg" className="app-logo-icon" />
         <h1>CreamLinux</h1>
       </div>
       <div className="header-controls">
@@ -25,7 +25,7 @@ const Header = ({ onRefresh, refreshDisabled = false, onSearch, searchQuery }: H
           onClick={onRefresh}
           disabled={refreshDisabled}
           className="refresh-button"
-          leftIcon={<Icon name={refresh} variant="bold" size="md" />}
+          leftIcon={<Icon name={refresh} variant="solid" size="md" />}
         >
           Refresh
         </Button>
@@ -37,7 +37,7 @@ const Header = ({ onRefresh, refreshDisabled = false, onSearch, searchQuery }: H
             value={searchQuery}
             onChange={(e) => onSearch(e.target.value)}
           />
-          <Icon name={search} variant="bold" size="md" className="search-icon" />
+          <Icon name={search} variant="solid" size="md" className="search-icon" />
         </div>
       </div>
     </header>

@@ -152,9 +152,9 @@ const GameItem = ({ game, onAction, onEdit }: GameItemProps) => {
               disabled={!game.cream_installed || !!game.installing}
               title="Manage DLCs"
               className="edit-button settings-icon-button"
-            >
-              <Icon name="Settings" size="md" />
-            </Button>
+              leftIcon={<Icon name="Settings" variant="solid" size="md" />}
+              iconOnly
+            />
           )}
         </div>
       </div>

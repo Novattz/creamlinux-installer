@@ -41,7 +41,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({ visible, onClose }) => 
     <Dialog visible={visible} onClose={onClose} size="medium">
       <DialogHeader onClose={onClose} hideCloseButton={true}>
         <div className="settings-header">
-          <Icon name={settings} variant="bold" size="md" />
+          <Icon name={settings} variant="solid" size="md" />
           <h3>Settings</h3>
         </div>
       </DialogHeader>
@@ -55,7 +55,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({ visible, onClose }) => 
             </p>
             
             <div className="settings-placeholder">
-              <div className="placeholder-icon"> <Icon name={settings} variant="bold" size="xl" /> </div>
+              <div className="placeholder-icon"> <Icon name={settings} variant="solid" size="xl" /> </div>
               <div className="placeholder-text">
                 <h5>Settings Coming Soon</h5>
                 <p>
