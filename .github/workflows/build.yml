@@ -28,11 +28,37 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Package version: $VERSION"
 
+      - name: get changelog notes for version
+        id: changelog
+        env:
+          VERSION: ${{ steps.get-version.outputs.version }}
+        run: |
+          NOTES="$(awk -v ver="$VERSION" '
+            BEGIN { found=0 }
+            $0 ~ "^## \\[" ver "\\] - " { found=1 }
+            found {
+              if ($0 ~ "^## \\[" && $0 !~ "^## \\[" ver "\\] - " ) exit
+              print
+            }
+          ' CHANGELOG.md)"
+
+          if [ -z "$NOTES" ]; then
+            echo "No changelog entry found for version $VERSION" >&2
+            exit 1
+          fi
+
+          {
+            echo "notes<<EOF"
+            echo "$NOTES"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
       - name: create draft release
         id: create-release
         uses: actions/github-script@v6
         env:
           VERSION: ${{ steps.get-version.outputs.version }}
+          NOTES: ${{ steps.changelog.outputs.notes }}
         with:
           script: |
             const { data } = await github.rest.repos.createRelease({
@@ -40,7 +66,7 @@ jobs:
               repo: context.repo.repo,
               tag_name: `v${process.env.VERSION}`,
               name: `v${process.env.VERSION}`,
-              body: 'Release.',
+              body: process.env.NOTES,
               draft: true,
               prerelease: false
             })
