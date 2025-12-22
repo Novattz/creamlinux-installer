@@ -88,15 +88,19 @@ export const AppProvider = ({ children }: AppProviderProps) => {
     try {
       await executeGameAction(gameId, action, games)
 
-      // Show success message
-      if (action.includes('install')) {
-        success(
-          `Successfully installed ${action.includes('cream') ? 'CreamLinux' : 'SmokeAPI'} for ${game.title}`
-        )
+      // Show appropriate success message based on action type
+      const product = action.includes('cream') ? 'Creamlinux' : 'SmokeAPI'
+      const isUninstall = action.includes('uninstall')
+      const isInstall = action.includes('install') && !isUninstall
+
+      console.log('DEBUG: Action processed. Product:', product, 'isInstall:', isInstall, 'isUninstall:', isUninstall, 'action:', action)
+
+      if (isInstall) {
+        success(`Successfully installed ${product} for ${game.title}`)
+      } else if (isUninstall) {
+        info(`${product} uninstalled from ${game.title}`)
       } else {
-        success(
-          `Successfully uninstalled ${action.includes('cream') ? 'CreamLinux' : 'SmokeAPI'} from ${game.title}`
-        )
+        console.log('Unknown action type:', action)
       }
     } catch (error) {
       showError(`Action failed: ${error}`)

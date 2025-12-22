@@ -11,9 +11,9 @@
   z-index: var(--z-tooltip);
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.75rem;
   padding: 1rem;
-  max-width: 380px;
+  max-width: 400px;
 
   // Position variations
   &.top-right {
@@ -60,97 +60,140 @@
   display: flex;
   align-items: flex-start;
   background-color: var(--elevated-bg);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
-  padding: 0.75rem 1rem;
+  padding: 1rem 1.25rem;
   max-width: 100%;
-  min-width: 280px;
+  min-width: 320px;
   opacity: 0;
-  transform: translateY(10px);
-  transition: all 0.3s var(--easing-ease-out);
-  border-left: 4px solid;
+  transform: translateY(20px) scale(0.95);
+  transition: all 0.4s var(--easing-bounce);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   position: relative;
   cursor: default;
 
   &.visible {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 
   &.closing {
     opacity: 0;
-    transform: translateY(-10px);
+    transform: translateY(-20px) scale(0.95);
   }
 
   // Type-specific styling
   &.toast-success {
-    border-color: var(--success);
+    border-left: 4px solid var(--success);
+
     .toast-icon {
-      color: var(--success);
+      .toast-success-icon {
+        color: var(--success);
+      }
     }
   }
 
   &.toast-error {
-    border-color: var(--danger);
+    border-left: 4px solid var(--danger);
+
     .toast-icon {
-      color: var(--danger);
+      .toast-error-icon {
+        color: var(--danger);
+      }
     }
   }
 
   &.toast-warning {
-    border-color: var(--warning);
+    border-left: 4px solid var(--warning);
+
     .toast-icon {
-      color: var(--warning);
+      .toast-warning-icon {
+        color: var(--warning);
+      }
     }
   }
 
   &.toast-info {
-    border-color: var(--info);
+    border-left: 4px solid var(--info);
+
     .toast-icon {
-      color: var(--info);
+      .toast-info-icon {
+        color: var(--info);
+      }
     }
   }
 
   // Toast elements
   .toast-icon {
     flex-shrink: 0;
-    font-size: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    background: var(--tertiary-bg);
+    border-radius: var(--radius-sm);
+    padding: 0.35rem;
     margin-right: 0.75rem;
-    margin-top: 0.125rem;
+    margin-top: 0;
+
+    .toast-type-icon {
+      color: inherit;
+    }
   }
 
   .toast-content {
     flex: 1;
     min-width: 0; // Required for proper overflow handling
+    padding-top: 0.1rem;
   }
 
   .toast-title {
     font-weight: 600;
-    font-size: 0.95rem;
-    margin-bottom: 0.25rem;
+    font-size: 1rem;
+    margin-bottom: 0.4rem;
     color: var(--text-primary);
+    line-height: 1.3;
   }
 
   .toast-message {
-    font-size: 0.875rem;
+    font-size: 0.9rem;
     color: var(--text-secondary);
     margin: 0;
     word-break: break-word;
+    line-height: 1.4;
   }
 
   .toast-close {
-    background: none;
+    background: rgba(255, 255, 255, 0.1);
     border: none;
     color: var(--text-muted);
-    font-size: 1.25rem;
-    line-height: 1;
-    padding: 0;
+    padding: 0.4rem;
     cursor: pointer;
-    margin-left: 0.5rem;
-    transition: color 0.2s ease;
+    margin-left: 0.75rem;
+    border-radius: 50%;
+    width: 1.75rem;
+    height: 1.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+
+    .toast-close-icon {
+      color: var(--text-muted);
+    }
 
     &:hover {
-      color: var(--text-primary);
+      background: rgba(255, 255, 255, 0.2);
+      transform: scale(1.1);
+
+      .toast-close-icon {
+        color: var(--text-primary);
+      }
+    }
+
+    &:active {
+      transform: scale(0.95);
     }
   }
 }
@@ -159,21 +202,21 @@
 @keyframes toast-in {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(30px) scale(0.9);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 }
 
 @keyframes toast-out {
   from {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
   to {
     opacity: 0;
-    transform: translateY(-20px);
+    transform: translateY(-30px) scale(0.9);
   }
 }

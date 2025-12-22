@@ -1,5 +1,5 @@
 import { ReactNode, useState, useEffect, useCallback } from 'react'
-import { Icon, check, info, warning, error } from '@/components/icons'
+import { Icon, check, info, warning, error, close } from '@/components/icons'
 
 export interface ToastProps {
   id: string
@@ -32,7 +32,7 @@ const Toast = ({
     setTimeout(() => {
       setVisible(false)
       setTimeout(() => onDismiss(id), 50)
-    }, 300)
+    }, 400)
   }, [id, onDismiss])
 
   // Handle animation on mount/unmount
@@ -40,7 +40,7 @@ const Toast = ({
     // Start the enter animation
     const enterTimer = setTimeout(() => {
       setVisible(true)
-    }, 10)
+    }, 50)
 
     // Auto-dismiss after duration, if not Infinity
     let dismissTimer: NodeJS.Timeout | null = null
@@ -60,15 +60,33 @@ const Toast = ({
   const getIcon = (): ReactNode => {
     switch (type) {
       case 'success':
-        return <Icon name={check} size="md" variant="bold" />
+        return <Icon name={check} size="md" variant="solid" className="toast-type-icon toast-success-icon"/>
       case 'error':
-        return <Icon name={error} size="md" variant="bold" />
+        return <Icon name={error} size="md" variant="solid" className="toast-type-icon toast-error-icon"/>
       case 'warning':
-        return <Icon name={warning} size="md" variant="bold" />
+        return <Icon name={warning} size="md" variant="solid" className="toast-type-icon toast-warning-icon"/>
       case 'info':
-        return <Icon name={info} size="md" variant="bold" />
+        return <Icon name={info} size="md" variant="solid" className="toast-type-icon toast-info-icon"/>
       default:
-        return <Icon name={info} size="md" variant="bold" />
+        return <Icon name={info} size="md" variant="solid" className="toast-type-icon toast-info-icon"/>
+    }
+  }
+
+  // Get default title if none provided
+  const getTitle = (): string => {
+    if (title) return title
+
+    switch (type) {
+      case 'success':
+        return 'Success'
+      case 'error':
+        return 'Error'
+      case 'warning':
+        return 'Warning'
+      case 'info':
+        return 'Information'
+      default:
+        return 'Notification'
     }
   }
 
@@ -78,11 +96,11 @@ const Toast = ({
     >
       <div className="toast-icon">{getIcon()}</div>
       <div className="toast-content">
-        {title && <h4 className="toast-title">{title}</h4>}
+        <h4 className="toast-title">{getTitle()}</h4>
         <p className="toast-message">{message}</p>
       </div>
       <button className="toast-close" onClick={handleDismiss} aria-label="Dismiss">
-        ×
+        <Icon name={close} size="sm" variant="solid" className="toast-close-icon" />
       </button>
     </div>
   )
