@@ -1,7 +1,7 @@
 {
   "name": "creamlinux",
   "private": true,
-  "version": "1.2.0",
+  "version": "1.3.0",
   "type": "module",
   "author": "Tickbase",
   "repository": "https://github.com/Novattz/creamlinux-installer",
@@ -13,7 +13,7 @@
     "preview": "vite preview",
     "tauri": "tauri",
     "optimize-svg": "node scripts/optimize-svg.js",
-    "prepare-release": "node scripts/prepare-release.js"
+    "set-version": "node scripts/set-version.js"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.5.0",
