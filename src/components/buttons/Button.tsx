@@ -10,6 +10,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   leftIcon?: React.ReactNode
   rightIcon?: React.ReactNode
   fullWidth?: boolean
+  iconOnly?: boolean
 }
 
 /**
@@ -23,6 +24,7 @@ const Button: FC<ButtonProps> = ({
   leftIcon,
   rightIcon,
   fullWidth = false,
+  iconOnly = false,
   className = '',
   disabled,
   ...props
@@ -43,11 +45,14 @@ const Button: FC<ButtonProps> = ({
     warning: 'btn-warning',
   }[variant]
 
+  // Determine if this is an icon-only button
+  const isIconOnly = iconOnly || (!children && (leftIcon || rightIcon))
+
   return (
     <button
       className={`btn ${variantClass} ${sizeClass} ${fullWidth ? 'btn-full' : ''} ${
         isLoading ? 'btn-loading' : ''
-      } ${className}`}
+      } ${isIconOnly ? 'btn-icon-only' : ''} ${className}`}
       disabled={disabled || isLoading}
       {...props}
     >
@@ -58,7 +63,7 @@ const Button: FC<ButtonProps> = ({
       )}
 
       {leftIcon && !isLoading && <span className="btn-icon btn-icon-left">{leftIcon}</span>}
-      <span className="btn-text">{children}</span>
+      {children && <span className="btn-text">{children}</span>}
       {rightIcon && !isLoading && <span className="btn-icon btn-icon-right">{rightIcon}</span>}
     </button>
   )

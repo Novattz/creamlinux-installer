@@ -1,6 +1,6 @@
 import { FC } from 'react'
 import Button, { ButtonVariant } from '../buttons/Button'
-import { Icon, layers, download } from '@/components/icons'
+import { Icon, trash, download } from '@/components/icons'
 
 // Define available action types
 export type ActionType = 'install_cream' | 'uninstall_cream' | 'install_smoke' | 'uninstall_smoke'
@@ -45,14 +45,12 @@ const ActionButton: FC<ActionButtonProps> = ({
 
   // Select appropriate icon based on action type and state
   const getIconInfo = () => {
-    const isCream = action.includes('cream')
-
     if (isInstalled) {
       // Uninstall actions
-      return { name: layers, variant: 'bold' }
+      return { name: trash, variant: 'solid' }
     } else {
       // Install actions
-      return { name: download, variant: isCream ? 'bold' : 'outline' }
+      return { name: download, variant: 'solid' }
     }
   }
 
