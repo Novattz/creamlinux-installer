@@ -60,6 +60,11 @@
         color: var(--elevated-bg);
       }
     }
+
+    // Ensure icons are white when not active
+    &:not(.active) .filter-icon {
+      color: var(--text-primary);
+    }
   }
 }
 
@@ -70,6 +75,37 @@
 
   .filter-icon {
     flex-shrink: 0;
+  }
+}
+
+.settings-button {
+  margin-top: auto;
+
+  &.btn.btn-secondary {
+    background-color: transparent;
+    border: 1px solid transparent;
+    color: var(--text-secondary);
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.07);
+      color: var(--text-primary);
+      border-color: var(--border-soft);
+      transform: none;
+      box-shadow: none;
+    }
+
+    &:active {
+      transform: scale(0.98);
+    }
+
+    .settings-icon {
+      transition: transform 0.3s ease;
+      color: inherit;
+    }
+
+    &:hover .settings-icon {
+      transform: rotate(45deg);
+    }
   }
 }
 

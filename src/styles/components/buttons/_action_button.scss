@@ -79,6 +79,10 @@
   letter-spacing: 1px;
   transition: all var(--duration-normal) var(--easing-ease-out);
 
+  svg {
+    color: var(--text-primary);
+  }
+
   &:hover {
     background-color: rgba(255, 255, 255, 0.3);
     transform: translateY(-2px);
@@ -96,15 +100,13 @@
     transform: none;
     box-shadow: none;
   }
-
   // Settings icon button variant
   &.settings-icon-button {
     svg {
       transition: transform var(--duration-normal) var(--easing-ease-out);
     }
-
     &:hover svg {
-      transform: rotate(90deg);
+      transform: rotate(45deg);
     }
   }
 }
