@@ -4,25 +4,25 @@
 import React from 'react'
 
 // Import all icon variants
-import * as OutlineIcons from './ui/outline'
-import * as BoldIcons from './ui/bold'
+import * as StrokeIcons from './ui/stroke'
+import * as SolidIcons from './ui/solid'
 import * as BrandIcons from './brands'
 
 export type IconSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | number
-export type IconVariant = 'bold' | 'outline' | 'brand' | undefined
-export type IconName = keyof typeof OutlineIcons | keyof typeof BoldIcons | keyof typeof BrandIcons
+export type IconVariant = 'solid' | 'stroke' | 'brand' | undefined
+export type IconName = keyof typeof StrokeIcons | keyof typeof SolidIcons | keyof typeof BrandIcons
 
 // Sets of icon names by type for determining default variants
 const BRAND_ICON_NAMES = new Set(Object.keys(BrandIcons))
-const OUTLINE_ICON_NAMES = new Set(Object.keys(OutlineIcons))
-const BOLD_ICON_NAMES = new Set(Object.keys(BoldIcons))
+const STROKE_ICON_NAMES = new Set(Object.keys(StrokeIcons))
+const SOLID_ICON_NAMES = new Set(Object.keys(SolidIcons))
 
 export interface IconProps extends React.SVGProps<SVGSVGElement> {
   /** Name of the icon to render */
   name: IconName | string
   /** Size of the icon */
   size?: IconSize
-  /** Icon variant - bold, outline, or brand */
+  /** Icon variant - solid, stroke, or brand */
   variant?: IconVariant | string
   /** Title for accessibility */
   title?: string
@@ -60,26 +60,26 @@ const getIconComponent = (
 ): React.ComponentType<React.SVGProps<SVGSVGElement>> | null => {
   // Normalize variant to ensure it's a valid IconVariant
   const normalizedVariant =
-    variant === 'bold' || variant === 'outline' || variant === 'brand'
+    variant === 'solid' || variant === 'stroke' || variant === 'brand'
       ? (variant as IconVariant)
       : undefined
 
   // Try to get the icon from the specified variant
   switch (normalizedVariant) {
-    case 'outline':
-      return OutlineIcons[name as keyof typeof OutlineIcons] || null
-    case 'bold':
-      return BoldIcons[name as keyof typeof BoldIcons] || null
+    case 'stroke':
+      return StrokeIcons[name as keyof typeof StrokeIcons] || null
+    case 'solid':
+      return SolidIcons[name as keyof typeof SolidIcons] || null
     case 'brand':
       return BrandIcons[name as keyof typeof BrandIcons] || null
     default:
       // If no variant specified, determine best default
       if (BRAND_ICON_NAMES.has(name)) {
         return BrandIcons[name as keyof typeof BrandIcons] || null
-      } else if (OUTLINE_ICON_NAMES.has(name)) {
-        return OutlineIcons[name as keyof typeof OutlineIcons] || null
-      } else if (BOLD_ICON_NAMES.has(name)) {
-        return BoldIcons[name as keyof typeof BoldIcons] || null
+      } else if (STROKE_ICON_NAMES.has(name)) {
+        return StrokeIcons[name as keyof typeof StrokeIcons] || null
+      } else if (SOLID_ICON_NAMES.has(name)) {
+        return SolidIcons[name as keyof typeof SolidIcons] || null
       }
       return null
   }

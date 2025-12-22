@@ -3,11 +3,11 @@ export { default as Icon } from './Icon'
 export type { IconProps, IconSize, IconVariant, IconName } from './Icon'
 
 // Re-export all icons by category for convenience
-import * as OutlineIcons from './ui/outline'
-import * as BoldIcons from './ui/bold'
+import * as StrokeIcons from './ui/stroke'
+import * as SolidIcons from './ui/solid'
 import * as BrandIcons from './brands'
 
-export { OutlineIcons, BoldIcons, BrandIcons }
+export { StrokeIcons, SolidIcons, BrandIcons }
 
 // Export individual icon names as constants
 // UI icons
