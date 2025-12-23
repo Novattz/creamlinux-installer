@@ -1,0 +1,127 @@
+@use '../../themes/index' as *;
+@use '../../abstracts/index' as *;
+
+/* 
+  Dropdown component styles
+*/
+
+.dropdown-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.dropdown-label-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.dropdown-label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.dropdown-description {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  margin: 0;
+}
+
+.dropdown {
+  position: relative;
+  width: 100%;
+
+  &.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.dropdown-trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: var(--border-dark);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 1rem;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all var(--duration-normal) var(--easing-ease-out);
+
+  &:hover:not(:disabled) {
+    border-color: var(--border);
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(var(--primary-color), 0.2);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+  }
+}
+
+.dropdown-value {
+  flex: 1;
+  text-align: left;
+  font-size: 0.9rem;
+}
+
+.dropdown-icon {
+  transition: transform var(--duration-normal) var(--easing-ease-out);
+  color: var(--text-secondary);
+  transform: rotate(180deg);
+
+  &.open {
+    transform: rotate(0deg);
+  }
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 0;
+  right: 0;
+  background-color: var(--elevated-bg);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-lg);
+  z-index: var(--z-modal);
+  max-height: 200px;
+  overflow-y: auto;
+  @include custom-scrollbar;
+}
+
+.dropdown-option {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  text-align: left;
+  cursor: pointer;
+  transition: all var(--duration-normal) var(--easing-ease-out);
+  font-size: 0.9rem;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+
+  &.selected {
+    background-color: rgba(var(--primary-color), 0.2);
+    color: var(--primary-color);
+  }
+
+  &:not(:last-child) {
+    border-bottom: 1px solid var(--border-soft);
+  }
+}
