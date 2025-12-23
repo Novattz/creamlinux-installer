@@ -1,0 +1,66 @@
+@use '../../themes/index' as *;
+@use '../../abstracts/index' as *;
+
+/* 
+  SmokeAPI Settings Dialog styles
+*/
+
+.dialog-subtitle {
+  color: var(--text-secondary);
+  font-weight: 500;
+  margin-top: 0.25rem;
+  font-weight: normal;
+}
+
+.smokeapi-settings-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.settings-options {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  transition: opacity var(--duration-normal) var(--easing-ease-out);
+
+  &.disabled {
+    opacity: 0.4;
+    pointer-events: none;
+  }
+}
+
+.settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-soft);
+  }
+}
+
+.checkbox-option {
+  padding: 0.5rem 0;
+
+  &:not(:last-child) {
+    border-bottom: 1px solid var(--border-soft);
+  }
+
+  .animated-checkbox {
+    width: 100%;
+
+    .checkbox-content {
+      flex: 1;
+    }
+
+    .checkbox-sublabel {
+      margin-top: 0.25rem;
+    }
+  }
+}

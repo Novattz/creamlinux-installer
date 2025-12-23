@@ -30,6 +30,12 @@ export interface ProgressDialogState {
   instructions?: InstallationInstructions
 }
 
+export interface SmokeAPISettingsDialogState {
+  visible: boolean
+  gamePath: string
+  gameTitle: string
+}
+
 // Define the context type
 export interface AppContextType {
   // Game state
@@ -53,6 +59,11 @@ export interface AppContextType {
   settingsDialog: { visible: boolean }
   handleSettingsOpen: () => void
   handleSettingsClose: () => void
+
+  // SmokeAPI settings
+  smokeAPISettingsDialog: SmokeAPISettingsDialogState
+  handleSmokeAPISettingsOpen: (gameId: string) => void
+  handleSmokeAPISettingsClose: () => void
 
   // Toast notifications
   showToast: (

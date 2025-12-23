@@ -43,6 +43,7 @@ function App() {
     settingsDialog,
     handleSettingsOpen,
     handleSettingsClose,
+    handleSmokeAPISettingsOpen,
   } = useAppContext()
 
   // Show update screen first
@@ -86,6 +87,7 @@ function App() {
               isLoading={isLoading}
               onAction={handleGameAction}
               onEdit={handleGameEdit}
+              onSmokeAPISettings={handleSmokeAPISettingsOpen}
             />
           )}
         </div>

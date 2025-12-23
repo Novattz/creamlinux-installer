@@ -7,6 +7,7 @@ export { default as DialogActions } from './DialogActions'
 export { default as ProgressDialog } from './ProgressDialog'
 export { default as DlcSelectionDialog } from './DlcSelectionDialog'
 export { default as SettingsDialog } from './SettingsDialog'
+export { default as SmokeAPISettingsDialog } from './SmokeAPISettingsDialog'
 
 // Export types
 export type { DialogProps } from './Dialog'

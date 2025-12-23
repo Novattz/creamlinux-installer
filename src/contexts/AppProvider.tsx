@@ -4,6 +4,7 @@ import { useGames, useDlcManager, useGameActions, useToasts } from '@/hooks'
 import { DlcInfo } from '@/types'
 import { ActionType } from '@/components/buttons/ActionButton'
 import { ToastContainer } from '@/components/notifications'
+import { SmokeAPISettingsDialog } from '@/components/dialogs'
 
 // Context provider component
 interface AppProviderProps {
@@ -38,6 +39,17 @@ export const AppProvider = ({ children }: AppProviderProps) => {
   // Settings dialog state
   const [settingsDialog, setSettingsDialog] = useState({ visible: false })
 
+  // SmokeAPI settings dialog state
+  const [smokeAPISettingsDialog, setSmokeAPISettingsDialog] = useState<{
+    visible: boolean
+    gamePath: string
+    gameTitle: string
+  }>({
+    visible: false,
+    gamePath: '',
+    gameTitle: '',
+  })
+
   // Settings handlers
   const handleSettingsOpen = () => {
     setSettingsDialog({ visible: true })
@@ -45,6 +57,25 @@ export const AppProvider = ({ children }: AppProviderProps) => {
 
   const handleSettingsClose = () => {
     setSettingsDialog({ visible: false })
+  }
+
+  // SmokeAPI settings handlers
+  const handleSmokeAPISettingsOpen = (gameId: string) => {
+    const game = games.find((g) => g.id === gameId)
+    if (!game) {
+      showError('Game not found')
+      return
+    }
+
+    setSmokeAPISettingsDialog({
+      visible: true,
+      gamePath: game.path,
+      gameTitle: game.title,
+    })
+  }
+
+  const handleSmokeAPISettingsClose = () => {
+    setSmokeAPISettingsDialog((prev) => ({ ...prev, visible: false }))
   }
 
   // Game action handler with proper error reporting
@@ -201,6 +232,11 @@ export const AppProvider = ({ children }: AppProviderProps) => {
     handleSettingsOpen,
     handleSettingsClose,
 
+    // SmokeAPI Settings
+    smokeAPISettingsDialog,
+    handleSmokeAPISettingsOpen,
+    handleSmokeAPISettingsClose,
+
     // Toast notifications
     showToast,
   }
@@ -209,6 +245,14 @@ export const AppProvider = ({ children }: AppProviderProps) => {
     <AppContext.Provider value={contextValue}>
       {children}
       <ToastContainer toasts={toasts} onDismiss={removeToast} />
+      
+      {/* SmokeAPI Settings Dialog */}
+      <SmokeAPISettingsDialog
+        visible={smokeAPISettingsDialog.visible}
+        onClose={handleSmokeAPISettingsClose}
+        gamePath={smokeAPISettingsDialog.gamePath}
+        gameTitle={smokeAPISettingsDialog.gameTitle}
+      />
     </AppContext.Provider>
   )
 }
