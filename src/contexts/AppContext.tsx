@@ -1,6 +1,7 @@
 import { createContext } from 'react'
 import { Game, DlcInfo } from '@/types'
 import { ActionType } from '@/components/buttons/ActionButton'
+import { DlcDialogState } from '@/hooks/useDlcManager'
 
 // Types for context sub-components
 export interface InstallationInstructions {
@@ -8,17 +9,6 @@ export interface InstallationInstructions {
   command: string
   game_title: string
   dlc_count?: number
-}
-
-export interface DlcDialogState {
-  visible: boolean
-  gameId: string
-  gameTitle: string
-  dlcs: DlcInfo[]
-  isLoading: boolean
-  isEditMode: boolean
-  progress: number
-  timeLeft?: string
 }
 
 export interface ProgressDialogState {
@@ -49,6 +39,7 @@ export interface AppContextType {
   dlcDialog: DlcDialogState
   handleGameEdit: (gameId: string) => void
   handleDlcDialogClose: () => void
+  handleUpdateDlcs: (gameId: string) => Promise<void>
 
   // Game actions
   progressDialog: ProgressDialogState

@@ -154,6 +154,28 @@
   color: var(--text-secondary);
 }
 
+// Update results message
+.dlc-update-results {
+  padding: 0.75rem 1.5rem;
+  background-color: var(--elevated-bg);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  margin-bottom: 0.75rem;
+
+  .update-success-message {
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    .dlc-update-icon {
+      color: var(--success);
+    }
+  }
+}
+
 // Game information in DLC dialog
 .dlc-game-info {
   display: flex;

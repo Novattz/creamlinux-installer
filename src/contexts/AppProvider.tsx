@@ -25,6 +25,7 @@ export const AppProvider = ({ children }: AppProviderProps) => {
     handleDlcDialogClose: closeDlcDialog,
     streamGameDlcs,
     handleGameEdit,
+    handleUpdateDlcs,
   } = useDlcManager()
 
   const {
@@ -220,6 +221,7 @@ export const AppProvider = ({ children }: AppProviderProps) => {
       handleGameEdit(gameId, games)
     },
     handleDlcDialogClose: closeDlcDialog,
+    handleUpdateDlcs: (gameId: string) => handleUpdateDlcs(gameId),
 
     // Game actions
     progressDialog,

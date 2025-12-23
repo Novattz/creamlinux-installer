@@ -11,10 +11,12 @@ export interface DlcDialogState {
   enabledDlcs: string[]
   isLoading: boolean
   isEditMode: boolean
+  isUpdating: boolean
   progress: number
   progressMessage: string
   timeLeft: string
   error: string | null
+  newDlcsCount: number
 }
 
 /**
@@ -36,10 +38,12 @@ export function useDlcManager() {
     enabledDlcs: [],
     isLoading: false,
     isEditMode: false,
+    isUpdating: false,
     progress: 0,
     progressMessage: '',
     timeLeft: '',
     error: null,
+    newDlcsCount: 0,
   })
 
   // Set up event listeners for DLC streaming
@@ -80,6 +84,7 @@ export function useDlcManager() {
               setDlcDialog((prev) => ({
                 ...prev,
                 isLoading: false,
+                isUpdating: false,
               }))
 
               // Reset fetch state
@@ -177,10 +182,12 @@ export function useDlcManager() {
         enabledDlcs: [],
         isLoading: true,
         isEditMode: true,
+        isUpdating: false,
         progress: 0,
         progressMessage: 'Reading DLC configuration...',
         timeLeft: '',
         error: null,
+        newDlcsCount: 0,
       })
 
       // Always get a fresh copy from the config file
@@ -302,6 +309,54 @@ export function useDlcManager() {
     }
   }, [dlcDialog.dlcs, dlcDialog.enabledDlcs])
 
+  // Function to update DLC list (refetch from Steam API)
+  const handleUpdateDlcs = async (gameId: string) => {
+    try {
+      // Store current app IDs to identify new DLCs later
+      const currentAppIds = new Set(dlcDialog.dlcs.map((dlc) => dlc.appid))
+
+      // Set updating state and clear DLCs
+      setDlcDialog((prev) => ({
+        ...prev,
+        isUpdating: true,
+        isLoading: true,
+        progress: 0,
+        progressMessage: 'Checking for new DLCs...',
+        newDlcsCount: 0,
+        dlcs: [], // Clear current DLCs to start fresh
+      }))
+
+      // Mark that we're fetching DLCs for this game
+      setIsFetchingDlcs(true)
+      activeDlcFetchId.current = gameId
+
+      // Start streaming DLCs
+      await streamGameDlcs(gameId)
+      
+      // After streaming, calculate new DLCs
+      // This will be done when progress reaches 100% in the listener
+      setTimeout(() => {
+        setDlcDialog((prev) => {
+          const actualNewCount = prev.dlcs.filter(dlc => !currentAppIds.has(dlc.appid)).length
+          
+          return {
+            ...prev,
+            newDlcsCount: actualNewCount > 0 ? actualNewCount : 0,
+          }
+        })
+      }, 1000)
+      
+    } catch (error) {
+      console.error('Error updating DLCs:', error)
+      setDlcDialog((prev) => ({
+        ...prev,
+        error: `Failed to update DLCs: ${error}`,
+        isLoading: false,
+        isUpdating: false,
+      }))
+    }
+  }
+
   return {
     dlcDialog,
     setDlcDialog,
@@ -309,6 +364,7 @@ export function useDlcManager() {
     streamGameDlcs,
     handleGameEdit,
     handleDlcDialogClose,
+    handleUpdateDlcs,
     forceReload,
   }
 }

@@ -40,6 +40,7 @@ function App() {
     handleGameAction,
     handleDlcConfirm,
     handleGameEdit,
+    handleUpdateDlcs,
     settingsDialog,
     handleSettingsOpen,
     handleSettingsClose,
@@ -107,13 +108,17 @@ function App() {
         <DlcSelectionDialog
           visible={dlcDialog.visible}
           gameTitle={dlcDialog.gameTitle}
+          gameId={dlcDialog.gameId}
           dlcs={dlcDialog.dlcs}
           isLoading={dlcDialog.isLoading}
           isEditMode={dlcDialog.isEditMode}
+          isUpdating={dlcDialog.isUpdating}
           loadingProgress={dlcDialog.progress}
           estimatedTimeLeft={dlcDialog.timeLeft}
+          newDlcsCount={dlcDialog.newDlcsCount}
           onClose={handleDlcDialogClose}
           onConfirm={handleDlcConfirm}
+          onUpdate={handleUpdateDlcs}
         />
 
         {/* Settings Dialog */}

@@ -6,17 +6,22 @@ import DialogFooter from './DialogFooter'
 import DialogActions from './DialogActions'
 import { Button, AnimatedCheckbox } from '@/components/buttons'
 import { DlcInfo } from '@/types'
+import { Icon, check } from '@/components/icons'
 
 export interface DlcSelectionDialogProps {
   visible: boolean
   gameTitle: string
+  gameId: string
   dlcs: DlcInfo[]
   onClose: () => void
   onConfirm: (selectedDlcs: DlcInfo[]) => void
+  onUpdate?: (gameId: string) => void
   isLoading: boolean
   isEditMode?: boolean
+  isUpdating?: boolean
   loadingProgress?: number
   estimatedTimeLeft?: string
+  newDlcsCount?: number
 }
 
 /**
@@ -27,13 +32,17 @@ export interface DlcSelectionDialogProps {
 const DlcSelectionDialog = ({
   visible,
   gameTitle,
+  gameId,
   dlcs,
   onClose,
   onConfirm,
+  onUpdate,
   isLoading,
   isEditMode = false,
+  isUpdating = false,
   loadingProgress = 0,
   estimatedTimeLeft = '',
+  newDlcsCount = 0,
 }: DlcSelectionDialogProps) => {
   // State for DLC management
   const [selectedDlcs, setSelectedDlcs] = useState<DlcInfo[]>([])
@@ -169,13 +178,13 @@ const DlcSelectionDialog = ({
         </div>
       </div>
 
-      {isLoading && loadingProgress > 0 && (
+      {(isLoading || isUpdating) && loadingProgress > 0 && (
         <div className="dlc-loading-progress">
           <div className="progress-bar-container">
             <div className="progress-bar" style={{ width: `${loadingProgress}%` }} />
           </div>
           <div className="loading-details">
-            <span>Loading DLCs: {loadingProgress}%</span>
+            <span>{isUpdating ? 'Updating DLC list' : 'Loading DLCs'}: {loadingProgress}%</span>
             {estimatedTimeLeft && (
               <span className="time-left">Est. time left: {estimatedTimeLeft}</span>
             )}
@@ -211,15 +220,36 @@ const DlcSelectionDialog = ({
       </DialogBody>
 
       <DialogFooter>
+        {/* Show update results if we found new DLCs */}
+        {newDlcsCount > 0 && !isUpdating && (
+          <div className="dlc-update-results">
+            <span className="update-success-message">
+              <Icon name={check} size="sm" variant="solid" className="dlc-update-icon" /> Found {newDlcsCount} new DLC{newDlcsCount > 1 ? 's' : ''}!
+            </span>
+          </div>
+        )}
+        
         <DialogActions>
           <Button
             variant="secondary"
             onClick={onClose}
-            disabled={isLoading && loadingProgress < 10}
+            disabled={(isLoading || isUpdating) && loadingProgress < 10}
           >
             Cancel
           </Button>
-          <Button variant="primary" onClick={handleConfirm} disabled={isLoading}>
+          
+          {/* Update button - only show in edit mode */}
+          {isEditMode && onUpdate && (
+            <Button
+              variant="warning"
+              onClick={() => onUpdate(gameId)}
+              disabled={isLoading || isUpdating}
+            >
+              {isUpdating ? 'Updating...' : 'Update DLC List'}
+            </Button>
+          )}
+          
+          <Button variant="primary" onClick={handleConfirm} disabled={isLoading || isUpdating}>
             {actionButtonText}
           </Button>
         </DialogActions>
