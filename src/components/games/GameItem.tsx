@@ -8,13 +8,14 @@ interface GameItemProps {
   game: Game
   onAction: (gameId: string, action: ActionType) => Promise<void>
   onEdit?: (gameId: string) => void
+  onSmokeAPISettings?: (gameId: string) => void
 }
 
 /**
  * Individual game card component
  * Displays game information and action buttons
  */
-const GameItem = ({ game, onAction, onEdit }: GameItemProps) => {
+const GameItem = ({ game, onAction, onEdit, onSmokeAPISettings }: GameItemProps) => {
   const [imageUrl, setImageUrl] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [hasError, setHasError] = useState(false)
@@ -74,6 +75,13 @@ const GameItem = ({ game, onAction, onEdit }: GameItemProps) => {
   const handleEdit = () => {
     if (onEdit && game.cream_installed) {
       onEdit(game.id)
+    }
+  }
+
+  // SmokeAPI settings handler
+  const handleSmokeAPISettings = () => {
+    if (onSmokeAPISettings && game.smoke_installed) {
+      onSmokeAPISettings(game.id)
     }
   }
 
@@ -151,6 +159,20 @@ const GameItem = ({ game, onAction, onEdit }: GameItemProps) => {
               onClick={handleEdit}
               disabled={!game.cream_installed || !!game.installing}
               title="Manage DLCs"
+              className="edit-button settings-icon-button"
+              leftIcon={<Icon name="Settings" variant="solid" size="md" />}
+              iconOnly
+            />
+          )}
+
+          {/* Edit button - only enabled if SmokeAPI is installed */}
+          {game.smoke_installed && (
+            <Button
+              variant="secondary"
+              size="small"
+              onClick={handleSmokeAPISettings}
+              disabled={!game.smoke_installed || !!game.installing}
+              title="Configure SmokeAPI"
               className="edit-button settings-icon-button"
               leftIcon={<Icon name="Settings" variant="solid" size="md" />}
               iconOnly
