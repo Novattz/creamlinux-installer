@@ -113,6 +113,7 @@ function App() {
           isLoading={dlcDialog.isLoading}
           isEditMode={dlcDialog.isEditMode}
           isUpdating={dlcDialog.isUpdating}
+          updateAttempted={dlcDialog.updateAttempted}
           loadingProgress={dlcDialog.progress}
           estimatedTimeLeft={dlcDialog.timeLeft}
           newDlcsCount={dlcDialog.newDlcsCount}

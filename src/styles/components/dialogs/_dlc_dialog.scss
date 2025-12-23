@@ -162,16 +162,28 @@
   border-radius: var(--radius-sm);
   margin-bottom: 0.75rem;
 
-  .update-success-message {
+  .update-message {
     color: var(--text-primary);
     font-weight: 600;
     font-size: 0.9rem;
     display: flex;
     align-items: center;
     gap: 0.5rem;
+  }
 
-    .dlc-update-icon {
-      color: var(--success);
+  &.dlc-update-success {
+    .update-message {
+      .dlc-update-icon-success {
+        color: var(--success);
+      }
+    }
+  }
+
+  &.dlc-update-info {
+    .update-message {
+      .dlc-update-icon-info {
+        color: var(--info);
+      }
     }
   }
 }

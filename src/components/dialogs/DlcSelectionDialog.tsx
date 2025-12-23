@@ -6,7 +6,7 @@ import DialogFooter from './DialogFooter'
 import DialogActions from './DialogActions'
 import { Button, AnimatedCheckbox } from '@/components/buttons'
 import { DlcInfo } from '@/types'
-import { Icon, check } from '@/components/icons'
+import { Icon, check, info } from '@/components/icons'
 
 export interface DlcSelectionDialogProps {
   visible: boolean
@@ -19,6 +19,7 @@ export interface DlcSelectionDialogProps {
   isLoading: boolean
   isEditMode?: boolean
   isUpdating?: boolean
+  updateAttempted?: boolean
   loadingProgress?: number
   estimatedTimeLeft?: string
   newDlcsCount?: number
@@ -40,6 +41,7 @@ const DlcSelectionDialog = ({
   isLoading,
   isEditMode = false,
   isUpdating = false,
+  updateAttempted = false,
   loadingProgress = 0,
   estimatedTimeLeft = '',
   newDlcsCount = 0,
@@ -220,13 +222,24 @@ const DlcSelectionDialog = ({
       </DialogBody>
 
       <DialogFooter>
-        {/* Show update results if we found new DLCs */}
-        {newDlcsCount > 0 && !isUpdating && (
-          <div className="dlc-update-results">
-            <span className="update-success-message">
-              <Icon name={check} size="sm" variant="solid" className="dlc-update-icon" /> Found {newDlcsCount} new DLC{newDlcsCount > 1 ? 's' : ''}!
-            </span>
-          </div>
+        {/* Show update results */}
+        {!isUpdating && !isLoading && isEditMode && updateAttempted && (
+          <>
+            {newDlcsCount > 0 && (
+              <div className="dlc-update-results dlc-update-success">
+                <span className="update-message">
+                  <Icon name={check} size="md" variant="solid" className="dlc-update-icon-success"/> Found {newDlcsCount} new DLC{newDlcsCount > 1 ? 's' : ''}!
+                </span>
+              </div>
+            )}
+            {newDlcsCount === 0 && (
+              <div className="dlc-update-results dlc-update-info">
+                <span className="update-message">
+                  <Icon name={info} size="md" variant="solid" className="dlc-update-icon-info"/> No new DLCs found. Your list is up to date!
+                </span>
+              </div>
+            )}
+          </>
         )}
         
         <DialogActions>

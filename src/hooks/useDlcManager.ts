@@ -12,6 +12,7 @@ export interface DlcDialogState {
   isLoading: boolean
   isEditMode: boolean
   isUpdating: boolean
+  updateAttempted: boolean
   progress: number
   progressMessage: string
   timeLeft: string
@@ -39,6 +40,7 @@ export function useDlcManager() {
     isLoading: false,
     isEditMode: false,
     isUpdating: false,
+    updateAttempted: false,
     progress: 0,
     progressMessage: '',
     timeLeft: '',
@@ -183,6 +185,7 @@ export function useDlcManager() {
         isLoading: true,
         isEditMode: true,
         isUpdating: false,
+        updateAttempted: false,
         progress: 0,
         progressMessage: 'Reading DLC configuration...',
         timeLeft: '',
@@ -320,6 +323,7 @@ export function useDlcManager() {
         ...prev,
         isUpdating: true,
         isLoading: true,
+        updateAttempted: true,
         progress: 0,
         progressMessage: 'Checking for new DLCs...',
         newDlcsCount: 0,
@@ -333,18 +337,21 @@ export function useDlcManager() {
       // Start streaming DLCs
       await streamGameDlcs(gameId)
       
-      // After streaming, calculate new DLCs
-      // This will be done when progress reaches 100% in the listener
+      // After streaming completes, calculate new DLCs
+      // Wait a bit longer to ensure all DLCs have been added
       setTimeout(() => {
         setDlcDialog((prev) => {
+          // Count how many DLCs are new (not in the original list)
           const actualNewCount = prev.dlcs.filter(dlc => !currentAppIds.has(dlc.appid)).length
+          
+          console.log(`Update complete: Found ${actualNewCount} new DLCs out of ${prev.dlcs.length} total`)
           
           return {
             ...prev,
-            newDlcsCount: actualNewCount > 0 ? actualNewCount : 0,
+            newDlcsCount: actualNewCount,
           }
         })
-      }, 1000)
+      }, 1500) // Increased timeout to ensure all DLCs are processed
       
     } catch (error) {
       console.error('Error updating DLCs:', error)
