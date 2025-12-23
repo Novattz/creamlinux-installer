@@ -8,6 +8,7 @@ mod dlc_manager;
 mod installer;
 mod searcher;
 mod unlockers;
+mod smokeapi_config;
 
 use dlc_manager::DlcInfoWithState;
 use installer::{Game, InstallerAction, InstallerType};
@@ -434,6 +435,27 @@ async fn install_cream_with_dlcs_command(
     }
 }
 
+#[tauri::command]
+fn read_smokeapi_config(game_path: String) -> Result<Option<smokeapi_config::SmokeAPIConfig>, String> {
+    info!("Reading SmokeAPI config for: {}", game_path);
+    smokeapi_config::read_config(&game_path)
+}
+
+#[tauri::command]
+fn write_smokeapi_config(
+    game_path: String,
+    config: smokeapi_config::SmokeAPIConfig,
+) -> Result<(), String> {
+    info!("Writing SmokeAPI config for: {}", game_path);
+    smokeapi_config::write_config(&game_path, &config)
+}
+
+#[tauri::command]
+fn delete_smokeapi_config(game_path: String) -> Result<(), String> {
+    info!("Deleting SmokeAPI config for: {}", game_path);
+    smokeapi_config::delete_config(&game_path)
+}
+
 fn setup_logging() -> Result<(), Box<dyn std::error::Error>> {
     use log::LevelFilter;
     use log4rs::append::file::FileAppender;
@@ -491,6 +513,9 @@ fn main() {
             get_all_dlcs_command,
             clear_caches,
             abort_dlc_fetch,
+            read_smokeapi_config,
+            write_smokeapi_config,
+            delete_smokeapi_config,
         ])
         .setup(|app| {
             info!("Tauri application setup");
