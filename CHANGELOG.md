@@ -1,3 +1,13 @@
+## [1.3.2] - 23-12-2025
+
+### Added
+- New dropdown component
+- Settings dialog for SmokeAPI configuration
+- Update creamlinux config functionality
+
+### Changed
+- Adjusted styling for CreamLinux settings dialog
+
 ## [1.3.0] - 22-12-2025
 
 ### Added
