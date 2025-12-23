@@ -41,7 +41,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({ visible, onClose }) => 
     <Dialog visible={visible} onClose={onClose} size="medium">
       <DialogHeader onClose={onClose} hideCloseButton={true}>
         <div className="settings-header">
-          <Icon name={settings} variant="solid" size="md" />
+          {/*<Icon name={settings} variant="solid" size="md" />*/}
           <h3>Settings</h3>
         </div>
       </DialogHeader>
