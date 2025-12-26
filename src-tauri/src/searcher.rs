@@ -256,11 +256,7 @@ fn check_creamlinux_installed(game_path: &Path) -> bool {
 
 // Check if a game has SmokeAPI installed
 fn check_smokeapi_installed(game_path: &Path, api_files: &[String]) -> bool {
-    if api_files.is_empty() {
-        return false;
-    }
-
-    // SmokeAPI creates backups with _o.dll suffix
+    // First check the provided api_files for backup files
     for api_file in api_files {
         let api_path = game_path.join(api_file);
         let api_dir = api_path.parent().unwrap_or(game_path);
@@ -272,6 +268,28 @@ fn check_smokeapi_installed(game_path: &Path, api_files: &[String]) -> bool {
 
         if backup_path.exists() {
             debug!("SmokeAPI backup file found: {}", backup_path.display());
+            return true;
+        }
+    }
+    
+    // Also scan for orphaned backup files (in case the main DLL was removed)
+    // This handles the Proton->Native switch case where steam_api*.dll is gone
+    // but steam_api*_o.dll backup remains
+    for entry in WalkDir::new(game_path)
+        .max_depth(5)
+        .into_iter()
+        .filter_map(Result::ok)
+    {
+        let path = entry.path();
+        if !path.is_file() {
+            continue;
+        }
+        
+        let filename = path.file_name().unwrap_or_default().to_string_lossy();
+        
+        // Look for steam_api*_o.dll backup files (SmokeAPI pattern)
+        if filename.starts_with("steam_api") && filename.ends_with("_o.dll") {
+            debug!("Found orphaned SmokeAPI backup file: {}", path.display());
             return true;
         }
     }
@@ -631,12 +649,10 @@ pub async fn find_installed_games(steamapps_paths: &[PathBuf]) -> Vec<GameInfo> 
                 // Check for CreamLinux installation
                 let cream_installed = check_creamlinux_installed(&game_path);
 
-                // Check for SmokeAPI installation (only for non-native games with Steam API DLLs)
-                let smoke_installed = if !is_native && !api_files.is_empty() {
-                    check_smokeapi_installed(&game_path, &api_files)
-                } else {
-                    false
-                };
+                // Check for SmokeAPI installation
+                // For Proton games: check if api_files exist
+                // For Native games: ALSO check for orphaned backup files (proton->native switch)
+                let smoke_installed = check_smokeapi_installed(&game_path, &api_files);
 
                 // Create the game info
                 let game_info = GameInfo {

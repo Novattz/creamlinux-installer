@@ -10,6 +10,7 @@ mod searcher;
 mod unlockers;
 mod smokeapi_config;
 
+use crate::unlockers::{CreamLinux, SmokeAPI, Unlocker};
 use dlc_manager::DlcInfoWithState;
 use installer::{Game, InstallerAction, InstallerType};
 use log::{debug, error, info, warn};
@@ -456,6 +457,146 @@ fn delete_smokeapi_config(game_path: String) -> Result<(), String> {
     smokeapi_config::delete_config(&game_path)
 }
 
+#[tauri::command]
+async fn resolve_platform_conflict(
+    game_id: String,
+    conflict_type: String, // "cream-to-proton" or "smoke-to-native"
+    state: State<'_, AppState>,
+    app_handle: tauri::AppHandle,
+) -> Result<Game, String> {
+    info!(
+        "Resolving platform conflict for game {}: {}",
+        game_id, conflict_type
+    );
+
+    let game = {
+        let games = state.games.lock();
+        games
+            .get(&game_id)
+            .cloned()
+            .ok_or_else(|| format!("Game with ID {} not found", game_id))?
+    };
+
+    let game_title = game.title.clone();
+
+    // Emit progress
+    installer::emit_progress(
+        &app_handle,
+        &format!("Resolving Conflict: {}", game_title),
+        "Removing conflicting files...",
+        50.0,
+        false,
+        false,
+        None,
+    );
+
+    // Perform the appropriate removal based on conflict type
+    match conflict_type.as_str() {
+        "cream-to-proton" => {
+            // Remove CreamLinux files (bypassing native check)
+            info!("Removing CreamLinux files from Proton game: {}", game_title);
+            
+            CreamLinux::uninstall_from_game(&game.path, &game.id)
+                .await
+                .map_err(|e| format!("Failed to remove CreamLinux files: {}", e))?;
+
+            // Remove version from manifest
+            crate::cache::remove_creamlinux_version(&game.path)?;
+        }
+        "smoke-to-native" => {
+            // Remove SmokeAPI files (bypassing proton check)
+            info!("Removing SmokeAPI files from native game: {}", game_title);
+            
+            // For native games, we need to manually remove backup files since
+            // the main DLL might already be gone
+            // Look for and remove *_o.dll backup files
+            use walkdir::WalkDir;
+            let mut removed_files = false;
+            
+            for entry in WalkDir::new(&game.path)
+                .max_depth(5)
+                .into_iter()
+                .filter_map(Result::ok)
+            {
+                let path = entry.path();
+                if !path.is_file() {
+                    continue;
+                }
+                
+                let filename = path.file_name().unwrap_or_default().to_string_lossy();
+                
+                // Remove steam_api*_o.dll backup files
+                if filename.starts_with("steam_api") && filename.ends_with("_o.dll") {
+                    match std::fs::remove_file(path) {
+                        Ok(_) => {
+                            info!("Removed SmokeAPI backup file: {}", path.display());
+                            removed_files = true;
+                        }
+                        Err(e) => {
+                            warn!("Failed to remove backup file {}: {}", path.display(), e);
+                        }
+                    }
+                }
+            }
+            
+            // Also try the normal uninstall if api_files are present
+            if !game.api_files.is_empty() {
+                let api_files_str = game.api_files.join(",");
+                if let Err(e) = SmokeAPI::uninstall_from_game(&game.path, &api_files_str).await {
+                    // Don't fail if this errors - we might have already cleaned up manually above
+                    warn!("SmokeAPI uninstall warning: {}", e);
+                }
+            }
+            
+            if !removed_files {
+                warn!("No SmokeAPI files found to remove for: {}", game_title);
+            }
+
+            // Remove version from manifest
+            crate::cache::remove_smokeapi_version(&game.path)?;
+        }
+        _ => return Err(format!("Invalid conflict type: {}", conflict_type)),
+    }
+
+    installer::emit_progress(
+        &app_handle,
+        &format!("Conflict Resolved: {}", game_title),
+        "Conflicting files have been removed successfully!",
+        100.0,
+        true,
+        false,
+        None,
+    );
+
+    // Update game state
+    let updated_game = {
+        let mut games_map = state.games.lock();
+        let game = games_map
+            .get_mut(&game_id)
+            .ok_or_else(|| format!("Game with ID {} not found after conflict resolution", game_id))?;
+
+        match conflict_type.as_str() {
+            "cream-to-proton" => {
+                game.cream_installed = false;
+            }
+            "smoke-to-native" => {
+                game.smoke_installed = false;
+            }
+            _ => {}
+        }
+
+        game.installing = false;
+        game.clone()
+    };
+
+    if let Err(e) = app_handle.emit("game-updated", &updated_game) {
+        warn!("Failed to emit game-updated event: {}", e);
+    }
+
+    info!("Platform conflict resolved successfully for: {}", game_title);
+    Ok(updated_game)
+}
+
 fn setup_logging() -> Result<(), Box<dyn std::error::Error>> {
     use log::LevelFilter;
     use log4rs::append::file::FileAppender;
@@ -516,6 +657,7 @@ fn main() {
             read_smokeapi_config,
             write_smokeapi_config,
             delete_smokeapi_config,
+            resolve_platform_conflict,
         ])
         .setup(|app| {
             info!("Tauri application setup");
