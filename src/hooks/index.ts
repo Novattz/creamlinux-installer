@@ -4,7 +4,9 @@ export { useDlcManager } from './useDlcManager'
 export { useGameActions } from './useGameActions'
 export { useToasts } from './useToasts'
 export { useAppLogic } from './useAppLogic'
+export { useConflictDetection } from './useConflictDetection'
 
 // Export types
 export type { ToastType, Toast, ToastOptions } from './useToasts'
 export type { DlcDialogState } from './useDlcManager'
+export type { Conflict, ConflictResolution } from './useConflictDetection'
