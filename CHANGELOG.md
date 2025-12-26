@@ -1,3 +1,11 @@
+## [1.3.3] - 26-12-2025
+
+### Added
+- Platform conflict detection
+- Automatic removal of incompatible unlocker files when switching between Native/Proton
+- Reminder dialog for steam launch options after creamlinux removal
+- Conflict dialog to show which game had the conflict
+
 ## [1.3.2] - 23-12-2025
 
 ### Added
