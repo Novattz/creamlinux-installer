@@ -10,6 +10,7 @@ export { default as SettingsDialog } from './SettingsDialog'
 export { default as SmokeAPISettingsDialog } from './SmokeAPISettingsDialog'
 export { default as ConflictDialog } from './ConflictDialog'
 export { default as ReminderDialog } from './ReminderDialog'
+export { default as DisclaimerDialog } from './DisclaimerDialog'
 
 // Export types
 export type { DialogProps } from './Dialog'
