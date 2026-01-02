@@ -142,3 +142,24 @@ jobs:
           includeUpdaterJson: true
           tauriScript: 'npm run tauri'
           args: ${{ matrix.args }}
+
+  publish-release:
+    name: Publish release
+    needs: [create-release, build-tauri]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+
+    steps:
+      - name: Publish GitHub release (unset draft)
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const release_id = Number("${{ needs.create-release.outputs.release_id }}");
+
+            await github.rest.repos.updateRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              release_id,
+              draft: false
+            });
