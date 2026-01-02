@@ -9,7 +9,9 @@ mod installer;
 mod searcher;
 mod unlockers;
 mod smokeapi_config;
+mod config;
 
+use crate::config::Config;
 use crate::unlockers::{CreamLinux, SmokeAPI, Unlocker};
 use dlc_manager::DlcInfoWithState;
 use installer::{Game, InstallerAction, InstallerType};
@@ -44,6 +46,19 @@ pub struct AppState {
     games: Mutex<HashMap<String, Game>>,
     dlc_cache: Mutex<HashMap<String, DlcCache>>,
     fetch_cancellation: Arc<AtomicBool>,
+}
+
+// Load the current configuration
+#[tauri::command]
+fn load_config() -> Result<Config, String> {
+    config::load_config()
+}
+
+// Update configuration
+#[tauri::command]
+fn update_config(config_data: Config) -> Result<Config, String> {
+    config::save_config(&config_data)?;
+    Ok(config_data)
 }
 
 #[tauri::command]
@@ -658,6 +673,8 @@ fn main() {
             write_smokeapi_config,
             delete_smokeapi_config,
             resolve_platform_conflict,
+            load_config,
+            update_config,
         ])
         .setup(|app| {
             info!("Tauri application setup");
