@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { invoke } from '@tauri-apps/api/core'
 import { useAppContext } from '@/contexts/useAppContext'
-import { useAppLogic, useConflictDetection } from '@/hooks'
+import { useAppLogic, useConflictDetection, useDisclaimer } from '@/hooks'
 import './styles/main.scss'
 
 // Layout components
@@ -21,6 +21,7 @@ import {
   SettingsDialog,
   ConflictDialog,
   ReminderDialog,
+  DisclaimerDialog,
 } from '@/components/dialogs'
 
 // Game components
@@ -31,6 +32,8 @@ import { GameList } from '@/components/games'
  */
 function App() {
   const [updateComplete, setUpdateComplete] = useState(false)
+
+  const { showDisclaimer, handleDisclaimerClose } = useDisclaimer()
 
   // Get application logic from hook
   const {
@@ -179,6 +182,9 @@ function App() {
 
         {/* Steam Launch Options Reminder */}
         <ReminderDialog visible={showReminder} onClose={closeReminder} />
+
+        {/* Disclaimer Dialog - Shows AFTER everything is loaded */}
+        <DisclaimerDialog visible={showDisclaimer} onClose={handleDisclaimerClose} />
       </div>
     </ErrorBoundary>
   )

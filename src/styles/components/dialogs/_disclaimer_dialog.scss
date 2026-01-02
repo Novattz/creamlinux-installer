@@ -1,0 +1,38 @@
+@use '../../themes/index' as *;
+@use '../../abstracts/index' as *;
+
+/* 
+  Disclaimer Dialog Styles
+  Used for the startup disclaimer dialog
+*/
+
+.disclaimer-header {
+  h3 {
+    margin-bottom: 0;
+  }
+}
+.disclaimer-content {
+  p {
+    margin-bottom: 1rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    font-size: 0.95rem;
+
+    &:last-of-type {
+      margin-bottom: 0;
+    }
+
+    strong {
+      color: var(--text-primary);
+      font-weight: var(--bold);
+    }
+  }
+}
+
+.disclaimer-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
