@@ -3,10 +3,10 @@ use std::fs;
 use std::path::PathBuf;
 use log::info;
 
-/// User configuration structure
+// User configuration structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Config {
-    /// Whether to show the disclaimer on startup
+    // Whether to show the disclaimer on startup
     pub show_disclaimer: bool,
 }
 
@@ -18,7 +18,7 @@ impl Default for Config {
     }
 }
 
-/// Get the config directory path (~/.config/creamlinux)
+// Get the config directory path (~/.config/creamlinux)
 fn get_config_dir() -> Result<PathBuf, String> {
     let home = std::env::var("HOME")
         .map_err(|_| "Failed to get HOME directory".to_string())?;
@@ -27,13 +27,13 @@ fn get_config_dir() -> Result<PathBuf, String> {
     Ok(config_dir)
 }
 
-/// Get the config file path
+// Get the config file path
 fn get_config_path() -> Result<PathBuf, String> {
     let config_dir = get_config_dir()?;
     Ok(config_dir.join("config.json"))
 }
 
-/// Ensure the config directory exists
+// Ensure the config directory exists
 fn ensure_config_dir() -> Result<(), String> {
     let config_dir = get_config_dir()?;
     
@@ -46,7 +46,7 @@ fn ensure_config_dir() -> Result<(), String> {
     Ok(())
 }
 
-/// Load configuration from disk
+// Load configuration from disk
 pub fn load_config() -> Result<Config, String> {
     ensure_config_dir()?;
     
@@ -71,7 +71,7 @@ pub fn load_config() -> Result<Config, String> {
     Ok(config)
 }
 
-/// Save configuration to disk
+// Save configuration to disk
 pub fn save_config(config: &Config) -> Result<(), String> {
     ensure_config_dir()?;
     
@@ -87,7 +87,7 @@ pub fn save_config(config: &Config) -> Result<(), String> {
     Ok(())
 }
 
-/// Update a specific config value
+// Update a specific config value
 pub fn update_config<F>(updater: F) -> Result<Config, String>
 where
     F: FnOnce(&mut Config),
