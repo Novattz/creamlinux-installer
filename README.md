@@ -1,6 +1,6 @@
 # CreamLinux
 
-CreamLinux is a GUI application for Linux that simplifies the management of DLC in Steam games. It provides a user-friendly interface to install and configure CreamAPI (for native Linux games) and SmokeAPI (for Windows games running through Proton).
+CreamLinux is a GUI application for Linux that simplifies the management of DLC IDs in Steam games. It provides a user-friendly interface to install and configure CreamAPI (for native Linux games) and SmokeAPI (for Windows games running through Proton).
 
 ## Watch the demo here:
 
@@ -61,7 +61,7 @@ While the core functionality is working, please be aware that this is an early r
 
    ```bash
    git clone https://github.com/Novattz/creamlinux-installer.git
-   cd creamlinux
+   cd creamlinux-installer
    ```
 
 2. Install dependencies:
@@ -124,7 +124,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE.md) f
 
 ## Credits
 
-- [Creamlinux](https://github.com/anticitizn/creamlinux) - Native DLC support
+- [Creamlinux](https://github.com/anticitizn/creamlinux) - Native support
 - [SmokeAPI](https://github.com/acidicoala/SmokeAPI) - Proton support
 - [Tauri](https://tauri.app/) - Framework for building the desktop application
 - [React](https://reactjs.org/) - UI library
