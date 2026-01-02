@@ -1,3 +1,10 @@
+## [1.3.4] - 03-01-2026
+
+### Added
+- Disclaimer dialog explaining that CreamLinux Installer manages DLC IDs, not actual DLC files
+- User config stored in `~/.config/creamlinux/config.json`
+- **"Don't show again" option**: Users can permanently dismiss the disclaimer via checkbox
+
 ## [1.3.3] - 26-12-2025
 
 ### Added
