@@ -20,7 +20,6 @@ import {
   DlcSelectionDialog,
   SettingsDialog,
   ConflictDialog,
-  ReminderDialog,
   DisclaimerDialog,
 } from '@/components/dialogs'
 
@@ -68,23 +67,28 @@ function App() {
   } = useAppContext()
 
   // Conflict detection
-  const { currentConflict, showReminder, resolveConflict, closeReminder } =
+  const { conflicts, showDialog, resolveConflict, closeDialog } =
     useConflictDetection(games)
 
   // Handle conflict resolution
-  const handleConflictResolve = async () => {
-    const resolution = resolveConflict()
-    if (!resolution) return
-
-    // Always remove files - use the special conflict resolution command
+  const handleConflictResolve = async (
+    gameId: string,
+    conflictType: 'cream-to-proton' | 'smoke-to-native'
+  ) => {
     try {
+      // Invoke backend to resolve the conflict
       await invoke('resolve_platform_conflict', {
-        gameId: resolution.gameId,
-        conflictType: resolution.conflictType,
+        gameId,
+        conflictType,
       })
+
+      // Remove from UI
+      resolveConflict(gameId, conflictType)
+
+      showToast('Conflict resolved successfully', 'success')
     } catch (error) {
       console.error('Error resolving conflict:', error)
-      showToast(`Failed to resolve conflict: ${error}`, 'error')
+      showToast('Failed to resolve conflict', 'error')
     }
   }
 
@@ -171,17 +175,12 @@ function App() {
         <SettingsDialog visible={settingsDialog.visible} onClose={handleSettingsClose} />
 
         {/* Conflict Detection Dialog */}
-        {currentConflict && (
-          <ConflictDialog
-            visible={true}
-            gameTitle={currentConflict.gameTitle}
-            conflictType={currentConflict.type}
-            onConfirm={handleConflictResolve}
-          />
-        )}
-
-        {/* Steam Launch Options Reminder */}
-        <ReminderDialog visible={showReminder} onClose={closeReminder} />
+        <ConflictDialog
+          visible={showDialog}
+          conflicts={conflicts}
+          onResolve={handleConflictResolve}
+          onClose={closeDialog}
+        />
 
         {/* Disclaimer Dialog - Shows AFTER everything is loaded */}
         <DisclaimerDialog visible={showDisclaimer} onClose={handleDisclaimerClose} />
