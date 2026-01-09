@@ -25,64 +25,119 @@
 }
 
 .conflict-dialog-body {
-  p {
-    margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  .conflict-intro {
+    margin: 0;
     color: var(--text-secondary);
     line-height: 1.5;
+  }
 
-    &:last-of-type {
-      margin-bottom: 0;
+  .conflict-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .conflict-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.15);
     }
+  }
 
-    strong {
+  .conflict-info {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    flex: 1;
+    min-width: 0; // Enable text truncation
+  }
+
+  .conflict-icon {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 193, 7, 0.1);
+    border-radius: 8px;
+
+    svg {
+      color: var(--warning);
+    }
+  }
+
+  .conflict-details {
+    flex: 1;
+    min-width: 0;
+
+    h4 {
+      margin: 0 0 0.25rem 0;
+      font-size: 0.95rem;
+      font-weight: var(--semibold);
       color: var(--text-primary);
-      font-weight: var(--bold);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
+
+    p {
+      margin: 0;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      line-height: 1.4;
+    }
+  }
+
+  .conflict-resolve-btn {
+    flex-shrink: 0;
+    min-width: 100px;
   }
 }
 
-/* 
-  Reminder Dialog Styles
-  Used for Steam launch option reminders
-*/
-
-.reminder-dialog-header {
+.conflict-reminder {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-
-  h3 {
-    margin: 0;
-    flex: 1;
-    font-size: 1.1rem;
-    color: var(--text-primary);
-  }
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: rgba(33, 150, 243, 0.1);
+  border: 1px solid rgba(33, 150, 243, 0.2);
+  border-radius: 6px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  margin-bottom: 1rem;
 
   svg {
     color: var(--info);
     flex-shrink: 0;
   }
-}
 
-.reminder-dialog-body {
-  p {
-    margin-bottom: 1rem;
-    color: var(--text-secondary);
-    line-height: 1.5;
+  span {
+    flex: 1;
   }
 
-  .reminder-steps {
-    margin: 1rem 0 0 1.5rem;
-    padding: 0;
-    color: var(--text-secondary);
-    line-height: 1.6;
-
-    li {
-      margin-bottom: 0.5rem;
-
-      &:last-child {
-        margin-bottom: 0;
-      }
-    }
+  code {
+    padding: 0.125rem 0.375rem;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 3px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.8rem;
+    color: var(--text-primary);
+    white-space: nowrap;
   }
 }

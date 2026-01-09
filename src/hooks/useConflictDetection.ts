@@ -9,7 +9,6 @@ export interface Conflict {
 
 export interface ConflictResolution {
   gameId: string
-  removeFiles: boolean
   conflictType: 'cream-to-proton' | 'smoke-to-native'
 }
 
@@ -19,10 +18,9 @@ export interface ConflictResolution {
  */
 export function useConflictDetection(games: Game[]) {
   const [conflicts, setConflicts] = useState<Conflict[]>([])
-  const [currentConflict, setCurrentConflict] = useState<Conflict | null>(null)
-  const [showReminder, setShowReminder] = useState(false)
-  const [isProcessing, setIsProcessing] = useState(false)
+  const [showDialog, setShowDialog] = useState(false)
   const [resolvedConflicts, setResolvedConflicts] = useState<Set<string>>(new Set())
+  const [hasShownThisSession, setHasShownThisSession] = useState(false)
 
   // Detect conflicts whenever games change
   useEffect(() => {
@@ -55,69 +53,50 @@ export function useConflictDetection(games: Game[]) {
 
     setConflicts(detectedConflicts)
 
-    // Show the first conflict if we have any and not currently processing
-    if (detectedConflicts.length > 0 && !currentConflict && !isProcessing) {
-      setCurrentConflict(detectedConflicts[0])
+    // Show dialog only if:
+    // 1. We have conflicts
+    // 2. Dialog isn't already visible
+    // 3. We haven't shown it this session
+    if (detectedConflicts.length > 0 && !showDialog && !hasShownThisSession) {
+      setShowDialog(true)
+      setHasShownThisSession(true)
     }
-  }, [games, currentConflict, isProcessing, resolvedConflicts])
+  }, [games, resolvedConflicts, showDialog, hasShownThisSession])
 
-  // Handle conflict resolution
-  const resolveConflict = useCallback((): ConflictResolution | null => {
-    if (!currentConflict || isProcessing) return null
+  // Handle resolving a single conflict
+  const resolveConflict = useCallback(
+    (gameId: string, conflictType: 'cream-to-proton' | 'smoke-to-native'): ConflictResolution => {
+      // Mark this game as resolved
+      setResolvedConflicts((prev) => new Set(prev).add(gameId))
 
-    setIsProcessing(true)
+      // Remove from conflicts list
+      setConflicts((prev) => prev.filter((c) => c.gameId !== gameId))
 
-    const resolution: ConflictResolution = {
-      gameId: currentConflict.gameId,
-      removeFiles: true, // Always remove files
-      conflictType: currentConflict.type,
+      return {
+        gameId,
+        conflictType,
+      }
+    },
+    []
+  )
+
+  // Auto-close dialog when all conflicts are resolved
+  useEffect(() => {
+    if (conflicts.length === 0 && showDialog) {
+      setShowDialog(false)
     }
+  }, [conflicts.length, showDialog])
 
-    // Mark this game as resolved so we don't re-detect the conflict
-    setResolvedConflicts((prev) => new Set(prev).add(currentConflict.gameId))
-
-    // Remove this conflict from the list
-    const remainingConflicts = conflicts.filter((c) => c.gameId !== currentConflict.gameId)
-    setConflicts(remainingConflicts)
-
-    // Close current conflict dialog immediately
-    setCurrentConflict(null)
-
-    // Determine what to show next based on conflict type
-    if (resolution.conflictType === 'cream-to-proton') {
-      // CreamLinux removal - show reminder after delay
-      setTimeout(() => {
-        setShowReminder(true)
-        setIsProcessing(false)
-      }, 100)
-    } else {
-      // SmokeAPI removal - no reminder, just show next conflict or finish
-      setTimeout(() => {
-        if (remainingConflicts.length > 0) {
-          setCurrentConflict(remainingConflicts[0])
-        }
-        setIsProcessing(false)
-      }, 100)
-    }
-
-    return resolution
-  }, [currentConflict, conflicts, isProcessing])
-
-  // Close reminder dialog
-  const closeReminder = useCallback(() => {
-    setShowReminder(false)
-    
-    // After closing reminder, check if there are more conflicts
-    if (conflicts.length > 0) {
-      setCurrentConflict(conflicts[0])
-    }
-  }, [conflicts])
+  // Handle dialog close
+  const closeDialog = useCallback(() => {
+    setShowDialog(false)
+  }, [])
 
   return {
-    currentConflict,
-    showReminder,
+    conflicts,
+    showDialog,
     resolveConflict,
-    closeReminder,
+    closeDialog,
     hasConflicts: conflicts.length > 0,
   }
 }
