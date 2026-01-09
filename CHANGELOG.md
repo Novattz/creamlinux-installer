@@ -1,3 +1,12 @@
+## [1.3.5] - 09-01-2026
+
+### Changed
+- Redesigned conflict detection dialog to show all conflicts at once
+- Integrated Steam launch option reminder directly into the conflict dialog
+
+### Fixed
+- Improved UX by allowing users to resolve conflicts in any order or defer to later
+
 ## [1.3.4] - 03-01-2026
 
 ### Added
