@@ -34,8 +34,6 @@ export const AppProvider = ({ children }: AppProviderProps) => {
     handleGameAction: executeGameAction,
     handleDlcConfirm: executeDlcConfirm,
     unlockerSelectionDialog,
-    handleSelectCreamLinux,
-    handleSelectSmokeAPI,
     closeUnlockerDialog,
   } = useGameActions()
 
@@ -280,12 +278,26 @@ export const AppProvider = ({ children }: AppProviderProps) => {
       if (gameId) {
         const game = games.find((g) => g.id === gameId)
         if (game) {
+
+          closeUnlockerDialog()
+
           // Reset installing state before showing DLC dialog
           setGames((prevGames) =>
             prevGames.map((g) => (g.id === gameId ? { ...g, installing: false } : g))
           )
-          // Call the original handleSelectCreamLinux which will trigger install_cream
-          handleSelectCreamLinux()
+          // Show DLC selection dialog directly
+          setDlcDialog({
+            ...dlcDialog,
+            visible: true,
+            gameId,
+            gameTitle: game.title,
+            dlcs: [],
+            isLoading: true,
+            isEditMode: false,
+            progress: 0,
+          })
+
+          streamGameDlcs(gameId)
         }
       }
     },
@@ -293,9 +305,14 @@ export const AppProvider = ({ children }: AppProviderProps) => {
       // When SmokeAPI is selected, trigger the actual installation
       const gameId = unlockerSelectionDialog.gameId
       if (gameId) {
-        // Close the dialog first
-        handleSelectSmokeAPI()
-        // The selection callback will handle the actual installation
+        const game = games.find((g) => g.id === gameId)
+        if (game) {
+          closeUnlockerDialog()
+
+          setTimeout(() => {
+            handleGameAction(gameId, 'install_smoke')
+          }, 0)
+        }
       }
     },
     closeUnlockerDialog,
