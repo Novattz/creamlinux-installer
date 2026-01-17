@@ -10,6 +10,7 @@ export { default as SettingsDialog } from './SettingsDialog'
 export { default as SmokeAPISettingsDialog } from './SmokeAPISettingsDialog'
 export { default as ConflictDialog } from './ConflictDialog'
 export { default as DisclaimerDialog } from './DisclaimerDialog'
+export { default as UnlockerSelectionDialog} from './UnlockerSelectionDialog'
 
 // Export types
 export type { DialogProps } from './Dialog'
@@ -20,3 +21,4 @@ export type { DialogActionsProps } from './DialogActions'
 export type { ProgressDialogProps, InstallationInstructions } from './ProgressDialog'
 export type { DlcSelectionDialogProps } from './DlcSelectionDialog'
 export type { ConflictDialogProps, Conflict } from './ConflictDialog'
+export type { UnlockerSelectionDialogProps } from './UnlockerSelectionDialog'
