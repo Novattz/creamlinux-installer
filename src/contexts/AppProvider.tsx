@@ -80,7 +80,11 @@ export const AppProvider = ({ children }: AppProviderProps) => {
   }
 
   const handleSmokeAPISettingsClose = () => {
-    setSmokeAPISettingsDialog((prev) => ({ ...prev, visible: false }))
+    setSmokeAPISettingsDialog({
+      visible: false,
+      gamePath: '',
+      gameTitle: '',
+    })
   }
 
   // Game action handler with proper error reporting
@@ -115,6 +119,28 @@ export const AppProvider = ({ children }: AppProviderProps) => {
       }
     }
 
+    // For install_unlocker action, executeGameAction will handle showing the dialog
+    // We should NOT show any notifications here - they'll be shown after actual installation
+    if (action === 'install_unlocker') {
+      // Mark game as installing while the user makes a selection
+      setGames((prevGames) =>
+        prevGames.map((g) => (g.id === gameId ? { ...g, installing: true } : g))
+      )
+
+      try {
+        // This will show the UnlockerSelectionDialog and handle the callback
+        await executeGameAction(gameId, action, games)
+      } catch (error) {
+        showError(`Action failed: ${error}`)
+      } finally {
+        // Reset installing state
+        setGames((prevGames) =>
+          prevGames.map((g) => (g.id === gameId ? { ...g, installing: false } : g))
+        )
+      }
+      return // Don't show any notifications for install_unlocker
+    }
+
     // For other actions (uninstall cream, install/uninstall smoke)
     // Mark game as installing
     setGames((prevGames) =>
@@ -125,7 +151,7 @@ export const AppProvider = ({ children }: AppProviderProps) => {
       await executeGameAction(gameId, action, games)
 
       // Show appropriate success message based on action type
-      const product = action.includes('cream') ? 'Creamlinux' : 'SmokeAPI'
+      const product = action.includes('cream') ? 'CreamLinux' : 'SmokeAPI'
       const isUninstall = action.includes('uninstall')
       const isInstall = action.includes('install') && !isUninstall
 
@@ -246,10 +272,32 @@ export const AppProvider = ({ children }: AppProviderProps) => {
     // Toast notifications
     showToast,
 
-    // Unlocker selection
+    // Unlocker selection - Pass wrapped handlers that also handle the installing state
     unlockerSelectionDialog,
-    handleSelectCreamLinux,
-    handleSelectSmokeAPI,
+    handleSelectCreamLinux: () => {
+      // When CreamLinux is selected, trigger the DLC dialog flow
+      const gameId = unlockerSelectionDialog.gameId
+      if (gameId) {
+        const game = games.find((g) => g.id === gameId)
+        if (game) {
+          // Reset installing state before showing DLC dialog
+          setGames((prevGames) =>
+            prevGames.map((g) => (g.id === gameId ? { ...g, installing: false } : g))
+          )
+          // Call the original handleSelectCreamLinux which will trigger install_cream
+          handleSelectCreamLinux()
+        }
+      }
+    },
+    handleSelectSmokeAPI: () => {
+      // When SmokeAPI is selected, trigger the actual installation
+      const gameId = unlockerSelectionDialog.gameId
+      if (gameId) {
+        // Close the dialog first
+        handleSelectSmokeAPI()
+        // The selection callback will handle the actual installation
+      }
+    },
     closeUnlockerDialog,
   }
 
