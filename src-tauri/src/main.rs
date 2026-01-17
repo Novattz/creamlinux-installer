@@ -4,6 +4,7 @@
 )]
 
 mod cache;
+mod utils;
 mod dlc_manager;
 mod installer;
 mod searcher;
