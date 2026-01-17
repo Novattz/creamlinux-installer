@@ -3,7 +3,7 @@ import Button, { ButtonVariant } from '../buttons/Button'
 import { Icon, trash, download } from '@/components/icons'
 
 // Define available action types
-export type ActionType = 'install_cream' | 'uninstall_cream' | 'install_smoke' | 'uninstall_smoke'
+export type ActionType = 'install_cream' | 'uninstall_cream' | 'install_smoke' | 'uninstall_smoke' | 'install_unlocker'
 
 interface ActionButtonProps {
   action: ActionType
@@ -18,7 +18,6 @@ interface ActionButtonProps {
  * Specialized button for game installation actions
  */
 const ActionButton: FC<ActionButtonProps> = ({
-  action,
   isInstalled,
   isWorking,
   onClick,
@@ -29,10 +28,7 @@ const ActionButton: FC<ActionButtonProps> = ({
   const getButtonText = () => {
     if (isWorking) return 'Working...'
 
-    const isCream = action.includes('cream')
-    const product = isCream ? 'CreamLinux' : 'SmokeAPI'
-
-    return isInstalled ? `Uninstall ${product}` : `Install ${product}`
+    return isInstalled ? 'Uninstall' : 'Install'
   }
 
   // Map to button variant
