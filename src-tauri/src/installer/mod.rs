@@ -241,8 +241,26 @@ async fn uninstall_creamlinux(game: Game, app_handle: AppHandle) -> Result<(), S
     Ok(())
 }
 
-// Install SmokeAPI to a game
 async fn install_smokeapi(game: Game, app_handle: AppHandle) -> Result<(), String> {
+    // Check if native or proton and route accordingly
+    if game.native {
+        install_smokeapi_native(game, app_handle).await
+    } else {
+        install_smokeapi_proton(game, app_handle).await
+    }
+}
+
+async fn uninstall_smokeapi(game: Game, app_handle: AppHandle) -> Result<(), String> {
+    // Check if native or proton and route accordingly
+    if game.native {
+        uninstall_smokeapi_native(game, app_handle).await
+    } else {
+        uninstall_smokeapi_proton(game, app_handle).await
+    }
+}
+
+// Install SmokeAPI to a proton game
+async fn install_smokeapi_proton(game: Game, app_handle: AppHandle) -> Result<(), String> {
     if game.native {
         return Err("SmokeAPI can only be installed on Proton/Windows games".to_string());
     }
@@ -286,8 +304,8 @@ async fn install_smokeapi(game: Game, app_handle: AppHandle) -> Result<(), Strin
     Ok(())
 }
 
-// Uninstall SmokeAPI from a game
-async fn uninstall_smokeapi(game: Game, app_handle: AppHandle) -> Result<(), String> {
+// Uninstall SmokeAPI from a proton game
+async fn uninstall_smokeapi_proton(game: Game, app_handle: AppHandle) -> Result<(), String> {
     if game.native {
         return Err("SmokeAPI can only be uninstalled from Proton/Windows games".to_string());
     }
@@ -326,6 +344,99 @@ async fn uninstall_smokeapi(game: Game, app_handle: AppHandle) -> Result<(), Str
     );
 
     info!("SmokeAPI uninstallation completed for: {}", game_title);
+    Ok(())
+}
+
+// Install SmokeAPI to a native Linux game
+async fn install_smokeapi_native(
+    game: Game,
+    app_handle: AppHandle,
+) -> Result<(), String> {
+
+    info!("Installing SmokeAPI (native) for game: {}", game.title);
+    let game_title = game.title.clone();
+
+    emit_progress(
+        &app_handle,
+        &format!("Installing SmokeAPI for {}", game_title),
+        "Detecting game architecture...",
+        20.0,
+        false,
+        false,
+        None,
+    );
+
+    emit_progress(
+        &app_handle,
+        &format!("Installing SmokeAPI for {}", game_title),
+        "Installing from cache...",
+        50.0,
+        false,
+        false,
+        None,
+    );
+
+    // Install SmokeAPI for native Linux (empty string for api_files_str)
+    SmokeAPI::install_to_game(&game.path, "")
+        .await
+        .map_err(|e| format!("Failed to install SmokeAPI: {}", e))?;
+
+    // Update version manifest
+    let cached_versions = crate::cache::read_versions()?;
+    update_game_smokeapi_version(&game.path, cached_versions.smokeapi.latest)?;
+
+    emit_progress(
+        &app_handle,
+        &format!("Installation Completed: {}", game_title),
+        "SmokeAPI has been installed successfully!",
+        100.0,
+        true,
+        false,
+        None,
+    );
+
+    info!("SmokeAPI (native) installation completed for: {}", game_title);
+    Ok(())
+}
+
+// Uninstall SmokeAPI from a native Linux game
+async fn uninstall_smokeapi_native(game: Game, app_handle: AppHandle) -> Result<(), String> {
+    if !game.native {
+        return Err("This function is only for native Linux games".to_string());
+    }
+
+    let game_title = game.title.clone();
+    info!("Uninstalling SmokeAPI (native) from game: {}", game_title);
+
+    emit_progress(
+        &app_handle,
+        &format!("Uninstalling SmokeAPI from {}", game_title),
+        "Removing SmokeAPI files...",
+        50.0,
+        false,
+        false,
+        None,
+    );
+
+    // Uninstall SmokeAPI (empty string for api_files_str)
+    SmokeAPI::uninstall_from_game(&game.path, "")
+        .await
+        .map_err(|e| format!("Failed to uninstall SmokeAPI: {}", e))?;
+
+    // Remove version from manifest
+    remove_smokeapi_version(&game.path)?;
+
+    emit_progress(
+        &app_handle,
+        &format!("Uninstallation Completed: {}", game_title),
+        "SmokeAPI has been removed successfully!",
+        100.0,
+        true,
+        false,
+        None,
+    );
+
+    info!("SmokeAPI (native) uninstallation completed for: {}", game_title);
     Ok(())
 }
 
