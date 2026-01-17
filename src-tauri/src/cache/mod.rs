@@ -2,9 +2,10 @@ mod storage;
 mod version;
 
 pub use storage::{
-    get_creamlinux_version_dir, get_smokeapi_version_dir, is_cache_initialized,
-    list_creamlinux_files, list_smokeapi_dlls, read_versions, update_creamlinux_version,
-    update_smokeapi_version,
+    get_creamlinux_version_dir, get_smokeapi_version_dir,
+    list_creamlinux_files, list_smokeapi_files, read_versions, 
+    update_creamlinux_version, update_smokeapi_version, validate_smokeapi_cache,
+    validate_creamlinux_cache,
 };
 
 pub use version::{
@@ -22,39 +23,87 @@ use std::collections::HashMap;
 pub async fn initialize_cache() -> Result<(), String> {
     info!("Initializing cache...");
 
-    // Check if cache is already initialized
-    if is_cache_initialized()? {
-        info!("Cache already initialized");
-        return Ok(());
+    let versions = read_versions()?;
+    let mut needs_smokeapi = false;
+    let mut needs_creamlinux = false;
+
+    // Check if SmokeAPI is properly cached
+    if versions.smokeapi.latest.is_empty() {
+        info!("No SmokeAPI version in manifest");
+        needs_smokeapi = true
+    } else {
+        // Validate that all files exist
+        match validate_smokeapi_cache(&versions.smokeapi.latest) {
+            Ok(true) => {
+                info!("SmokeAPI cache validated successfully");
+            }
+            Ok(false) => {
+                info!("SmokeAPI cache incomplete, re-downloading");
+                needs_smokeapi = true;
+            }
+            Err(e) => {
+                warn!("Failed to validate SmokeAPI cache: {}, re-downloading", e);
+                needs_smokeapi = true;
+            }
+        }
     }
 
-    info!("Cache not initialized, downloading unlockers...");
+    // Check if CreamLinux is properly cached
+    if versions.creamlinux.latest.is_empty() {
+        info!("No CreamLinux version in manifest");
+        needs_creamlinux = true;
+    } else {
+        match validate_creamlinux_cache(&versions.creamlinux.latest) {
+            Ok(true) => {
+                info!("CreamLinux cache validated successfully");
+            }
+            Ok(false) => {
+                info!("CreamLinux cache incomplete, re-downloading");
+                needs_creamlinux = true;
+            }
+            Err(e) => {
+                warn!("Failed to validate CreamLinux cache: {}, re-downloading", e);
+                needs_creamlinux = true;
+            }
+        }
+    }
 
     // Download SmokeAPI
-    match SmokeAPI::download_to_cache().await {
-        Ok(version) => {
-            info!("Downloaded SmokeAPI version: {}", version);
-            update_smokeapi_version(&version)?;
-        }
-        Err(e) => {
-            error!("Failed to download SmokeAPI: {}", e);
-            return Err(format!("Failed to download SmokeAPI: {}", e));
+    if needs_smokeapi {
+        info!("Downloading SmokeAPI...");
+        match SmokeAPI::download_to_cache().await {
+            Ok(version) => {
+                info!("Downloaded SmokeAPI version: {}", version);
+                update_smokeapi_version(&version)?;
+            }
+            Err(e) => {
+                error!("Failed to download SmokeAPI: {}", e);
+                return Err(format!("Failed to download SmokeAPI: {}", e));
+            }
         }
     }
 
     // Download CreamLinux
-    match CreamLinux::download_to_cache().await {
-        Ok(version) => {
-            info!("Downloaded CreamLinux version: {}", version);
-            update_creamlinux_version(&version)?;
-        }
-        Err(e) => {
-            error!("Failed to download CreamLinux: {}", e);
-            return Err(format!("Failed to download CreamLinux: {}", e));
+    if needs_creamlinux {
+        info!("Downloading CreamLinux...");
+        match CreamLinux::download_to_cache().await {
+            Ok(version) => {
+                info!("Downloaded CreamLinux version: {}", version);
+                update_creamlinux_version(&version)?;
+            }
+            Err(e) => {
+                error!("Failed to download CreamLinux: {}", e);
+                return Err(format!("Failed to download CreamLinux: {}", e));
+            }
         }
     }
 
-    info!("Cache initialization complete");
+    if !needs_smokeapi && !needs_creamlinux {
+        info!("Cache already initialized and validated");
+    } else {
+        info!("Cache initialization complete");
+    }
+
     Ok(())
 }
 

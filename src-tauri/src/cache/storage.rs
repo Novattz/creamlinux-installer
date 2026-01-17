@@ -204,12 +204,6 @@ pub fn update_creamlinux_version(new_version: &str) -> Result<(), String> {
     Ok(())
 }
 
-// Check if the cache is initialized (has both unlockers cached)
-pub fn is_cache_initialized() -> Result<bool, String> {
-    let versions = read_versions()?;
-    Ok(!versions.smokeapi.latest.is_empty() && !versions.creamlinux.latest.is_empty())
-}
-
 // Get the SmokeAPI DLL path for the latest cached version
 #[allow(dead_code)]
 pub fn get_smokeapi_dll_path() -> Result<PathBuf, String> {
@@ -233,8 +227,8 @@ pub fn get_creamlinux_files_dir() -> Result<PathBuf, String> {
     get_creamlinux_version_dir(&versions.creamlinux.latest)
 }
 
-// List all SmokeAPI DLL files in the cached version directory
-pub fn list_smokeapi_dlls() -> Result<Vec<PathBuf>, String> {
+/// List all SmokeAPI files in the cached version directory
+pub fn list_smokeapi_files() -> Result<Vec<PathBuf>, String> {
     let versions = read_versions()?;
     if versions.smokeapi.latest.is_empty() {
         return Ok(Vec::new());
@@ -249,17 +243,20 @@ pub fn list_smokeapi_dlls() -> Result<Vec<PathBuf>, String> {
     let entries = fs::read_dir(&version_dir)
         .map_err(|e| format!("Failed to read SmokeAPI directory: {}", e))?;
 
-    let mut dlls = Vec::new();
+    let mut files = Vec::new();
     for entry in entries {
         if let Ok(entry) = entry {
             let path = entry.path();
-            if path.extension().and_then(|s| s.to_str()) == Some("dll") {
-                dlls.push(path);
+            // Get both .dll and .so files
+            if let Some(ext) = path.extension().and_then(|s| s.to_str()) {
+                if ext == "dll" || ext == "so" {
+                    files.push(path);
+                }
             }
         }
     }
 
-    Ok(dlls)
+    Ok(files)
 }
 
 // List all CreamLinux files in the cached version directory
@@ -289,4 +286,70 @@ pub fn list_creamlinux_files() -> Result<Vec<PathBuf>, String> {
     }
 
     Ok(files)
+}
+
+/// Validate that all required files exist for SmokeAPI
+pub fn validate_smokeapi_cache(version: &str) -> Result<bool, String> {
+    let version_dir = get_smokeapi_version_dir(version)?;
+
+    if !version_dir.exists() {
+        return Ok(false);
+    }
+
+    // Required files for SmokeAPI
+    let required_files = vec![
+        "smoke_api32.dll",
+        "smoke_api64.dll",
+        "libsmoke_api32.so",
+        "libsmoke_api64.so",
+    ];
+
+    let mut missing_files = Vec::new();
+
+    for file in &required_files {
+        let file_path = version_dir.join(file);
+        if !file_path.exists() {
+            missing_files.push(file.to_string());
+        }
+    }
+
+    if !missing_files.is_empty() {
+        info!("Missing required files in cache: {:?}", missing_files);
+        return Ok(false);
+    }
+
+    Ok(true)
+}
+
+/// Validate that all required files exist for CreamLinux
+pub fn validate_creamlinux_cache(version: &str) -> Result<bool, String> {
+    let version_dir = get_creamlinux_version_dir(version)?;
+
+    if !version_dir.exists() {
+        return Ok(false);
+    }
+
+    // Required files for CreamLinux
+    let required_files = vec![
+        "cream.sh",
+        "cream_api.ini",
+        "lib32Creamlinux.so",
+        "lib64Creamlinux.so",
+    ];
+
+    let mut missing_files = Vec::new();
+
+    for file in &required_files {
+        let file_path = version_dir.join(file);
+        if !file_path.exists() {
+            missing_files.push(file.to_string());
+        }
+    }
+
+    if !missing_files.is_empty() {
+        info!("Missing required files in cache: {:?}", missing_files);
+        return Ok(false);
+    }
+
+    Ok(true)
 }
