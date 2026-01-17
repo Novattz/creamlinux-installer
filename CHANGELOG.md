@@ -1,3 +1,12 @@
+## [1.4.0] - 17-01-2026
+
+### Added
+- Unlocker selection dialog for native games, allowing users to choose between CreamLinux and SmokeAPI
+- Game bitness detection
+
+### Fixed
+- Cache now validates if expected files are missing.
+
 ## [1.3.5] - 09-01-2026
 
 ### Changed
