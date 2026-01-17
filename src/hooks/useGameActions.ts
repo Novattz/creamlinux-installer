@@ -4,6 +4,7 @@ import { listen } from '@tauri-apps/api/event'
 import { ActionType } from '@/components/buttons/ActionButton'
 import { Game, DlcInfo } from '@/types'
 import { InstallationInstructions } from '@/contexts/AppContext'
+import { useUnlockerSelection } from './useUnlockerSelection'
 
 /**
  * Hook for managing game action operations
@@ -79,22 +80,38 @@ export function useGameActions() {
     setProgressDialog((prev) => ({ ...prev, visible: false }))
   }, [])
 
+  // Unlocker selection hook for native games
+  const {
+    selectionState,
+    showUnlockerSelection,
+    handleSelectCreamLinux,
+    handleSelectSmokeAPI,
+    closeDialog: closeUnlockerDialog,
+  } = useUnlockerSelection()
+
   // Unified handler for game actions (install/uninstall)
   const handleGameAction = useCallback(
     async (gameId: string, action: ActionType, games: Game[]) => {
       try {
-        // For CreamLinux installation, we should NOT call process_game_action directly
-        // Instead, we show the DLC selection dialog first, which is handled in AppProvider
+        // Find the game
+        const game = games.find((g) => g.id === gameId)
+        if (!game) return
+
+        // For CreamLinux installation, DLC dialog is handled in AppProvider
         if (action === 'install_cream') {
           return
         }
 
-        // For other actions (uninstall_cream, install_smoke, uninstall_smoke)
-        // Find game to get title
-        const game = games.find((g) => g.id === gameId)
-        if (!game) return
+        // Handle generic "install_unlocker" action for native games
+        if (action === 'install_unlocker') {
+          showUnlockerSelection(game, (chosenAction: ActionType) => {
+            // User chose, now proceed with that action
+            handleGameAction(gameId, chosenAction, games)
+          })
+          return
+        }
 
-        // Get title based on action
+        // For other actions (uninstall_cream, install_smoke, uninstall_smoke)
         const isCream = action.includes('cream')
         const isInstall = action.includes('install')
         const product = isCream ? 'CreamLinux' : 'SmokeAPI'
@@ -138,7 +155,7 @@ export function useGameActions() {
         throw error
       }
     },
-    []
+    [showUnlockerSelection]
   )
 
   // Handle DLC selection confirmation
@@ -231,5 +248,9 @@ export function useGameActions() {
     handleCloseProgressDialog,
     handleGameAction,
     handleDlcConfirm,
+    unlockerSelectionDialog: selectionState,
+    handleSelectCreamLinux,
+    handleSelectSmokeAPI,
+    closeUnlockerDialog,
   }
 }
