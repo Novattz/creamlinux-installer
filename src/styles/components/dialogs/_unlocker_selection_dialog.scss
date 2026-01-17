@@ -1,0 +1,122 @@
+@use '../../themes/index' as *;
+@use '../../abstracts/index' as *;
+
+/* 
+  Unlocker Selection Dialog styles
+  For choosing between CreamLinux and SmokeAPI on native games
+*/
+
+.unlocker-selection-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+
+  h3 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+}
+
+.unlocker-selection-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+
+  .game-title-info {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    margin: 0;
+
+    strong {
+      color: var(--text-primary);
+    }
+  }
+
+  .unlocker-options {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .unlocker-option {
+    background-color: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-soft);
+    border-radius: 8px;
+    padding: 1.25rem;
+    transition: all var(--duration-normal) var(--easing-ease-out);
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.05);
+      border-color: var(--border);
+    }
+
+    &.recommended {
+      border-color: var(--primary-color);
+      background-color: rgba(245, 150, 130, 0.05);
+
+      &:hover {
+        background-color: rgba(245, 150, 130, 0.08);
+      }
+    }
+
+    .option-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+
+      h4 {
+        margin: 0;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+      }
+
+      .recommended-badge {
+        background-color: var(--primary-color);
+        color: var(--text-heavy);
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+      }
+
+      .alternative-badge {
+        background-color: var(--border);
+        color: var(--text-secondary);
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+      }
+    }
+
+    .option-description {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      margin: 0 0 1rem 0;
+      line-height: 1.5;
+    }
+  }
+
+  .selection-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background-color: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border-soft);
+    border-radius: 6px;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+
+    svg {
+      flex-shrink: 0;
+      color: var(--info);
+    }
+  }
+}
