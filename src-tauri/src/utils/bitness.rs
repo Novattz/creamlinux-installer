@@ -20,7 +20,7 @@ fn detect_binary_bitness(file_path: &Path) -> Option<Bitness> {
     };
 
     // Check for ELF magic number (0x7F 'E' 'L' 'F')
-    if bytes.len() < 5 || &bytes[0..4] != b"\x7ELF" {
+    if bytes.len() < 5 || &bytes[0..4] != b"\x7FELF" {
         return None;
     }
 
@@ -90,35 +90,32 @@ pub fn detect_game_bitness(game_path: &str) -> Result<Bitness, String> {
             continue;
         }
 
+        // Skip non-binary files early for performance
+        let filename = path.file_name().unwrap_or_default().to_string_lossy();
+        
+        // Check for common Linux executable extensions or shared libraries
+        let has_binary_extension = filename.ends_with(".x86")
+            || filename.ends_with(".x86_64")
+            || filename.ends_with(".bin")
+            || filename.ends_with(".so")
+            || filename.contains(".so.")
+            || filename.starts_with("lib");
+
         // Check if file is executable
         #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt;
             if let Ok(metadata) = fs::metadata(path) {
                 let permissions = metadata.permissions();
-                // Check if executable bit is set
-                if permissions.mode() & 0o111 == 0 {
+                let is_executable = permissions.mode() & 0o111 != 0;
+                
+                // Skip files that are neither executable nor have binary extensions
+                if !is_executable && !has_binary_extension {
                     continue;
                 }
             } else {
                 continue;
             }
-        }
-
-        // Check for common Linux executable extensions or no extension
-        let filename = path.file_name().unwrap_or_default().to_string_lossy();
-        let has_exe_extension = filename.ends_with(".x86")
-            || filename.ends_with(".x86_64")
-            || filename.ends_with(".bin")
-            || filename.contains('.');
-
-        // Also check for .so files (shared libraries) as they indicate bitness
-        let is_shared_lib = filename.ends_with(".so")
-            || filename.contains(".so")
-            || filename.starts_with("lib");
-
-        if !has_exe_extension && !is_shared_lib {
-            continue;
         }
 
         // Detect bitness
@@ -139,10 +136,10 @@ pub fn detect_game_bitness(game_path: &str) -> Result<Bitness, String> {
     // 4. If we found neither, return an error
 
     if !bit64_binaries.is_empty() && bit32_binaries.is_empty() {
-        info!("Detected 64-bit game (Only 64-bit binaries found");
+        info!("Detected 64-bit game (Only 64-bit binaries found)");
         Ok(Bitness::Bit64)
     } else if !bit32_binaries.is_empty() && bit64_binaries.is_empty() {
-        info!("Detected 32-bit game (Only 32-bit binaries found");
+        info!("Detected 32-bit game (Only 32-bit binaries found)");
         Ok(Bitness::Bit32)
     } else if !bit64_binaries.is_empty() && !bit32_binaries.is_empty() {
         warn!(
