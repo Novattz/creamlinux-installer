@@ -6,6 +6,7 @@ export { useToasts } from './useToasts'
 export { useAppLogic } from './useAppLogic'
 export { useConflictDetection } from './useConflictDetection'
 export { useDisclaimer } from './useDisclaimer'
+export { useUnlockerSelection } from './useUnlockerSelection'
 
 // Export types
 export type { ToastType, Toast, ToastOptions } from './useToasts'
