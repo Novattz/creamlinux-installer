@@ -256,18 +256,40 @@ fn check_creamlinux_installed(game_path: &Path) -> bool {
 
 // Check if a game has SmokeAPI installed
 fn check_smokeapi_installed(game_path: &Path, api_files: &[String]) -> bool {
-    // First check the provided api_files for backup files
-    for api_file in api_files {
-        let api_path = game_path.join(api_file);
-        let api_dir = api_path.parent().unwrap_or(game_path);
-        let api_filename = api_path.file_name().unwrap_or_default();
+    // For Proton games: check for backup DLL files
+    if !api_files.is_empty() {
+        for api_file in api_files {
+            let api_path = game_path.join(api_file);
+            let api_dir = api_path.parent().unwrap_or(game_path);
+            let api_filename = api_path.file_name().unwrap_or_default();
 
-        // Check for backup file (original file renamed with _o.dll suffix)
-        let backup_name = api_filename.to_string_lossy().replace(".dll", "_o.dll");
-        let backup_path = api_dir.join(backup_name);
+            // Check for backup file (original file renamed with _o.dll suffix)
+            let backup_name = api_filename.to_string_lossy().replace(".dll", "_o.dll");
+            let backup_path = api_dir.join(backup_name);
 
-        if backup_path.exists() {
-            debug!("SmokeAPI backup file found: {}", backup_path.display());
+            if backup_path.exists() {
+                debug!("SmokeAPI backup file found: {}", backup_path.display());
+                return true;
+            }
+        }
+    }
+
+    // For Native games: check for lib_steam_api_o.so backup
+    for entry in WalkDir::new(game_path)
+        .max_depth(3)
+        .into_iter()
+        .filter_map(Result::ok)
+    {
+        let path = entry.path();
+        if !path.is_file() {
+            continue;
+        }
+
+        let filename = path.file_name().unwrap_or_default().to_string_lossy();
+
+        // Check for native SmokeAPI backup
+        if filename == "libsteam_api_o.so" {
+            debug!("Found native SmokeAPI backup: {}", path.display());
             return true;
         }
     }

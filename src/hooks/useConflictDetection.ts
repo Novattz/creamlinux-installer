@@ -41,8 +41,8 @@ export function useConflictDetection(games: Game[]) {
         })
       }
 
-      // Conflict 2: SmokeAPI installed but game is now Native
-      if (game.native && game.smoke_installed) {
+      // Conflict 2: Orphaned Proton SmokeAPI DLL files on a native game
+      if (game.native && game.smoke_installed && game.api_files && game.api_files.length > 0) {
         detectedConflicts.push({
           gameId: game.id,
           gameTitle: game.title,

@@ -294,7 +294,7 @@ impl SmokeAPI {
             .map_err(|e| format!("Failed to replace libsteam_api.so: {}", e))?;
 
         info!(
-            "Replaced libsteam_api.so with {} (hook mode)",
+            "Replaced libsteam_api.so with {}",
             target_so
         );
 
