@@ -51,10 +51,13 @@ const GameItem = ({ game, onAction, onEdit, onSmokeAPISettings }: GameItemProps)
   }, [game.id, imageUrl])
 
   // Determine if we should show CreamLinux buttons (only for native games)
-  const shouldShowCream = game.native === true
+  const shouldShowCream = game.native && game.cream_installed // Only show if installed (for uninstall)
 
   // Determine if we should show SmokeAPI buttons (only for non-native games with API files)
   const shouldShowSmoke = !game.native && game.api_files && game.api_files.length > 0
+
+  // Show generic button if nothing installed
+  const shouldShowUnlocker = game.native && !game.cream_installed && !game.smoke_installed
 
   // Check if this is a Proton game without API files
   const isProtonNoApi = !game.native && (!game.api_files || game.api_files.length === 0)
@@ -69,6 +72,11 @@ const GameItem = ({ game, onAction, onEdit, onSmokeAPISettings }: GameItemProps)
     if (game.installing) return
     const action: ActionType = game.smoke_installed ? 'uninstall_smoke' : 'install_smoke'
     onAction(game.id, action)
+  }
+
+  const handleUnlockerAction = () => {
+    if (game.installing) return
+    onAction(game.id, 'install_unlocker')
   }
 
   // Handle edit button click
@@ -116,21 +124,41 @@ const GameItem = ({ game, onAction, onEdit, onSmokeAPISettings }: GameItemProps)
         </div>
 
         <div className="game-actions">
-          {/* Show CreamLinux button only for native games */}
+          {/* Show generic "Install" button for native games with nothing installed */}
+          {shouldShowUnlocker && (
+            <ActionButton
+              action="install_unlocker"
+              isInstalled={false}
+              isWorking={!!game.installing}
+              onClick={handleUnlockerAction}
+            />
+          )}
+
+          {/* Show CreamLinux uninstall button if CreamLinux is installed */}
           {shouldShowCream && (
             <ActionButton
-              action={game.cream_installed ? 'uninstall_cream' : 'install_cream'}
-              isInstalled={!!game.cream_installed}
+              action="uninstall_cream"
+              isInstalled={true}
               isWorking={!!game.installing}
               onClick={handleCreamAction}
             />
           )}
 
-          {/* Show SmokeAPI button only for Proton/Windows games with API files */}
+          {/* Show SmokeAPI button for Proton games OR native games with SmokeAPI installed */}
           {shouldShowSmoke && (
             <ActionButton
               action={game.smoke_installed ? 'uninstall_smoke' : 'install_smoke'}
               isInstalled={!!game.smoke_installed}
+              isWorking={!!game.installing}
+              onClick={handleSmokeAction}
+            />
+          )}
+
+          {/* Show SmokeAPI uninstall for native games if installed */}
+          {game.native && game.smoke_installed && (
+            <ActionButton
+              action="uninstall_smoke"
+              isInstalled={true}
               isWorking={!!game.installing}
               onClick={handleSmokeAction}
             />

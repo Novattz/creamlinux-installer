@@ -62,6 +62,16 @@ export interface AppContextType {
     type: 'success' | 'error' | 'warning' | 'info',
     options?: Record<string, unknown>
   ) => void
+
+  // Unlocker selection
+  unlockerSelectionDialog: {
+    visible: boolean
+    gameId: string | null
+    gameTitle: string | null
+  }
+  handleSelectCreamLinux: () => void
+  handleSelectSmokeAPI: () => void
+  closeUnlockerDialog: () => void
 }
 
 // Create the context with a default value

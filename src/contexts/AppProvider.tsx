@@ -33,6 +33,10 @@ export const AppProvider = ({ children }: AppProviderProps) => {
     handleCloseProgressDialog,
     handleGameAction: executeGameAction,
     handleDlcConfirm: executeDlcConfirm,
+    unlockerSelectionDialog,
+    handleSelectCreamLinux,
+    handleSelectSmokeAPI,
+    closeUnlockerDialog,
   } = useGameActions()
 
   const { toasts, removeToast, success, error: showError, warning, info } = useToasts()
@@ -241,6 +245,12 @@ export const AppProvider = ({ children }: AppProviderProps) => {
 
     // Toast notifications
     showToast,
+
+    // Unlocker selection
+    unlockerSelectionDialog,
+    handleSelectCreamLinux,
+    handleSelectSmokeAPI,
+    closeUnlockerDialog,
   }
 
   return (

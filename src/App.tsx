@@ -21,6 +21,7 @@ import {
   SettingsDialog,
   ConflictDialog,
   DisclaimerDialog,
+  UnlockerSelectionDialog,
 } from '@/components/dialogs'
 
 // Game components
@@ -64,6 +65,10 @@ function App() {
     handleSettingsClose,
     handleSmokeAPISettingsOpen,
     showToast,
+    unlockerSelectionDialog,
+    handleSelectCreamLinux,
+    handleSelectSmokeAPI,
+    closeUnlockerDialog,
   } = useAppContext()
 
   // Conflict detection
@@ -180,6 +185,15 @@ function App() {
           conflicts={conflicts}
           onResolve={handleConflictResolve}
           onClose={closeDialog}
+        />
+
+        {/* Unlocker Selection Dialog */}
+        <UnlockerSelectionDialog
+          visible={unlockerSelectionDialog.visible}
+          gameTitle={unlockerSelectionDialog.gameTitle || ''}
+          onClose={closeUnlockerDialog}
+          onSelectCreamLinux={handleSelectCreamLinux}
+          onSelectSmokeAPI={handleSelectSmokeAPI}
         />
 
         {/* Disclaimer Dialog - Shows AFTER everything is loaded */}
