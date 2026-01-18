@@ -1,3 +1,8 @@
+## [1.4.1] - 18-01-2026
+
+### Added
+- Dramatically reduced the time that bitness detection takes to detect game bitness
+
 ## [1.4.0] - 17-01-2026
 
 ### Added
