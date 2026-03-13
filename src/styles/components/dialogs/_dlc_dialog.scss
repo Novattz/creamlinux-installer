@@ -209,6 +209,51 @@
   }
 }
 
+// Add DLC manually form
+.add-dlc-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.add-dlc-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.add-dlc-label {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.add-dlc-input {
+  background-color: var(--border-dark);
+  border: 1px solid var(--border-soft);
+  border-radius: 4px;
+  color: var(--text-primary);
+  padding: 0.6rem 1rem;
+  font-size: 0.9rem;
+  transition: all var(--duration-normal) var(--easing-ease-out);
+
+  &:focus {
+    border-color: var(--primary-color);
+    outline: none;
+    box-shadow: 0px 0px 6px rgba(245, 150, 130, 0.2);
+  }
+
+  &::placeholder {
+    color: var(--text-muted);
+  }
+}
+
+.add-dlc-error {
+  font-size: 0.82rem;
+  color: var(--error);
+  margin: 0;
+}
+
 // Loading animations
 @keyframes spin {
   0% {

@@ -4,6 +4,7 @@ import DialogHeader from './DialogHeader'
 import DialogBody from './DialogBody'
 import DialogFooter from './DialogFooter'
 import DialogActions from './DialogActions'
+import AddDlcDialog from './AddDlcDialog'
 import { Button, AnimatedCheckbox } from '@/components/buttons'
 import { DlcInfo } from '@/types'
 import { Icon, check, info } from '@/components/icons'
@@ -51,6 +52,7 @@ const DlcSelectionDialog = ({
   const [searchQuery, setSearchQuery] = useState('')
   const [selectAll, setSelectAll] = useState(true)
   const [initialized, setInitialized] = useState(false)
+  const [showAddDlc, setShowAddDlc] = useState(false)
 
   // Reset dialog state when it opens or closes
   useEffect(() => {
@@ -126,6 +128,11 @@ const DlcSelectionDialog = ({
     )
   }, [selectAll])
 
+  // Add a manually-entered DLC to the list
+  const handleAddDlc = useCallback((dlc: DlcInfo) => {
+    setSelectedDlcs((prev) => [...prev, dlc])
+  }, [])
+
   // Submit selected DLCs to parent component
   const handleConfirm = useCallback(() => {
     // Create a deep copy to prevent reference issues
@@ -151,123 +158,140 @@ const DlcSelectionDialog = ({
   }
 
   return (
-    <Dialog visible={visible} onClose={onClose} size="large" preventBackdropClose={isLoading}>
-      <DialogHeader onClose={onClose} hideCloseButton={true}>
-        <h3>{dialogTitle}</h3>
-        <div className="dlc-game-info">
-          <span className="game-title">{gameTitle}</span>
-          <span className="dlc-count">
-            {selectedCount} of {selectedDlcs.length} DLCs selected
-            {getLoadingInfoText()}
-          </span>
-        </div>
-      </DialogHeader>
+    <>
+      <Dialog visible={visible} onClose={onClose} size="large" preventBackdropClose={isLoading}>
+        <DialogHeader onClose={onClose} hideCloseButton={true}>
+          <h3>{dialogTitle}</h3>
+          <div className="dlc-game-info">
+            <span className="game-title">{gameTitle}</span>
+            <span className="dlc-count">
+              {selectedCount} of {selectedDlcs.length} DLCs selected
+              {getLoadingInfoText()}
+            </span>
+          </div>
+        </DialogHeader>
 
-      <div className="dlc-dialog-search">
-        <input
-          type="text"
-          placeholder="Search DLCs..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="dlc-search-input"
-        />
-        <div className="select-all-container">
-          <AnimatedCheckbox
-            checked={selectAll}
-            onChange={handleToggleSelectAll}
-            label="Select All"
+        <div className="dlc-dialog-search">
+          <input
+            type="text"
+            placeholder="Search DLCs..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="dlc-search-input"
           />
-        </div>
-      </div>
-
-      {(isLoading || isUpdating) && loadingProgress > 0 && (
-        <div className="dlc-loading-progress">
-          <div className="progress-bar-container">
-            <div className="progress-bar" style={{ width: `${loadingProgress}%` }} />
-          </div>
-          <div className="loading-details">
-            <span>{isUpdating ? 'Updating DLC list' : 'Loading DLCs'}: {loadingProgress}%</span>
-            {estimatedTimeLeft && (
-              <span className="time-left">Est. time left: {estimatedTimeLeft}</span>
-            )}
+          <div className="select-all-container">
+            <AnimatedCheckbox
+              checked={selectAll}
+              onChange={handleToggleSelectAll}
+              label="Select All"
+            />
           </div>
         </div>
-      )}
 
-      <DialogBody className="dlc-list-container">
-        {selectedDlcs.length > 0 ? (
-          <ul className="dlc-list">
-            {filteredDlcs.map((dlc) => (
-              <li key={dlc.appid} className="dlc-item">
-                <AnimatedCheckbox
-                  checked={dlc.enabled}
-                  onChange={() => handleToggleDlc(dlc.appid)}
-                  label={dlc.name}
-                  sublabel={`ID: ${dlc.appid}`}
-                />
-              </li>
-            ))}
-            {isLoading && (
-              <li className="dlc-item dlc-item-loading">
-                <div className="loading-pulse"></div>
-              </li>
-            )}
-          </ul>
-        ) : (
-          <div className="dlc-loading">
-            <div className="loading-spinner"></div>
-            <p>Loading DLC information...</p>
+        {(isLoading || isUpdating) && loadingProgress > 0 && (
+          <div className="dlc-loading-progress">
+            <div className="progress-bar-container">
+              <div className="progress-bar" style={{ width: `${loadingProgress}%` }} />
+            </div>
+            <div className="loading-details">
+              <span>{isUpdating ? 'Updating DLC list' : 'Loading DLCs'}: {loadingProgress}%</span>
+              {estimatedTimeLeft && (
+                <span className="time-left">Est. time left: {estimatedTimeLeft}</span>
+              )}
+            </div>
           </div>
         )}
-      </DialogBody>
 
-      <DialogFooter>
-        {/* Show update results */}
-        {!isUpdating && !isLoading && isEditMode && updateAttempted && (
-          <>
-            {newDlcsCount > 0 && (
-              <div className="dlc-update-results dlc-update-success">
-                <span className="update-message">
-                  <Icon name={check} size="md" variant="solid" className="dlc-update-icon-success"/> Found {newDlcsCount} new DLC{newDlcsCount > 1 ? 's' : ''}!
-                </span>
-              </div>
-            )}
-            {newDlcsCount === 0 && (
-              <div className="dlc-update-results dlc-update-info">
-                <span className="update-message">
-                  <Icon name={info} size="md" variant="solid" className="dlc-update-icon-info"/> No new DLCs found. Your list is up to date!
-                </span>
-              </div>
-            )}
-          </>
-        )}
-        
-        <DialogActions>
-          <Button
-            variant="secondary"
-            onClick={onClose}
-            disabled={(isLoading || isUpdating) && loadingProgress < 10}
-          >
-            Cancel
-          </Button>
-          
-          {/* Update button - only show in edit mode */}
-          {isEditMode && onUpdate && (
+        <DialogBody className="dlc-list-container">
+          {selectedDlcs.length > 0 ? (
+            <ul className="dlc-list">
+              {filteredDlcs.map((dlc) => (
+                <li key={dlc.appid} className="dlc-item">
+                  <AnimatedCheckbox
+                    checked={dlc.enabled}
+                    onChange={() => handleToggleDlc(dlc.appid)}
+                    label={dlc.name}
+                    sublabel={`ID: ${dlc.appid}`}
+                  />
+                </li>
+              ))}
+              {isLoading && (
+                <li className="dlc-item dlc-item-loading">
+                  <div className="loading-pulse"></div>
+                </li>
+              )}
+            </ul>
+          ) : (
+            <div className="dlc-loading">
+              <div className="loading-spinner"></div>
+              <p>Loading DLC information...</p>
+            </div>
+          )}
+        </DialogBody>
+
+        <DialogFooter>
+          {/* Show update results */}
+          {!isUpdating && !isLoading && isEditMode && updateAttempted && (
+            <>
+              {newDlcsCount > 0 && (
+                <div className="dlc-update-results dlc-update-success">
+                  <span className="update-message">
+                    <Icon name={check} size="md" variant="solid" className="dlc-update-icon-success"/> Found {newDlcsCount} new DLC{newDlcsCount > 1 ? 's' : ''}!
+                  </span>
+                </div>
+              )}
+              {newDlcsCount === 0 && (
+                <div className="dlc-update-results dlc-update-info">
+                  <span className="update-message">
+                    <Icon name={info} size="md" variant="solid" className="dlc-update-icon-info"/> No new DLCs found. Your list is up to date!
+                  </span>
+                </div>
+              )}
+            </>
+          )}
+
+          <DialogActions>
             <Button
-              variant="warning"
-              onClick={() => onUpdate(gameId)}
+              variant="secondary"
+              onClick={onClose}
+              disabled={(isLoading || isUpdating) && loadingProgress < 10}
+            >
+              Cancel
+            </Button>
+
+            <Button
+              variant="secondary"
+              onClick={() => setShowAddDlc(true)}
               disabled={isLoading || isUpdating}
             >
-              {isUpdating ? 'Updating...' : 'Update DLC List'}
+              Add DLC Manually
             </Button>
-          )}
-          
-          <Button variant="primary" onClick={handleConfirm} disabled={isLoading || isUpdating}>
-            {actionButtonText}
-          </Button>
-        </DialogActions>
-      </DialogFooter>
-    </Dialog>
+
+            {/* Update button - only show in edit mode */}
+            {isEditMode && onUpdate && (
+              <Button
+                variant="warning"
+                onClick={() => onUpdate(gameId)}
+                disabled={isLoading || isUpdating}
+              >
+                {isUpdating ? 'Updating...' : 'Update DLC List'}
+              </Button>
+            )}
+
+            <Button variant="primary" onClick={handleConfirm} disabled={isLoading || isUpdating}>
+              {actionButtonText}
+            </Button>
+          </DialogActions>
+        </DialogFooter>
+      </Dialog>
+
+      <AddDlcDialog
+        visible={showAddDlc}
+        onClose={() => setShowAddDlc(false)}
+        onAdd={handleAddDlc}
+        existingIds={new Set(selectedDlcs.map((d) => d.appid))}
+      />
+    </>
   )
 }
 
