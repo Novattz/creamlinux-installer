@@ -19,7 +19,7 @@
   },
   "productName": "Creamlinux",
   "mainBinaryName": "creamlinux",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "identifier": "com.creamlinux.dev",
   "app": {
     "withGlobalTauri": false,
