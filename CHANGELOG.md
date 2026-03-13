@@ -1,3 +1,11 @@
+## [1.4.2] - 13-03-2026
+
+### Added
+- Added a dialog so users can manually add DLC's incase they are missing from the steam api
+
+### Fixed
+- Fixed an issue where if the libsteam_api.so file is nested too deeply in a game causing the app to not find it.
+
 ## [1.4.1] - 18-01-2026
 
 ### Added
