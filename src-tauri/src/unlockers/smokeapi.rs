@@ -410,9 +410,9 @@ impl SmokeAPI {
     fn find_libsteam_api(game_path: &Path) -> Result<std::path::PathBuf, String> {
         use walkdir::WalkDir;
 
-        // Scan for libsteam_api.so (not too deep to keep it fast)
+        // Scan for libsteam_api.so (some games place it several subdirectories deep)
         for entry in WalkDir::new(game_path)
-            .max_depth(3)
+            .max_depth(8)
             .into_iter()
             .filter_map(Result::ok)
         {
