@@ -1,3 +1,15 @@
+## [1.5.0] - 28-03-2026
+
+### Added
+- Anonymous reporting system. Vote on whether CreamLinux or SmokeAPI works for a game
+- Opt-in dialog on first launch explaining what is collected and why
+- Rating button on game cards (only visible when opted in and an unlocker is installed)
+- Community vote display in the unlocker selection dialog and before installing SmokeAPI on Proton games
+- Votes track per-unlocker so CreamLinux and SmokeAPI ratings are independent
+- Previously submitted votes are stored locally so already-cast buttons are disabled on re-open
+- Config now automatically migrates missing fields on update without overwriting existing values
+- API source available at https://github.com/Novattz/Lactose/
+
 ## [1.4.2] - 13-03-2026
 
 ### Added
