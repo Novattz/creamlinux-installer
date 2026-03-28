@@ -1,4 +1,5 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
+import { invoke } from '@tauri-apps/api/core'
 import {
   Dialog,
   DialogHeader,
@@ -8,10 +9,12 @@ import {
 } from '@/components/dialogs'
 import { Button } from '@/components/buttons'
 import { Icon, info } from '@/components/icons'
+import VotesDisplay, { GameVotes } from '@/components/common/VotesDisplay'
 
 export interface UnlockerSelectionDialogProps {
   visible: boolean
-  gameTitle: string
+  gameId: string | null
+  gameTitle: string | null
   onClose: () => void
   onSelectCreamLinux: () => void
   onSelectSmokeAPI: () => void
@@ -19,15 +22,39 @@ export interface UnlockerSelectionDialogProps {
 
 /**
  * Unlocker Selection Dialog component
- * Allows users to choose between CreamLinux and SmokeAPI for native Linux games
+ * Allows users to choose between CreamLinux and SmokeAPI for native Linux games.
+ * Fetches and displays community vote data per unlocker.
  */
 const UnlockerSelectionDialog: React.FC<UnlockerSelectionDialogProps> = ({
   visible,
+  gameId,
   gameTitle,
   onClose,
   onSelectCreamLinux,
   onSelectSmokeAPI,
 }) => {
+  const [creamVotes, setCreamVotes] = useState<GameVotes | null>(null)
+  const [smokeVotes, setSmokeVotes] = useState<GameVotes | null>(null)
+
+  useEffect(() => {
+    if (!visible || !gameId) {
+      setCreamVotes(null)
+      setSmokeVotes(null)
+      return
+    }
+
+    invoke<GameVotes[]>('get_game_votes', { gameId })
+      .then((results) => {
+        setCreamVotes(results.find((v) => v.unlocker === 'creamlinux') ?? null)
+        setSmokeVotes(results.find((v) => v.unlocker === 'smokeapi') ?? null)
+      })
+      .catch(() => {
+        // Votes are non-critical — silently fall back to "No votes yet"
+        setCreamVotes(null)
+        setSmokeVotes(null)
+      })
+  }, [visible, gameId])
+
   return (
     <Dialog visible={visible} onClose={onClose} size="medium">
       <DialogHeader onClose={onClose} hideCloseButton={true}>
@@ -52,6 +79,7 @@ const UnlockerSelectionDialog: React.FC<UnlockerSelectionDialogProps> = ({
                 Native Linux DLC unlocker. Works best with most native Linux games and provides
                 better compatibility.
               </p>
+              <VotesDisplay votes={creamVotes} />
               <Button variant="primary" onClick={onSelectCreamLinux} fullWidth>
                 Install CreamLinux
               </Button>
@@ -66,6 +94,7 @@ const UnlockerSelectionDialog: React.FC<UnlockerSelectionDialogProps> = ({
                 Cross-platform DLC unlocker. Try this if CreamLinux doesn't work for your game.
                 Automatically fetches DLC information.
               </p>
+              <VotesDisplay votes={smokeVotes} />
               <Button variant="secondary" onClick={onSelectSmokeAPI} fullWidth>
                 Install SmokeAPI
               </Button>
