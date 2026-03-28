@@ -29,6 +29,7 @@ export const warning = 'Warning'
 export const wine = 'Wine'
 export const diamond = 'Diamond'
 export const settings = 'Settings'
+export const star = 'Star'
 
 // Brand icons
 export const discord = 'Discord'
@@ -59,6 +60,7 @@ export const IconNames = {
   Wine: wine,
   Diamond: diamond,
   Settings: settings,
+  Star: star,
 
   // Brand icons
   Discord: discord,
