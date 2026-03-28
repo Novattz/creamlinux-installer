@@ -4,6 +4,7 @@
 )]
 
 mod cache;
+mod reporting;
 mod utils;
 mod dlc_manager;
 mod installer;
@@ -613,6 +614,81 @@ async fn resolve_platform_conflict(
     Ok(updated_game)
 }
 
+#[tauri::command]
+fn set_reporting_opt_in(opted_in: bool) -> Result<(), String> {
+    config::update_config(|cfg| {
+        cfg.reporting_opted_in = opted_in;
+        cfg.reporting_has_seen_prompt = true;
+    })?;
+ 
+    if opted_in {
+        // Ensure a salt exists so future hashes work immediately
+        reporting::delete_salt().ok(); // clear any stale one first
+        // re-create via generate_user_hash is fine; salt is lazy-created there
+    } else {
+        reporting::delete_salt()?;
+    }
+ 
+    info!("Reporting opt-in set to: {}", opted_in);
+    Ok(())
+}
+ 
+#[tauri::command]
+async fn submit_report(
+    game_id: String,
+    unlocker: String,
+    worked: bool,
+    steam_path: String,
+) -> Result<(), String> {
+    let user_hash = reporting::generate_user_hash(&steam_path)?;
+ 
+    reporting::post_report(reporting::ReportPayload {
+        user_hash,
+        game_id: game_id.clone(),
+        unlocker: unlocker.clone(),
+        worked,
+    })
+    .await?;
+
+    // Always save locally so the UI can reflect the vote immediately,
+    // regardless of opt-in status (the local file is only used client-side).
+    reporting::save_local_report(reporting::LocalReport {
+        game_id,
+        unlocker,
+        worked,
+    })?;
+
+    Ok(())
+}
+
+#[tauri::command]
+fn get_local_reports() -> Vec<reporting::LocalReport> {
+    reporting::load_local_reports()
+}
+
+#[tauri::command]
+async fn get_game_votes(game_id: String) -> Result<Vec<reporting::VoteResult>, String> {
+    let url = format!("https://api.shibe.fun/v1/votes/{}", game_id);
+
+    let client = reqwest::Client::new();
+    let response = client
+        .get(&url)
+        .timeout(std::time::Duration::from_secs(5))
+        .send()
+        .await
+        .map_err(|e| format!("Failed to fetch votes: {}", e))?;
+
+    if !response.status().is_success() {
+        // Non-critical - return empty rather than surfacing an error to the UI
+        return Ok(Vec::new());
+    }
+
+    response
+        .json::<Vec<reporting::VoteResult>>()
+        .await
+        .map_err(|e| format!("Failed to parse votes: {}", e))
+}
+
 fn setup_logging() -> Result<(), Box<dyn std::error::Error>> {
     use log::LevelFilter;
     use log4rs::append::file::FileAppender;
@@ -676,6 +752,10 @@ fn main() {
             resolve_platform_conflict,
             load_config,
             update_config,
+            set_reporting_opt_in,
+            submit_report,
+            get_local_reports,
+            get_game_votes,
         ])
         .setup(|app| {
             info!("Tauri application setup");
