@@ -160,3 +160,33 @@
     transform: rotate(360deg);
   }
 }
+
+// Rating button on game card
+.rate-button {
+  svg {
+    color: var(--elevated-bg);
+    transition: transform var(--duration-normal) var(--easing-ease-out);
+  }
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.28);
+    transform: translateY(-2px);
+    box-shadow: 0 7px 15px rgba(0, 0, 0, 0.25);
+
+    svg {
+      transform: scale(1.1);
+    }
+  }
+
+  &:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+}

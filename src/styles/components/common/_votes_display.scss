@@ -1,0 +1,43 @@
+@use '../../themes/index' as *;
+@use '../../abstracts/index' as *;
+
+.unlocker-votes {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.35rem;
+  margin-bottom: 0.35rem;
+
+  .votes-bar-wrap {
+    flex: 1;
+    height: 6px;
+    background-color: var(--border-soft);
+    border-radius: 99px;
+    overflow: hidden;
+
+    .votes-bar-fill {
+      height: 100%;
+      background-color: var(--success);
+      border-radius: 99px;
+      transition: width 0.4s ease;
+    }
+  }
+
+  .votes-label {
+    font-size: 0.75rem;
+    white-space: nowrap;
+    color: var(--text-muted);
+
+    &.votes-label--positive {
+      color: var(--success);
+    }
+
+    &.votes-label--negative {
+      color: var(--danger);
+    }
+
+    &.votes-label--none {
+      color: var(--text-muted);
+    }
+  }
+}
