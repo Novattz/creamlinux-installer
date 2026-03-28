@@ -5,7 +5,7 @@ pub use storage::{
     get_creamlinux_version_dir, get_smokeapi_version_dir,
     list_creamlinux_files, list_smokeapi_files, read_versions, 
     update_creamlinux_version, update_smokeapi_version, validate_smokeapi_cache,
-    validate_creamlinux_cache,
+    validate_creamlinux_cache, get_cache_dir,
 };
 
 pub use version::{
