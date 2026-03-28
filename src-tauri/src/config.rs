@@ -8,12 +8,17 @@ use log::info;
 pub struct Config {
     // Whether to show the disclaimer on startup
     pub show_disclaimer: bool,
+    // Reporting / compatibility voting
+    pub reporting_opted_in: bool,
+    pub reporting_has_seen_prompt: bool,
 }
 
 impl Default for Config {
     fn default() -> Self {
         Self {
             show_disclaimer: true,
+            reporting_opted_in: false,
+            reporting_has_seen_prompt: false,
         }
     }
 }
@@ -63,11 +68,50 @@ pub fn load_config() -> Result<Config, String> {
     // Read and parse config file
     let config_str = fs::read_to_string(&config_path)
         .map_err(|e| format!("Failed to read config file: {}", e))?;
-    
-    let config: Config = serde_json::from_str(&config_str)
+
+    let mut on_disk: serde_json::Value = serde_json::from_str(&config_str)
         .map_err(|e| format!("Failed to parse config file: {}", e))?;
+
+    // Serialize the defaults into a Value so we can iterate their keys
+    let defaults = serde_json::to_value(Config::default())
+        .map_err(|e| format!("Failed to serialize default config: {}", e))?;
+
+    // For every key that exists in the current Config but is absent from the
+    // on-disk JSON, inject the default value. Keys that are already present
+    // are left completely untouched.
+    let mut migrated = false;
+    if let Some(default_obj) = defaults.as_object() {
+        let missing: Vec<(String, serde_json::Value)> = default_obj
+            .iter()
+            .filter(|(key, _)| {
+                on_disk
+                    .as_object()
+                    .map_or(false, |d| !d.contains_key(*key))
+            })
+            .map(|(key, val)| (key.clone(), val.clone()))
+            .collect();
+ 
+        if let Some(disk_obj) = on_disk.as_object_mut() {
+            for (key, value) in missing {
+                info!("Config migration: adding missing field '{}' with default value", key);
+                disk_obj.insert(key, value);
+                migrated = true;
+            }
+        }
+    }
+
+    // Deserialize the (possiblyh augmented) value into Config
+    let config: Config = serde_json::from_value(on_disk)
+        .map_err(|e| format!("Failed to deserialize config: {}", e))?;
+
+    // Persist the migrated file so the next launch doesn't need to do this again
+    if migrated {
+        save_config(&config)?;
+        info!("Config migrated - new fields written to disk");
+    } else {
+        info!("Loaded config from {:?}", config_path);
+    }
     
-    info!("Loaded config from {:?}", config_path);
     Ok(config)
 }
 
