@@ -4,7 +4,7 @@ CreamLinux is a GUI application for Linux that simplifies the management of DLC 
 
 ## Watch the demo here:
 
-[![Watch the demo](./src/assets/screenshot.png)](https://www.youtube.com/watch?v=ZunhZnKFLlg)
+[![Watch the demo](./src/assets/screenshot1.png)](https://www.youtube.com/watch?v=neUDotrqnDM)
 
 ## Beta Status
 
