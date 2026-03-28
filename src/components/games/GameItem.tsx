@@ -9,13 +9,15 @@ interface GameItemProps {
   onAction: (gameId: string, action: ActionType) => Promise<void>
   onEdit?: (gameId: string) => void
   onSmokeAPISettings?: (gameId: string) => void
+  onRate?: (gameId: string) => void
+  reportingEnabled?: boolean // When false/undefined, rate button is not rendered at all.
 }
 
 /**
  * Individual game card component
  * Displays game information and action buttons
  */
-const GameItem = ({ game, onAction, onEdit, onSmokeAPISettings }: GameItemProps) => {
+const GameItem = ({ game, onAction, onEdit, onSmokeAPISettings, onRate, reportingEnabled }: GameItemProps) => {
   const [imageUrl, setImageUrl] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [hasError, setHasError] = useState(false)
@@ -90,6 +92,13 @@ const GameItem = ({ game, onAction, onEdit, onSmokeAPISettings }: GameItemProps)
   const handleSmokeAPISettings = () => {
     if (onSmokeAPISettings && game.smoke_installed) {
       onSmokeAPISettings(game.id)
+    }
+  }
+
+  // Rating handler
+  const handleRate = () => {
+    if (onRate && (game.cream_installed || game.smoke_installed)) {
+      onRate(game.id)
     }
   }
 
@@ -177,6 +186,20 @@ const GameItem = ({ game, onAction, onEdit, onSmokeAPISettings }: GameItemProps)
                 Rescan
               </Button>
             </div>
+          )}
+
+          {/* Rate button */}
+          {(game.cream_installed || game.smoke_installed) && onRate && reportingEnabled && (
+            <Button
+              variant="primary"
+              size="small"
+              onClick={handleRate}
+              disabled={!!game.installing}
+              title="Rate compatibility"
+              className="edit-button rate-button"
+              leftIcon={<Icon name="Star" variant="solid" size="md" />}
+              iconOnly
+            />
           )}
 
           {/* Edit button - only enabled if CreamLinux is installed */}

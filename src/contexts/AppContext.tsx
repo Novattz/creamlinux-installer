@@ -26,6 +26,14 @@ export interface SmokeAPISettingsDialogState {
   gameTitle: string
 }
 
+export interface RatingDialogState {
+  visible: boolean
+  gameId: string
+  gameTitle: string
+  unlocker: 'creamlinux' | 'smokeapi'
+  steamPath: string
+}
+
 // Define the context type
 export interface AppContextType {
   // Game state
@@ -55,6 +63,22 @@ export interface AppContextType {
   smokeAPISettingsDialog: SmokeAPISettingsDialogState
   handleSmokeAPISettingsOpen: (gameId: string) => void
   handleSmokeAPISettingsClose: () => void
+
+  // SmokeAPI votes dialog
+  smokeAPIVotesDialog: {
+  visible: boolean
+  gameId: string | null
+  gameTitle: string | null
+  }
+  handleSmokeAPIVotesClose: () => void
+  handleSmokeAPIVotesConfirm: () => void
+
+  // Rating dialog
+  ratingDialog: RatingDialogState
+  handleOpenRating: (gameId: string) => void
+  handleCloseRating: () => void
+  handleSubmitRating: (worked: boolean) => Promise<void>
+  reportingEnabled: boolean
 
   // Toast notifications
   showToast: (

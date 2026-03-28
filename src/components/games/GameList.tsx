@@ -10,13 +10,15 @@ interface GameListProps {
   onAction: (gameId: string, action: ActionType) => Promise<void>
   onEdit?: (gameId: string) => void
   onSmokeAPISettings?: (gameId: string) => void
+  onRate?: (gameId: string) => void
+  reportingEnabled?: boolean
 }
 
 /**
  * Main game list component
  * Displays games in a grid with search and filtering applied
  */
-const GameList = ({ games, isLoading, onAction, onEdit, onSmokeAPISettings }: GameListProps) => {
+const GameList = ({ games, isLoading, onAction, onEdit, onSmokeAPISettings, onRate, reportingEnabled }: GameListProps) => {
   const [imagesPreloaded, setImagesPreloaded] = useState(false)
 
   // Sort games alphabetically by title
@@ -57,7 +59,7 @@ const GameList = ({ games, isLoading, onAction, onEdit, onSmokeAPISettings }: Ga
       ) : (
         <div className="game-grid">
           {sortedGames.map((game) => (
-            <GameItem key={game.id} game={game} onAction={onAction} onEdit={onEdit} onSmokeAPISettings={onSmokeAPISettings} />
+            <GameItem key={game.id} game={game} onAction={onAction} onEdit={onEdit} onSmokeAPISettings={onSmokeAPISettings} onRate={onRate} reportingEnabled={reportingEnabled} />
           ))}
         </div>
       )}

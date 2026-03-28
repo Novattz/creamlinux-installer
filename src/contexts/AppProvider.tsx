@@ -1,10 +1,11 @@
-import { ReactNode, useState } from 'react'
+import { ReactNode, useState, useEffect } from 'react'
 import { AppContext, AppContextType } from './AppContext'
 import { useGames, useDlcManager, useGameActions, useToasts } from '@/hooks'
-import { DlcInfo } from '@/types'
+import { DlcInfo, Config } from '@/types'
 import { ActionType } from '@/components/buttons/ActionButton'
 import { ToastContainer } from '@/components/notifications'
-import { SmokeAPISettingsDialog } from '@/components/dialogs'
+import { SmokeAPISettingsDialog, OptInDialog, RatingDialog, SmokeAPIVotesDialog } from '@/components/dialogs'
+import { invoke } from '@tauri-apps/api/core'
 
 // Context provider component
 interface AppProviderProps {
@@ -53,6 +54,47 @@ export const AppProvider = ({ children }: AppProviderProps) => {
     gameTitle: '',
   })
 
+  // SmokeAPI votes dialog state
+  const [smokeAPIVotesDialog, setSmokeAPIVotesDialog] = useState<{
+    visible: boolean
+    gameId: string | null
+    gameTitle: string | null
+  }>({
+    visible: false,
+    gameId: null,
+    gameTitle: null,
+  })
+
+  // Opt-in dialog state
+  const [optInDialog, setOptInDialog] = useState(false)
+  const [reportingEnabled, setReportingEnabled] = useState(false)
+
+  // Rating dialog state
+  const [ratingDialog, setRatingDialog] = useState<{
+    visible: boolean
+    gameId: string
+    gameTitle: string
+    unlocker: 'creamlinux' | 'smokeapi'
+    steamPath: string
+  }>({
+    visible: false,
+    gameId: '',
+    gameTitle: '',
+    unlocker: 'creamlinux',
+    steamPath: '',
+  })
+
+  useEffect(() => {
+    invoke<Config>('load_config')
+      .then((cfg) => {
+        setReportingEnabled(cfg.reporting_opted_in)
+        if (!cfg.reporting_has_seen_prompt) {
+          setOptInDialog(true)
+        }
+      })
+      .catch((err) => console.error('Failed to load config for reporting check:', err))
+  }, [])
+
   // Settings handlers
   const handleSettingsOpen = () => {
     setSettingsDialog({ visible: true })
@@ -85,6 +127,69 @@ export const AppProvider = ({ children }: AppProviderProps) => {
     })
   }
 
+  const handleSmokeAPIVotesClose = () => {
+    setSmokeAPIVotesDialog({ visible: false, gameId: null, gameTitle: null })
+  }
+
+  const handleSmokeAPIVotesConfirm = () => {
+    const gameId = smokeAPIVotesDialog.gameId
+    setSmokeAPIVotesDialog({ visible: false, gameId: null, gameTitle: null })
+    if (gameId) {
+      // Now actually run the install
+      executeGameAction(gameId, 'install_smoke', games)
+    }
+  }
+
+  const handleOptInAccept = async () => {
+    try {
+      await invoke('set_reporting_opt_in', { optedIn: true })
+      setReportingEnabled(true)
+    } catch (err) {
+      console.error('Failed to save reporting opt-in:', err)
+    }
+    setOptInDialog(false)
+  }
+
+  const handleOptInDecline = async () => {
+    try {
+      await invoke('set_reporting_opt_in', { optedIn: false })
+      setReportingEnabled(false)
+    } catch (err) {
+      console.error('Failed to save reporting opt-out:', err)
+    }
+    setOptInDialog(false)
+  }
+
+  const handleOpenRating = (gameId: string) => {
+    const game = games.find((g) => g.id === gameId)
+    if (!game) return
+
+    setRatingDialog({
+      visible: true,
+      gameId,
+      gameTitle: game.title,
+      unlocker: game.cream_installed ? 'creamlinux' : 'smokeapi',
+      steamPath: game.path,
+    })
+  }
+
+  const handleCloseRating = () => {
+    setRatingDialog((prev) => ({ ...prev, visible: false }))
+  }
+
+  const handleSubmitRating = async (worked: boolean) => {
+    try {
+      await invoke('submit_report', {
+        gameId: ratingDialog.gameId,
+        unlocker: ratingDialog.unlocker,
+        worked,
+        steamPath: ratingDialog.steamPath,
+      })
+    } catch (err) {
+      console.error('Failed to submit rating:', err)
+    }
+  }
+
   // Game action handler with proper error reporting
   const handleGameAction = async (gameId: string, action: ActionType) => {
     const game = games.find((g) => g.id === gameId)
@@ -115,6 +220,16 @@ export const AppProvider = ({ children }: AppProviderProps) => {
         showError(`Failed to prepare DLC installation: ${error}`)
         return
       }
+    }
+
+    // intercept install_smoke for votes dialog
+    if (action === 'install_smoke' && !game.native) {
+      setSmokeAPIVotesDialog({
+        visible: true,
+        gameId: game.id,
+        gameTitle: game.title,
+      })
+      return
     }
 
     // For install_unlocker action, executeGameAction will handle showing the dialog
@@ -267,6 +382,18 @@ export const AppProvider = ({ children }: AppProviderProps) => {
     handleSmokeAPISettingsOpen,
     handleSmokeAPISettingsClose,
 
+    // SmokeAPI Votes
+    smokeAPIVotesDialog,
+    handleSmokeAPIVotesClose,
+    handleSmokeAPIVotesConfirm,
+
+    // Rating
+    ratingDialog,
+    handleOpenRating,
+    handleCloseRating,
+    handleSubmitRating,
+    reportingEnabled,
+
     // Toast notifications
     showToast,
 
@@ -329,6 +456,32 @@ export const AppProvider = ({ children }: AppProviderProps) => {
         onClose={handleSmokeAPISettingsClose}
         gamePath={smokeAPISettingsDialog.gamePath}
         gameTitle={smokeAPISettingsDialog.gameTitle}
+      />
+
+      {/* SmokeAPI Votes Dialog */}
+      <SmokeAPIVotesDialog
+        visible={smokeAPIVotesDialog.visible}
+        gameId={smokeAPIVotesDialog.gameId}
+        gameTitle={smokeAPIVotesDialog.gameTitle}
+        onClose={handleSmokeAPIVotesClose}
+        onConfirm={handleSmokeAPIVotesConfirm}
+      />
+
+      {/* Opt-in Dialog */}
+      <OptInDialog
+        visible={optInDialog}
+        onAccept={handleOptInAccept}
+        onDecline={handleOptInDecline}
+      />
+
+      {/* Rating Dialog */}
+      <RatingDialog
+        visible={ratingDialog.visible}
+        gameId={ratingDialog.gameId}
+        gameTitle={ratingDialog.gameTitle}
+        unlocker={ratingDialog.unlocker}
+        onClose={handleCloseRating}
+        onSubmit={handleSubmitRating}
       />
     </AppContext.Provider>
   )

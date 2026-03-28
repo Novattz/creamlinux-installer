@@ -64,6 +64,8 @@ function App() {
     handleSettingsOpen,
     handleSettingsClose,
     handleSmokeAPISettingsOpen,
+    handleOpenRating,
+    reportingEnabled,
     showToast,
     unlockerSelectionDialog,
     handleSelectCreamLinux,
@@ -143,6 +145,8 @@ function App() {
               onAction={handleGameAction}
               onEdit={handleGameEdit}
               onSmokeAPISettings={handleSmokeAPISettingsOpen}
+              onRate={handleOpenRating}
+              reportingEnabled={reportingEnabled}
             />
           )}
         </div>
@@ -190,6 +194,7 @@ function App() {
         {/* Unlocker Selection Dialog */}
         <UnlockerSelectionDialog
           visible={unlockerSelectionDialog.visible}
+          gameId={unlockerSelectionDialog.gameId}
           gameTitle={unlockerSelectionDialog.gameTitle || ''}
           onClose={closeUnlockerDialog}
           onSelectCreamLinux={handleSelectCreamLinux}
