@@ -53,6 +53,39 @@ jobs:
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
 
+      - name: install nix
+        uses: DeterminateSystems/nix-installer-action@main
+
+      - name: update package.nix version, date, and npm hash
+        env:
+          VERSION: ${{ steps.get-version.outputs.version }}
+        run: |
+          # Get today's date in YYYY-MM-DD format
+          TODAY=$(date -u +%Y-%m-%d)
+
+          # Compute new npm deps hash from package-lock.json
+          HASH=$(nix-shell -p prefetch-npm-deps --run "prefetch-npm-deps package-lock.json" 2>/dev/null)
+          echo "New hash: $HASH"
+
+          # Update version string (e.g. 1.5.5-unstable-2026-05-03)
+          sed -i "s|version = \"[^\"]*\"|version = \"${VERSION}-unstable-${TODAY}\"|" package.nix
+
+          # Update npm deps hash
+          sed -i "s|hash = \"[^\"]*\"|hash = \"${HASH}\"|" package.nix
+
+          echo "Updated package.nix:"
+          grep -E 'version|hash' package.nix
+
+      - name: commit updated package.nix
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add package.nix
+          if [[ $(git status -s) ]]; then
+            git commit -m "chore: update package.nix for v${{ steps.get-version.outputs.version }}"
+            git push
+          fi
+
       - name: create draft release
         id: create-release
         uses: actions/github-script@v6
@@ -88,6 +121,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: main
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
