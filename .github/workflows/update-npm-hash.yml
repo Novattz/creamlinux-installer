@@ -1,0 +1,31 @@
+name: Update npm deps hash
+
+on:
+  push:
+    paths:
+      - "package-lock.json"
+
+jobs:
+  update-hash:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: DeterminateSystems/nix-installer-action@main
+
+      - name: Update hash
+        run: ./update-npm-hash.sh
+
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add package.nix
+          if [[ $(git status -s) ]]; then
+            git commit -m "chore: update npm deps hash"
+            git push
+          else
+            echo "Hash wasn't changed"
+          fi
