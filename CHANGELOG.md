@@ -1,3 +1,8 @@
+## [1.5.6] - 06-05-2026
+
+### Added
+- DLC fetching now uses steamcmd instead of the Steam store API, which was missing DLCs from many games
+
 ## [1.5.5] - 30-04-2026
 
 ### Added
