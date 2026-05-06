@@ -650,106 +650,132 @@ pub async fn uninstall_koaloader(game: EpicGame, app_handle: AppHandle) -> Resul
     Ok(())
 }
 
-// Fetch DLC details from Steam API (simple version without progress)
-pub async fn fetch_dlc_details(app_id: &str) -> Result<Vec<DlcInfo>, String> {
-    let client = reqwest::Client::new();
-    let base_url = format!(
-        "https://store.steampowered.com/api/appdetails?appids={}",
-        app_id
-    );
+// steamcmd helpers
 
-    let response = client
-        .get(&base_url)
-        .timeout(Duration::from_secs(10))
+/// Calls `https://api.steamcmd.net/v1/info/{app_id}` and returns the per-app
+/// JSON object (`data[app_id]`), or `None` on any failure.
+async fn fetch_steamcmd_info(
+    client: &reqwest::Client,
+    app_id: &str,
+) -> Option<serde_json::Value> {
+    let url = format!("https://api.steamcmd.net/v1/info/{}", app_id);
+
+    let resp = client
+        .get(&url)
+        .header("User-Agent", "CreamLinux-Installer")
+        .timeout(Duration::from_secs(15))
         .send()
         .await
-        .map_err(|e| format!("Failed to fetch game details: {}", e))?;
+        .ok()?;
 
-    if !response.status().is_success() {
-        return Err(format!(
-            "Failed to fetch game details: HTTP {}",
-            response.status()
-        ));
+    let json: serde_json::Value = resp.json().await.ok()?;
+
+    if json.get("status").and_then(|s| s.as_str()) != Some("success") {
+        return None;
     }
 
-    let data: serde_json::Value = response
-        .json()
-        .await
-        .map_err(|e| format!("Failed to parse response: {}", e))?;
+    json.get("data").and_then(|d| d.get(app_id)).cloned()
+}
 
-    let dlc_ids = match data
-        .get(app_id)
-        .and_then(|app| app.get("data"))
-        .and_then(|data| data.get("dlc"))
+/// Extracts DLC app-IDs from a game's steamcmd info object.
+/// Merges two sources and deduplicates:
+///   1. `extended.listofdlc` - comma-separated string
+///   2. `depots[*].dlcappid` - per-depot numeric field
+fn extract_dlc_ids(info: &serde_json::Value) -> Vec<String> {
+    let mut ids: std::collections::HashSet<String> = std::collections::HashSet::new();
+ 
+    // Source 1 - extended.listofdlc
+    if let Some(list) = info
+        .get("extended")
+        .and_then(|e| e.get("listofdlc"))
+        .and_then(|v| v.as_str())
     {
-        Some(dlc_array) => match dlc_array.as_array() {
-            Some(array) => array
-                .iter()
-                .filter_map(|id| id.as_u64().map(|n| n.to_string()))
-                .collect::<Vec<String>>(),
-            _ => Vec::new(),
-        },
-        _ => Vec::new(),
-    };
-
-    info!("Found {} DLCs for game ID {}", dlc_ids.len(), app_id);
-
-    let mut dlc_details = Vec::new();
-
-    for dlc_id in dlc_ids {
-        let dlc_url = format!(
-            "https://store.steampowered.com/api/appdetails?appids={}",
-            dlc_id
-        );
-
-        // Add a small delay to avoid rate limiting
-        tokio::time::sleep(Duration::from_millis(300)).await;
-
-        let dlc_response = client
-            .get(&dlc_url)
-            .timeout(Duration::from_secs(10))
-            .send()
-            .await
-            .map_err(|e| format!("Failed to fetch DLC details: {}", e))?;
-
-        if dlc_response.status().is_success() {
-            let dlc_data: serde_json::Value = dlc_response
-                .json()
-                .await
-                .map_err(|e| format!("Failed to parse DLC response: {}", e))?;
-
-            let dlc_name = match dlc_data
-                .get(&dlc_id)
-                .and_then(|app| app.get("data"))
-                .and_then(|data| data.get("name"))
-            {
-                Some(name) => match name.as_str() {
-                    Some(s) => s.to_string(),
-                    _ => "Unknown DLC".to_string(),
-                },
-                _ => "Unknown DLC".to_string(),
-            };
-
-            info!("Found DLC: {} ({})", dlc_name, dlc_id);
-            dlc_details.push(DlcInfo {
-                appid: dlc_id,
-                name: dlc_name,
-            });
-        } else if dlc_response.status() == reqwest::StatusCode::TOO_MANY_REQUESTS {
-            // If rate limited, wait longer
-            error!("Rate limited by Steam API, waiting 10 seconds");
-            tokio::time::sleep(Duration::from_secs(10)).await;
+        for raw in list.split(',') {
+            let id = raw.trim();
+            if !id.is_empty() {
+                ids.insert(id.to_string());
+            }
         }
     }
+ 
+    // Source 2 - depots[*].dlcappid
+    if let Some(depots) = info.get("depots").and_then(|d| d.as_object()) {
+        for (_key, depot) in depots {
+            if let Some(dlc_id) = depot.get("dlcappid").and_then(|v| {
+                v.as_u64()
+                    .map(|n| n.to_string())
+                    .or_else(|| v.as_str().map(|s| s.to_string()))
+            }) {
+                if !dlc_id.is_empty() {
+                    ids.insert(dlc_id);
+                }
+            }
+        }
+    }
+ 
+    let mut sorted: Vec<String> = ids.into_iter().collect();
+    sorted.sort();
+    sorted
+}
 
-    info!(
-        "Successfully retrieved details for {} DLCs",
-        dlc_details.len()
-    );
+/// Fetches the display name for a single DLC from steamcmd.net.
+/// Returns `None` if the call fails or the name is empty / "Unknown".
+async fn fetch_dlc_name(
+    client: &reqwest::Client,
+    dlc_id: &str,
+) -> Option<String> {
+    let info = fetch_steamcmd_info(client, dlc_id).await?;
+    let name = info
+        .get("common")
+        .and_then(|c| c.get("name"))
+        .and_then(|n| n.as_str())?;
+ 
+    if name.is_empty() || name.eq_ignore_ascii_case("unknown") {
+        return None;
+    }
+ 
+    Some(name.to_string())
+}
+
+// Fetch DLC details from steamcmd.net (simple version without progress)
+pub async fn fetch_dlc_details(app_id: &str) -> Result<Vec<DlcInfo>, String> {
+    info!("Fetching DLC list via steamcmd.net for game ID: {}", app_id);
+ 
+    let client = reqwest::Client::new();
+ 
+    // Step 1: get game info → extract DLC IDs
+    let game_info = fetch_steamcmd_info(&client, app_id)
+        .await
+        .ok_or_else(|| format!("steamcmd.net returned no data for app {}", app_id))?;
+ 
+    let dlc_ids = extract_dlc_ids(&game_info);
+    info!("Found {} DLC IDs for game {}", dlc_ids.len(), app_id);
+ 
+    // Step 2: fetch name for each ID; skip any that resolve to Unknown
+    let mut dlc_details = Vec::new();
+ 
+    for dlc_id in &dlc_ids {
+        tokio::time::sleep(Duration::from_millis(100)).await;
+ 
+        match fetch_dlc_name(&client, dlc_id).await {
+            Some(name) => {
+                info!("Found DLC: {} ({})", name, dlc_id);
+                dlc_details.push(DlcInfo {
+                    appid: dlc_id.clone(),
+                    name,
+                });
+            }
+            None => {
+                info!("Skipping DLC {} - no name / unknown", dlc_id);
+            }
+        }
+    }
+ 
+    info!("Successfully retrieved {} named DLCs", dlc_details.len());
     Ok(dlc_details)
 }
 
-// Fetch DLC details from Steam API with progress updates
+// Fetch DLC details from steamcmd.net with progress updates
 pub async fn fetch_dlc_details_with_progress(
     app_id: &str,
     app_handle: &tauri::AppHandle,
@@ -758,80 +784,46 @@ pub async fn fetch_dlc_details_with_progress(
         "Starting DLC details fetch with progress for game ID: {}",
         app_id
     );
-
-    // Get a reference to a cancellation flag from app state
+ 
     let state = app_handle.state::<AppState>();
     let should_cancel = state.fetch_cancellation.clone();
-
+ 
     let client = reqwest::Client::new();
-    let base_url = format!(
-        "https://store.steampowered.com/api/appdetails?appids={}",
-        app_id
-    );
-
-    // Emit initial progress
+ 
+    // Step 1: fetch game info to get DLC ID list
     emit_dlc_progress(app_handle, "Looking up game details...", 5, None);
-    info!("Emitted initial DLC progress: 5%");
-
-    let response = client
-        .get(&base_url)
-        .timeout(Duration::from_secs(10))
-        .send()
+ 
+    let game_info = fetch_steamcmd_info(&client, app_id)
         .await
-        .map_err(|e| format!("Failed to fetch game details: {}", e))?;
-
-    if !response.status().is_success() {
-        let error_msg = format!("Failed to fetch game details: HTTP {}", response.status());
-        error!("{}", error_msg);
-        return Err(error_msg);
-    }
-
-    let data: serde_json::Value = response
-        .json()
-        .await
-        .map_err(|e| format!("Failed to parse response: {}", e))?;
-
-    let dlc_ids = match data
-        .get(app_id)
-        .and_then(|app| app.get("data"))
-        .and_then(|data| data.get("dlc"))
-    {
-        Some(dlc_array) => match dlc_array.as_array() {
-            Some(array) => array
-                .iter()
-                .filter_map(|id| id.as_u64().map(|n| n.to_string()))
-                .collect::<Vec<String>>(),
-            _ => Vec::new(),
-        },
-        _ => Vec::new(),
-    };
-
-    info!("Found {} DLCs for game ID {}", dlc_ids.len(), app_id);
+        .ok_or_else(|| format!("steamcmd.net returned no data for app {}", app_id))?;
+ 
+    let dlc_ids = extract_dlc_ids(&game_info);
+    let total_dlcs = dlc_ids.len();
+ 
+    info!("Found {} DLC IDs for game {}", total_dlcs, app_id);
     emit_dlc_progress(
         app_handle,
-        &format!("Found {} DLCs. Fetching details...", dlc_ids.len()),
+        &format!("Found {} DLCs. Fetching details...", total_dlcs),
         10,
         None,
     );
-    info!("Emitted DLC progress: 10%, found {} DLCs", dlc_ids.len());
-
+ 
+    // Step 2: fetch each DLC name, emit as we go, skip unknowns
     let mut dlc_details = Vec::new();
-    let total_dlcs = dlc_ids.len();
-
+ 
     for (index, dlc_id) in dlc_ids.iter().enumerate() {
-        // Check if cancellation was requested
+        // Check for cancellation
         if should_cancel.load(Ordering::SeqCst) {
             info!("DLC fetch cancelled for game {}", app_id);
             return Err("Operation cancelled by user".to_string());
         }
-
-        let progress_percent = 10.0 + (index as f32 / total_dlcs as f32) * 90.0;
-        let progress_rounded = progress_percent as u32;
-        let remaining_dlcs = total_dlcs - index;
-
-        // Estimate time remaining (rough calculation - 300ms per DLC)
-        let est_time_left = if remaining_dlcs > 0 {
-            let seconds = (remaining_dlcs as f32 * 0.3).ceil() as u32;
+ 
+        let progress_rounded = (10.0 + (index as f32 / total_dlcs as f32) * 90.0) as u32;
+        let remaining = total_dlcs - index;
+ 
+        let est_time_left = if remaining > 0 {
+            // steamcmd is ~100 ms/request, much faster than the old 300 ms Steam API
+            let seconds = (remaining as f32 * 0.15).ceil() as u32;
             if seconds < 60 {
                 format!("~{} seconds", seconds)
             } else {
@@ -840,12 +832,12 @@ pub async fn fetch_dlc_details_with_progress(
         } else {
             "almost done".to_string()
         };
-
+ 
         info!(
-            "Processing DLC {}/{} - Progress: {}%",
+            "Processing DLC {}/{} ({})",
             index + 1,
             total_dlcs,
-            progress_rounded
+            dlc_id
         );
         emit_dlc_progress(
             app_handle,
@@ -853,73 +845,37 @@ pub async fn fetch_dlc_details_with_progress(
             progress_rounded,
             Some(&est_time_left),
         );
-
-        let dlc_url = format!(
-            "https://store.steampowered.com/api/appdetails?appids={}",
-            dlc_id
-        );
-
-        // Add a small delay to avoid rate limiting
-        tokio::time::sleep(Duration::from_millis(300)).await;
-
-        let dlc_response = client
-            .get(&dlc_url)
-            .timeout(Duration::from_secs(10))
-            .send()
-            .await
-            .map_err(|e| format!("Failed to fetch DLC details: {}", e))?;
-
-        if dlc_response.status().is_success() {
-            let dlc_data: serde_json::Value = dlc_response
-                .json()
-                .await
-                .map_err(|e| format!("Failed to parse DLC response: {}", e))?;
-
-            let dlc_name = match dlc_data
-                .get(&dlc_id)
-                .and_then(|app| app.get("data"))
-                .and_then(|data| data.get("name"))
-            {
-                Some(name) => match name.as_str() {
-                    Some(s) => s.to_string(),
-                    _ => "Unknown DLC".to_string(),
-                },
-                _ => "Unknown DLC".to_string(),
-            };
-
-            info!("Found DLC: {} ({})", dlc_name, dlc_id);
-            let dlc_info = DlcInfo {
-                appid: dlc_id.clone(),
-                name: dlc_name,
-            };
-
-            // Emit each DLC as we find it
-            if let Ok(json) = serde_json::to_string(&dlc_info) {
-                if let Err(e) = app_handle.emit("dlc-found", json) {
-                    warn!("Failed to emit dlc-found event: {}", e);
-                } else {
-                    info!("Emitted dlc-found event for DLC: {}", dlc_id);
+ 
+        // Small delay to be polite to the API
+        tokio::time::sleep(Duration::from_millis(100)).await;
+ 
+        match fetch_dlc_name(&client, dlc_id).await {
+            Some(name) => {
+                info!("Found DLC: {} ({})", name, dlc_id);
+                let dlc_info = DlcInfo {
+                    appid: dlc_id.clone(),
+                    name,
+                };
+ 
+                // Emit immediately so the UI updates as DLCs arrive
+                if let Ok(json) = serde_json::to_string(&dlc_info) {
+                    if let Err(e) = app_handle.emit("dlc-found", json) {
+                        warn!("Failed to emit dlc-found event: {}", e);
+                    }
                 }
+ 
+                dlc_details.push(dlc_info);
             }
-
-            dlc_details.push(dlc_info);
-        } else if dlc_response.status() == reqwest::StatusCode::TOO_MANY_REQUESTS {
-            // If rate limited, wait longer
-            error!("Rate limited by Steam API, waiting 10 seconds");
-            emit_dlc_progress(
-                app_handle,
-                "Rate limited by Steam. Waiting...",
-                progress_rounded,
-                None,
-            );
-            tokio::time::sleep(Duration::from_secs(10)).await;
+            None => {
+                info!("Skipping DLC {} - no name / unknown", dlc_id);
+            }
         }
     }
-
-    // Final progress update
+ 
     info!(
-        "Completed DLC fetch. Found {} DLCs in total",
-        dlc_details.len()
+        "Completed DLC fetch. Found {} named DLCs out of {} IDs",
+        dlc_details.len(),
+        total_dlcs
     );
     emit_dlc_progress(
         app_handle,
@@ -927,8 +883,7 @@ pub async fn fetch_dlc_details_with_progress(
         100,
         None,
     );
-    info!("Emitted final DLC progress: 100%");
-
+ 
     Ok(dlc_details)
 }
 
