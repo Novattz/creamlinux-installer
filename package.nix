@@ -29,14 +29,14 @@ let
 in
 rustPlatform.buildRustPackage {
   pname = "creamlinux-installer";
-  version = "1.5.5-unstable-2026-05-03";
+  version = "1.5.6-unstable-2026-05-06";
   inherit src;
 
   cargoLock.lockFile = ./src-tauri/Cargo.lock;
 
   npmDeps = fetchNpmDeps {
     inherit src;
-    hash = "sha256-9VUywt71u4kuHNCFxW2aiavqM7e6tvBMHyzeSdJIJ5o=";
+    hash = "sha256-6sQul8tZaCk62JL9SfDKxVShNgYdoGYOS25asugirDo=";
   };
 
   nativeBuildInputs = [
