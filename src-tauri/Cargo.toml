@@ -1,6 +1,6 @@
 [package]
 name = "creamlinux-installer"
-version = "1.5.5"
+version = "1.5.6"
 description = "DLC Manager for Steam games on Linux"
 authors = ["tickbase"]
 license = "MIT"
