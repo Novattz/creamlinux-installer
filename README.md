@@ -6,17 +6,6 @@ CreamLinux is a GUI application for Linux that simplifies the management of DLC 
 
 [![Watch the demo](./src/assets/screenshot1.png)](https://www.youtube.com/watch?v=neUDotrqnDM)
 
-## Beta Status
-
-⚠️ **IMPORTANT**: CreamLinux is currently in BETA. This means:
-
-- Some features may be incomplete or subject to change
-- You might encounter bugs or unexpected behavior
-- The application is under active development
-- Your feedback and bug reports are invaluable
-
-While the core functionality is working, please be aware that this is an early release. Im continuously working to improve stability, add features, and enhance the user experience. Please report any issues you encounter on [GitHub Issues page](https://github.com/Novattz/creamlinux-installer/issues).
-
 ## Features
 
 - **Auto-discovery**: Automatically finds Steam games installed on your system
@@ -181,6 +170,8 @@ update-desktop-database ~/.local/share/applications
 ### Debug Logs
 
 Logs are stored at: `~/.cache/creamlinux/creamlinux.log`
+
+Found a bug? Please report it on the [GitHub Issues page](https://github.com/Novattz/creamlinux-installer/issues).
 
 ## License
 
