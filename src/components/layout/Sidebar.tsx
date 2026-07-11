@@ -1,11 +1,11 @@
-import { Icon, layers, linux, proton, settings } from '@/components/icons'
+import { useState, useEffect } from 'react'
+import { getVersion } from '@tauri-apps/api/app'
+import { Icon, layers, linux, proton, settings, diamond } from '@/components/icons'
 import { epic } from '@/components/icons'
-import { Button } from '@/components/buttons'
 
 interface SidebarProps {
   setFilter: (filter: string) => void
   currentFilter: string
-  onSettingsClick: () => void
 }
 
 type FilterItem = {
@@ -15,7 +15,20 @@ type FilterItem = {
   variant?: string
 }
 
-const Sidebar = ({ setFilter, currentFilter, onSettingsClick }: SidebarProps) => {
+const Sidebar = ({ setFilter, currentFilter }: SidebarProps) => {
+  const [version, setVersion] = useState('')
+
+  useEffect(() => {
+    getVersion()
+      .then(setVersion)
+      .catch(() => setVersion(''))
+  }, [])
+
+  const generalFilters: FilterItem[] = [
+    { id: 'overview', label: 'Overview', icon: diamond, variant: 'solid' },
+    { id: 'settings', label: 'Settings', icon: settings, variant: 'solid' },
+  ]
+
   const steamFilters: FilterItem[] = [
     { id: 'all', label: 'All Games', icon: layers, variant: 'solid' },
     { id: 'native', label: 'Native', icon: linux, variant: 'brand' },
@@ -46,6 +59,12 @@ const Sidebar = ({ setFilter, currentFilter, onSettingsClick }: SidebarProps) =>
       </div>
 
       <div className="sidebar-section">
+        <ul className="filter-list">
+          {generalFilters.map(renderFilter)}
+        </ul>
+      </div>
+
+      <div className="sidebar-section">
         <span className="sidebar-section-label">Steam</span>
         <ul className="filter-list">
           {steamFilters.map(renderFilter)}
@@ -59,16 +78,20 @@ const Sidebar = ({ setFilter, currentFilter, onSettingsClick }: SidebarProps) =>
         </ul>
       </div>
 
-      <Button
-        variant="secondary"
-        size="medium"
-        onClick={onSettingsClick}
-        className="settings-button"
-        leftIcon={<Icon name={settings} variant="solid" size="md" className="settings-icon" />}
-        fullWidth
-      >
-        Settings
-      </Button>
+      <div className="sidebar-footer">
+        <div className="sidebar-footer-info">
+          {version && <span className="sidebar-footer-version">v{version}</span>}
+          <span className="sidebar-footer-build">Stable</span>
+        </div>
+        <a
+          href="https://github.com/Novattz/creamlinux-installer"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="sidebar-footer-link"
+        >
+          GitHub
+        </a>
+      </div>
     </div>
   )
 }
