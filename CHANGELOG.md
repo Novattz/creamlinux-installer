@@ -6,6 +6,8 @@
 >
 > Thanks for sticking with this project, for the kind words, and for actually using it. I honestly didn't expect to hit 100 stars given how much I still had (and have) left to learn and fix along the way and somehow we're past 300 now. That means a lot.
 
+![Overview Page](./src/assets/screenshot.png)
+
 ### Added
 - Custom Steam library paths. Add extra folders to scan for Steam games from Settings, for libraries that aren't auto-detected
 - Redesigned the whole UI toward a flatter, more minimal look, reworked sidebar, top bar, dialogs, buttons, and game cards to remove gradients, glow shadows, and heavy drop shadows in favor of flat colors and subtle borders
