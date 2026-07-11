@@ -20,7 +20,6 @@ interface GameItemProps {
 const GameItem = ({ game, onAction, onEdit, onSmokeAPISettings, onRate, reportingEnabled }: GameItemProps) => {
   const [imageUrl, setImageUrl] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [hasError, setHasError] = useState(false)
 
   useEffect(() => {
     // Function to fetch the game cover/image
@@ -35,13 +34,9 @@ const GameItem = ({ game, onAction, onEdit, onSmokeAPISettings, onRate, reportin
 
         if (bestImageUrl) {
           setImageUrl(bestImageUrl)
-          setHasError(false)
-        } else {
-          setHasError(true)
         }
       } catch (error) {
         console.error('Error fetching game image:', error)
-        setHasError(true)
       } finally {
         setIsLoading(false)
       }
@@ -104,11 +99,7 @@ const GameItem = ({ game, onAction, onEdit, onSmokeAPISettings, onRate, reportin
 
   // Determine background image
   const backgroundImage =
-    !isLoading && imageUrl
-      ? `url(${imageUrl})`
-      : hasError
-        ? 'linear-gradient(135deg, #232323, #1A1A1A)'
-        : 'linear-gradient(135deg, #232323, #1A1A1A)'
+    !isLoading && imageUrl ? `url(${imageUrl})` : 'linear-gradient(135deg, #232323, #1A1A1A)'
 
   return (
     <div

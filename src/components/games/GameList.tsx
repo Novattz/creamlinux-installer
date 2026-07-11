@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { GameItem, ImagePreloader } from '@/components/games'
-import { ActionType } from '@/components/buttons'
+import { ActionType, Button } from '@/components/buttons'
+import { Icon, refresh } from '@/components/icons'
 import { Game } from '@/types'
 import LoadingIndicator from '../common/LoadingIndicator'
 
@@ -11,6 +12,7 @@ interface GameListProps {
   onEdit?: (gameId: string) => void
   onSmokeAPISettings?: (gameId: string) => void
   onRate?: (gameId: string) => void
+  onRefresh: () => void
   reportingEnabled?: boolean
 }
 
@@ -18,7 +20,7 @@ interface GameListProps {
  * Main game list component
  * Displays games in a grid with search and filtering applied
  */
-const GameList = ({ games, isLoading, onAction, onEdit, onSmokeAPISettings, onRate, reportingEnabled }: GameListProps) => {
+const GameList = ({ games, isLoading, onAction, onEdit, onSmokeAPISettings, onRate, onRefresh, reportingEnabled }: GameListProps) => {
   const [imagesPreloaded, setImagesPreloaded] = useState(false)
 
   // Sort games alphabetically by title
@@ -45,7 +47,18 @@ const GameList = ({ games, isLoading, onAction, onEdit, onSmokeAPISettings, onRa
 
   return (
     <div className="game-list">
-      <h2>Games ({games.length})</h2>
+      <div className="game-list-header">
+        <h2>Games ({games.length})</h2>
+        <Button
+          variant="secondary"
+          size="medium"
+          onClick={onRefresh}
+          title="Refresh"
+          className="refresh-button"
+          leftIcon={<Icon name={refresh} className="icon-secondary" variant="solid" size="md" />}
+          iconOnly
+        />
+      </div>
 
       {!imagesPreloaded && games.length > 0 && (
         <ImagePreloader

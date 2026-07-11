@@ -2,6 +2,8 @@ import { useMemo } from 'react'
 import EpicGameItem from '@/components/games/EpicGameItem'
 import { EpicGame } from '@/types/EpicGame'
 import LoadingIndicator from '../common/LoadingIndicator'
+import { Button } from '@/components/buttons'
+import { Icon, refresh } from '@/components/icons'
 
 interface EpicGameListProps {
   games: EpicGame[]
@@ -11,6 +13,7 @@ interface EpicGameListProps {
   onUninstallScream: (game: EpicGame) => void
   onUninstallKoaloader: (game: EpicGame) => void
   onSettings: (game: EpicGame) => void
+  onRefresh: () => void
 }
 
 const EpicGameList = ({
@@ -21,6 +24,7 @@ const EpicGameList = ({
   onUninstallScream,
   onUninstallKoaloader,
   onSettings,
+  onRefresh,
 }: EpicGameListProps) => {
   const sortedGames = useMemo(
     () => [...games].sort((a, b) => a.title.localeCompare(b.title)),
@@ -37,7 +41,18 @@ const EpicGameList = ({
 
   return (
     <div className="game-list">
-      <h2>Epic Games ({games.length})</h2>
+      <div className="game-list-header">
+        <h2>Epic Games ({games.length})</h2>
+        <Button
+          variant="secondary"
+          size="medium"
+          onClick={onRefresh}
+          title="Refresh"
+          className="refresh-button"
+          leftIcon={<Icon name={refresh} variant="solid" size="md" />}
+          iconOnly
+        />
+      </div>
 
       {games.length === 0 ? (
         <div className="no-games-message">

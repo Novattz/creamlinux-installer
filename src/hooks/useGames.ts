@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { Game } from '@/types'
 import { invoke } from '@tauri-apps/api/core'
 import { listen } from '@tauri-apps/api/event'
@@ -16,6 +16,7 @@ export function useGames() {
     progress: 0,
   })
   const [error, setError] = useState<string | null>(null)
+  const hasLoadedRef = useRef(false)
 
   // LoadGames function outside of the useEffect to make it reusable
   const loadGames = useCallback(async () => {
@@ -91,9 +92,13 @@ export function useGames() {
       }
     }
 
-    // Initialize event listeners and then load games
+    // Initialize event listeners and then load games. Guarded by a ref
+    // (not isInitialLoad state) so this effect only ever runs once putting
+    // isInitialLoad in the dep array would re-subscribe the listeners the
+    // moment it flips to false, needlessly tearing down and recreating them.
     setupEventListeners().then(() => {
-      if (isInitialLoad) {
+      if (!hasLoadedRef.current) {
+        hasLoadedRef.current = true
         loadGames().catch(console.error)
       }
     })
@@ -102,7 +107,7 @@ export function useGames() {
     return () => {
       unlisteners.forEach((fn) => fn())
     }
-  }, [loadGames, isInitialLoad])
+  }, [loadGames])
 
   // Helper function to update a specific game in state
   const updateGame = useCallback((updatedGame: Game) => {
