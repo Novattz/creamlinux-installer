@@ -1,25 +1,25 @@
 import { ReactNode } from 'react'
+import Spinner from './Spinner'
 
-export type LoadingType = 'spinner' | 'dots' | 'progress'
+export type LoadingType = 'spinner' | 'dots'
 export type LoadingSize = 'small' | 'medium' | 'large'
 
 interface LoadingIndicatorProps {
   size?: LoadingSize
   type?: LoadingType
   message?: string
-  progress?: number
   className?: string
 }
 
 /**
  * Versatile loading indicator component
- * Supports multiple visual styles and sizes
+ * Supports multiple visual styles and sizes.
+ * For a progress bar, use ProgressBar or ProgressDialog's progress bar instead.
  */
 const LoadingIndicator = ({
   size = 'medium',
   type = 'spinner',
   message,
-  progress = 0,
   className = '',
 }: LoadingIndicatorProps) => {
   // Size class mapping
@@ -33,7 +33,7 @@ const LoadingIndicator = ({
   const renderLoadingIndicator = (): ReactNode => {
     switch (type) {
       case 'spinner':
-        return <div className="loading-spinner"></div>
+        return <Spinner />
 
       case 'dots':
         return (
@@ -44,21 +44,8 @@ const LoadingIndicator = ({
           </div>
         )
 
-      case 'progress':
-        return (
-          <div className="loading-progress">
-            <div className="progress-bar-container">
-              <div
-                className="progress-bar"
-                style={{ width: `${Math.min(Math.max(progress, 0), 100)}%` }}
-              ></div>
-            </div>
-            {progress > 0 && <div className="progress-percentage">{Math.round(progress)}%</div>}
-          </div>
-        )
-
       default:
-        return <div className="loading-spinner"></div>
+        return <Spinner />
     }
   }
 

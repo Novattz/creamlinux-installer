@@ -1,4 +1,5 @@
 import { FC, ButtonHTMLAttributes } from 'react'
+import Spinner from '@/components/common/Spinner'
 
 export type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'success' | 'warning'
 export type ButtonSize = 'small' | 'medium' | 'large'
@@ -58,7 +59,7 @@ const Button: FC<ButtonProps> = ({
     >
       {isLoading && (
         <span className="btn-spinner">
-          <span className="spinner"></span>
+          <Spinner />
         </span>
       )}
 

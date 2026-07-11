@@ -6,6 +6,7 @@ import DialogFooter from './DialogFooter'
 import DialogActions from './DialogActions'
 import AddDlcDialog from './AddDlcDialog'
 import { Button, AnimatedCheckbox } from '@/components/buttons'
+import { Spinner } from '@/components/common'
 import { DlcInfo } from '@/types'
 import { Icon, check, info } from '@/components/icons'
 
@@ -223,7 +224,7 @@ const DlcSelectionDialog = ({
             </ul>
           ) : (
             <div className="dlc-loading">
-              <div className="loading-spinner"></div>
+              <Spinner />
               <p>Loading DLC information...</p>
             </div>
           )}

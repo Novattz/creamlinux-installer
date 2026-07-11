@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Spinner } from '@/components/common'
 
 interface InitialLoadingScreenProps {
   message: string
@@ -38,8 +39,7 @@ const InitialLoadingScreen = ({ message, progress }: InitialLoadingScreenProps) 
         <h1>CreamLinux</h1>
 
         <div className="loading-animation">
-          {/* Spinner animation */}
-          <div className="loading-spinner"></div>
+          <Spinner />
         </div>
 
         <p className="loading-message">{message}</p>

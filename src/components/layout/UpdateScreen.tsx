@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { check } from '@tauri-apps/plugin-updater'
 import { relaunch } from '@tauri-apps/plugin-process'
-import { ProgressBar } from '@/components/common'
+import { ProgressBar, Spinner } from '@/components/common'
 
 interface UpdateScreenProps {
   onComplete: () => void
@@ -16,6 +16,8 @@ const UpdateScreen = ({ onComplete }: UpdateScreenProps) => {
   const [downloading, setDownloading] = useState(false)
   const [progress, setProgress] = useState(0)
   const [version, setVersion] = useState('')
+  const totalBytesRef = useRef(0)
+  const downloadedBytesRef = useRef(0)
 
   const checkForUpdates = useCallback(async () => {
     try {
@@ -29,20 +31,22 @@ const UpdateScreen = ({ onComplete }: UpdateScreenProps) => {
         setVersion(update.version)
 
         // Download and install the update
+        totalBytesRef.current = 0
+        downloadedBytesRef.current = 0
+
         await update.downloadAndInstall((event) => {
           switch (event.event) {
             case 'Started': {
-              const contentLength = event.data.contentLength
-              console.log(`Started downloading ${contentLength} bytes`)
+              totalBytesRef.current = event.data.contentLength ?? 0
+              console.log(`Started downloading ${totalBytesRef.current} bytes`)
               break
             }
             case 'Progress': {
-              const { chunkLength } = event.data
-              // Calculate cumulative progress
-              setProgress((prev) => {
-                const newProgress = prev + chunkLength
-                return Math.min(newProgress, 100)
-              })
+              downloadedBytesRef.current += event.data.chunkLength
+              // Percentage of total bytes downloaded so far (0 if the server
+              // didn't report a content length)
+              const total = totalBytesRef.current
+              setProgress(total > 0 ? Math.min((downloadedBytesRef.current / total) * 100, 100) : 0)
               break
             }
             case 'Finished':
@@ -77,7 +81,7 @@ const UpdateScreen = ({ onComplete }: UpdateScreenProps) => {
         <h1>CreamLinux</h1>
 
         <div className="loading-animation">
-          {checking && <div className="loading-spinner"></div>}
+          {checking && <Spinner />}
         </div>
 
         <p className="loading-message">
