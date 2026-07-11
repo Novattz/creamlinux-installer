@@ -131,7 +131,7 @@ const ProgressDialog = ({
         <p>{message}</p>
 
         <div className="progress-bar-container">
-          <div className="progress-bar" style={{ width: `${progress}%` }} />
+          <div className="progress-dialog-fill" style={{ width: `${progress}%` }} />
         </div>
         <div className="progress-percentage">{Math.round(progress)}%</div>
 
