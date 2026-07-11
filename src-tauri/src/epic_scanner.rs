@@ -30,17 +30,32 @@ struct InstalledEntry {
 
 fn legendary_config_dir() -> Option<PathBuf> {
     let home = std::env::var("HOME").ok()?;
-    let path = PathBuf::from(&home)
-        .join(".config")
-        .join("heroic")
-        .join("legendaryConfig")
-        .join("legendary");
-    if path.exists() {
-        Some(path)
-    } else {
-        warn!("Heroic legendary config dir not found at: {}", path.display());
-        None
+    let home = PathBuf::from(&home);
+
+    // Heroic can be installed natively or via Flatpak. Flatpak sandboxes
+    // XDG_CONFIG_HOME to ~/.var/app/<app-id>/config, so ~/.config/heroic
+    // never exists in that case even though the game library itself lives
+    // on the normal host path (e.g. on Steam Deck installs via Discover).
+    let candidates = [
+        home.join(".config").join("heroic"),
+        home.join(".var")
+            .join("app")
+            .join("com.heroicgameslauncher.hgl")
+            .join("config")
+            .join("heroic"),
+    ];
+
+    for candidate in &candidates {
+        let path = candidate.join("legendaryConfig").join("legendary");
+        if path.exists() {
+            return Some(path);
+        }
     }
+
+    warn!(
+        "Heroic legendary config dir not found in any known location (checked native and Flatpak paths)"
+    );
+    None
 }
 
 pub fn scan_epic_games() -> Vec<EpicGame> {
