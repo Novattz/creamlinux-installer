@@ -72,6 +72,31 @@ pub fn get_default_steam_paths() -> Vec<PathBuf> {
     paths
 }
 
+/// Validates a user-picked directory and resolves it to the library root
+/// `find_steam_libraries` expects (i.e. the folder that directly contains
+/// `steamapps`, not the `steamapps` folder itself).
+pub fn normalize_steam_library_path(path: &Path) -> Result<PathBuf, String> {
+    if !path.is_dir() {
+        return Err(format!("{} is not a valid directory", path.display()));
+    }
+
+    if path.join("steamapps").is_dir() {
+        return Ok(path.to_path_buf());
+    }
+
+    // User picked the steamapps folder itself - use its parent as the root
+    if path.file_name().and_then(|n| n.to_str()) == Some("steamapps") {
+        if let Some(parent) = path.parent() {
+            return Ok(parent.to_path_buf());
+        }
+    }
+
+    Err(format!(
+        "No Steam library found at {} (expected a 'steamapps' folder inside it)",
+        path.display()
+    ))
+}
+
 // Try to read the Steam registry file to find installation paths
 fn read_steam_registry() -> Option<Vec<PathBuf>> {
     let home = match std::env::var("HOME") {
@@ -742,4 +767,41 @@ pub async fn find_installed_games(steamapps_paths: &[PathBuf]) -> Vec<GameInfo> 
 
     info!("Found {} installed games", games.len());
     games
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn normalize_accepts_folder_containing_steamapps() {
+        let dir = tempfile::tempdir().unwrap();
+        fs::create_dir(dir.path().join("steamapps")).unwrap();
+
+        let result = normalize_steam_library_path(dir.path()).unwrap();
+        assert_eq!(result, dir.path());
+    }
+
+    #[test]
+    fn normalize_accepts_steamapps_folder_itself() {
+        let dir = tempfile::tempdir().unwrap();
+        let steamapps = dir.path().join("steamapps");
+        fs::create_dir(&steamapps).unwrap();
+
+        let result = normalize_steam_library_path(&steamapps).unwrap();
+        assert_eq!(result, dir.path());
+    }
+
+    #[test]
+    fn normalize_rejects_folder_without_steamapps() {
+        let dir = tempfile::tempdir().unwrap();
+        assert!(normalize_steam_library_path(dir.path()).is_err());
+    }
+
+    #[test]
+    fn normalize_rejects_nonexistent_path() {
+        let dir = tempfile::tempdir().unwrap();
+        let missing = dir.path().join("does-not-exist");
+        assert!(normalize_steam_library_path(&missing).is_err());
+    }
 }

@@ -10,14 +10,7 @@ use tempfile::tempdir;
 use zip::ZipArchive;
 
 const KOALOADER_REPO: &str = "acidicoala/Koaloader";
-
-pub const KOA_VARIANTS: &[&str] = &[
-    "version.dll", "winmm.dll", "winhttp.dll", "iphlpapi.dll", "dinput8.dll",
-    "d3d11.dll", "dxgi.dll", "d3d9.dll", "d3d10.dll", "dwmapi.dll", "hid.dll",
-    "msimg32.dll", "mswsock.dll", "opengl32.dll", "profapi.dll", "propsys.dll",
-    "textshaping.dll", "glu32.dll", "audioses.dll", "msasn1.dll", "wldp.dll",
-    "xinput9_1_0.dll",
-];
+pub use crate::pe_inspector::KOA_VARIANTS;
 
 pub struct Koaloader;
 
@@ -159,35 +152,14 @@ impl Unlocker for Koaloader {
     /// context = relative executable path (e.g. "en_us/Sources/Bin/SnowRunner.exe")
     /// Progress events are emitted by installer/mod.rs, not here.
     async fn install_to_game(game_path: &str, context: &str) -> Result<(), String> {
-        // Install without progress called internally (e.g. from installer/mod.rs
-        // after it has already emitted its own progress steps)
         let exe_path = Self::resolve_exe(game_path, context)?;
+        Self::install_proxy(&exe_path)?;
+
         let exe_dir = exe_path.parent().ok_or("Failed to get executable directory")?;
-
-        let is_64bit = crate::pe_inspector::is_64bit_exe(&exe_path);
-        let scan = crate::pe_inspector::find_best_proxy(&exe_path);
-        let proxy_stem = scan.proxy_name.trim_end_matches(".dll").to_string();
-
-        let proxy_src = Self::get_proxy_dll(&proxy_stem, is_64bit)?;
-        fs::copy(&proxy_src, exe_dir.join(&scan.proxy_name))
-            .map_err(|e| format!("Failed to copy Koaloader proxy DLL: {}", e))?;
-
         let exe_dir_str = exe_dir.to_string_lossy().to_string();
         crate::unlockers::ScreamAPI::install_to_game(&exe_dir_str, "koaloader").await?;
 
-        let exe_name = exe_path.file_name().unwrap_or_default().to_string_lossy().to_string();
-        let koa_config = serde_json::json!({
-            "logging": false,
-            "enabled": true,
-            "auto_load": true,
-            "targets": [exe_name],
-            "modules": []
-        });
-        fs::write(
-            exe_dir.join("Koaloader.config.json"),
-            serde_json::to_string_pretty(&koa_config).unwrap(),
-        )
-        .map_err(|e| format!("Failed to write Koaloader config: {}", e))?;
+        Self::write_koaloader_config(&exe_path)?;
 
         info!("Koaloader installation complete for: {}", game_path);
         Ok(())
@@ -198,26 +170,7 @@ impl Unlocker for Koaloader {
         let exe_dir = exe_path.parent().ok_or("Failed to get executable directory")?;
         let exe_dir_str = exe_dir.to_string_lossy().to_string();
 
-        let koa_config = exe_dir.join("Koaloader.config.json");
-        if koa_config.exists() {
-            fs::remove_file(&koa_config)
-                .map_err(|e| format!("Failed to remove Koaloader config: {}", e))?;
-        }
-
-        if let Ok(entries) = fs::read_dir(exe_dir) {
-            for entry in entries.filter_map(Result::ok) {
-                let path = entry.path();
-                let name_lower = path
-                    .file_name()
-                    .unwrap_or_default()
-                    .to_string_lossy()
-                    .to_lowercase();
-                if KOA_VARIANTS.contains(&name_lower.as_str()) {
-                    fs::remove_file(&path).ok();
-                    info!("Removed proxy DLL: {}", path.display());
-                }
-            }
-        }
+        Self::remove_proxy_and_config(exe_dir)?;
 
         crate::unlockers::ScreamAPI::uninstall_from_game(&exe_dir_str, "koaloader").await?;
 
@@ -264,6 +217,71 @@ impl Koaloader {
             "Executable not found: {} (searched in {})",
             exe_relative, game_path
         ))
+    }
+
+    /// Detects bitness, scans for the best-match Koaloader proxy, and copies
+    /// it next to `exe_path`. Returns the scan result so callers can report
+    /// which proxy was used and whether it was a version.dll fallback.
+    /// Shared by the Unlocker trait impl above and installer/mod.rs (which
+    /// wraps this with progress events).
+    pub(crate) fn install_proxy(
+        exe_path: &Path,
+    ) -> Result<crate::pe_inspector::ProxyScanResult, String> {
+        let exe_dir = exe_path.parent().ok_or("Failed to get executable directory")?;
+        let is_64bit = crate::pe_inspector::is_64bit_exe(exe_path);
+        let scan = crate::pe_inspector::find_best_proxy(exe_path);
+        let proxy_stem = scan.proxy_name.trim_end_matches(".dll").to_string();
+
+        let proxy_src = Self::get_proxy_dll(&proxy_stem, is_64bit)?;
+        fs::copy(&proxy_src, exe_dir.join(&scan.proxy_name))
+            .map_err(|e| format!("Failed to copy Koaloader proxy DLL: {}", e))?;
+
+        info!("Selected proxy: {} (fallback={})", scan.proxy_name, scan.is_fallback);
+        Ok(scan)
+    }
+
+    /// Writes Koaloader.config.json targeting the given executable, next to it.
+    pub(crate) fn write_koaloader_config(exe_path: &Path) -> Result<(), String> {
+        let exe_dir = exe_path.parent().ok_or("Failed to get executable directory")?;
+        let exe_name = exe_path.file_name().unwrap_or_default().to_string_lossy().to_string();
+        let koa_config = serde_json::json!({
+            "logging": false,
+            "enabled": true,
+            "auto_load": true,
+            "targets": [exe_name],
+            "modules": []
+        });
+        fs::write(
+            exe_dir.join("Koaloader.config.json"),
+            serde_json::to_string_pretty(&koa_config).unwrap(),
+        )
+        .map_err(|e| format!("Failed to write Koaloader config: {}", e))
+    }
+
+    /// Removes Koaloader.config.json and any installed proxy DLL from `exe_dir`.
+    pub(crate) fn remove_proxy_and_config(exe_dir: &Path) -> Result<(), String> {
+        let koa_config = exe_dir.join("Koaloader.config.json");
+        if koa_config.exists() {
+            fs::remove_file(&koa_config)
+                .map_err(|e| format!("Failed to remove Koaloader config: {}", e))?;
+        }
+
+        if let Ok(entries) = fs::read_dir(exe_dir) {
+            for entry in entries.filter_map(Result::ok) {
+                let path = entry.path();
+                let name_lower = path
+                    .file_name()
+                    .unwrap_or_default()
+                    .to_string_lossy()
+                    .to_lowercase();
+                if KOA_VARIANTS.contains(&name_lower.as_str()) {
+                    fs::remove_file(&path).ok();
+                    info!("Removed proxy DLL: {}", path.display());
+                }
+            }
+        }
+
+        Ok(())
     }
 
     pub fn get_proxy_dll(proxy_stem: &str, is_64bit: bool) -> Result<std::path::PathBuf, String> {

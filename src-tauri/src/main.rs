@@ -15,6 +15,7 @@ mod config;
 mod epic_scanner;
 mod pe_inspector;
 mod screamapi_config;
+mod system_info;
 
 use crate::config::Config;
 use crate::unlockers::{CreamLinux, SmokeAPI, Unlocker};
@@ -83,6 +84,49 @@ fn update_config(config_data: Config) -> Result<Config, String> {
     Ok(config_data)
 }
 
+// Add a custom Steam library path (validated to contain a steamapps folder)
+#[tauri::command]
+fn add_custom_steam_path(path: String) -> Result<Config, String> {
+    let normalized = searcher::normalize_steam_library_path(std::path::Path::new(&path))?;
+    let normalized_str = normalized.to_string_lossy().to_string();
+
+    info!("Adding custom Steam library path: {}", normalized_str);
+
+    config::update_config(|cfg| {
+        if !cfg.custom_steam_paths.contains(&normalized_str) {
+            cfg.custom_steam_paths.push(normalized_str.clone());
+        }
+    })
+}
+
+// Remove a custom Steam library path
+#[tauri::command]
+fn remove_custom_steam_path(path: String) -> Result<Config, String> {
+    info!("Removing custom Steam library path: {}", path);
+
+    config::update_config(|cfg| {
+        cfg.custom_steam_paths.retain(|p| p != &path);
+    })
+}
+
+// Reset configuration to defaults
+#[tauri::command]
+fn reset_config() -> Result<Config, String> {
+    config::reset_config()
+}
+
+// Open the config folder in the system's file manager
+#[tauri::command]
+fn open_config_folder() -> Result<(), String> {
+    config::open_config_folder()
+}
+
+// Basic host info (OS/CPU/GPU) shown on the Overview page
+#[tauri::command]
+fn get_system_info() -> system_info::SystemInfo {
+    system_info::get_system_info()
+}
+
 #[tauri::command]
 fn get_all_dlcs_command(game_path: String) -> Result<Vec<DlcInfoWithState>, String> {
     info!("Getting all DLCs (enabled and disabled) for: {}", game_path);
@@ -105,7 +149,18 @@ async fn scan_steam_games(
     info!("Starting Steam games scan");
     emit_scan_progress(&app_handle, "Locating Steam libraries...", 10);
 
-    let paths = searcher::get_default_steam_paths();
+    let mut paths = searcher::get_default_steam_paths();
+
+    // Add user-configured custom library paths, in case a library lives
+    // somewhere the auto-detection doesn't know to look.
+    let cfg = config::load_config()?;
+    for custom_path in &cfg.custom_steam_paths {
+        let p = std::path::PathBuf::from(custom_path);
+        if p.exists() && !paths.contains(&p) {
+            info!("Adding custom Steam library path: {}", p.display());
+            paths.push(p);
+        }
+    }
 
     emit_scan_progress(&app_handle, "Finding Steam libraries...", 15);
     let libraries = searcher::find_steam_libraries(&paths);
@@ -454,8 +509,8 @@ async fn stream_game_dlcs(game_id: String, app_handle: tauri::AppHandle) -> Resu
 
 #[tauri::command]
 fn clear_caches() -> Result<(), String> {
-    info!("Data flush requested - cleaning in-memory state only");
-    Ok(())
+    info!("Clearing cached unlocker binaries");
+    cache::clear_unlocker_cache()
 }
 
 #[tauri::command]
@@ -844,6 +899,11 @@ fn main() {
             resolve_platform_conflict,
             load_config,
             update_config,
+            add_custom_steam_path,
+            remove_custom_steam_path,
+            reset_config,
+            open_config_folder,
+            get_system_info,
             set_reporting_opt_in,
             submit_report,
             get_local_reports,
@@ -891,8 +951,9 @@ fn main() {
                     Ok(result) => {
                         if result.any_updated() {
                             info!(
-                                "Updates found - SmokeAPI: {:?}, CreamLinux: {:?}",
-                                result.new_smokeapi_version, result.new_creamlinux_version
+                                "Updates found - SmokeAPI: {:?}, CreamLinux: {:?}, ScreamAPI: {:?}, Koaloader: {:?}",
+                                result.new_smokeapi_version, result.new_creamlinux_version,
+                                result.new_screamapi_version, result.new_koaloader_version
                             );
 
                             // Step 3: Update outdated games

@@ -3,9 +3,10 @@ mod version;
 
 pub use storage::{
     get_creamlinux_version_dir, get_smokeapi_version_dir,
-    list_creamlinux_files, list_smokeapi_files, read_versions, 
+    list_creamlinux_files, list_smokeapi_files, read_versions,
     update_creamlinux_version, update_smokeapi_version, validate_smokeapi_cache,
     validate_creamlinux_cache, get_cache_dir, get_koaloader_version_dir, get_screamapi_version_dir,
+    clear_unlocker_cache,
 };
 
 pub use version::{
@@ -81,7 +82,7 @@ pub async fn initialize_cache() -> Result<(), String> {
             }
             Ok(false) => {
                 info!("ScreamAPI cache incomplete, re-downloading");
-                needs_smokeapi = true;
+                needs_screamapi = true;
             }
             Err(e) => {
                 warn!("Failed to validate ScreamAPI cache: {}, re-downloading", e);
@@ -170,7 +171,7 @@ pub async fn initialize_cache() -> Result<(), String> {
         }
     }
 
-    if !needs_smokeapi && !needs_creamlinux && !needs_smokeapi && !needs_koaloader {
+    if !needs_smokeapi && !needs_creamlinux && !needs_screamapi && !needs_koaloader {
         info!("Cache already initialized and validated");
     } else {
         info!("Cache initialization complete");
@@ -244,6 +245,68 @@ pub async fn check_and_update_cache() -> Result<UpdateResult, String> {
         }
         Err(e) => {
             warn!("Failed to check CreamLinux version: {}", e);
+        }
+    }
+
+    // Check ScreamAPI
+    let current_screamapi = read_versions()?.screamapi.latest;
+    match ScreamAPI::get_latest_version().await {
+        Ok(latest_version) => {
+            if current_screamapi != latest_version {
+                info!(
+                    "ScreamAPI update available: {} -> {}",
+                    current_screamapi, latest_version
+                );
+
+                match ScreamAPI::download_to_cache().await {
+                    Ok(version) => {
+                        update_screamapi_version(&version)?;
+                        result.screamapi_updated = true;
+                        result.new_screamapi_version = Some(version);
+                        info!("ScreamAPI updated successfully");
+                    }
+                    Err(e) => {
+                        error!("Failed to download ScreamAPI update: {}", e);
+                        return Err(format!("Failed to download ScreamAPI update: {}", e));
+                    }
+                }
+            } else {
+                info!("ScreamAPI is up to date: {}", current_screamapi);
+            }
+        }
+        Err(e) => {
+            warn!("Failed to check ScreamAPI version: {}", e);
+        }
+    }
+
+    // Check Koaloader
+    let current_koaloader = read_versions()?.koaloader.latest;
+    match Koaloader::get_latest_version().await {
+        Ok(latest_version) => {
+            if current_koaloader != latest_version {
+                info!(
+                    "Koaloader update available: {} -> {}",
+                    current_koaloader, latest_version
+                );
+
+                match Koaloader::download_to_cache().await {
+                    Ok(version) => {
+                        update_koaloader_version(&version)?;
+                        result.koaloader_updated = true;
+                        result.new_koaloader_version = Some(version);
+                        info!("Koaloader updated successfully");
+                    }
+                    Err(e) => {
+                        error!("Failed to download Koaloader update: {}", e);
+                        return Err(format!("Failed to download Koaloader update: {}", e));
+                    }
+                }
+            } else {
+                info!("Koaloader is up to date: {}", current_koaloader);
+            }
+        }
+        Err(e) => {
+            warn!("Failed to check Koaloader version: {}", e);
         }
     }
 
@@ -333,13 +396,20 @@ pub async fn update_outdated_games(
 pub struct UpdateResult {
     pub smokeapi_updated: bool,
     pub creamlinux_updated: bool,
+    pub screamapi_updated: bool,
+    pub koaloader_updated: bool,
     pub new_smokeapi_version: Option<String>,
     pub new_creamlinux_version: Option<String>,
+    pub new_screamapi_version: Option<String>,
+    pub new_koaloader_version: Option<String>,
 }
 
 impl UpdateResult {
     pub fn any_updated(&self) -> bool {
-        self.smokeapi_updated || self.creamlinux_updated
+        self.smokeapi_updated
+            || self.creamlinux_updated
+            || self.screamapi_updated
+            || self.koaloader_updated
     }
 }
 

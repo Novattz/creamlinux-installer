@@ -83,6 +83,22 @@ pub fn get_koaloader_dir() -> Result<PathBuf, String> {
     Ok(dir)
 }
 
+// Delete all cached unlocker binaries so they're re-downloaded on next
+// launch. Deliberately leaves reports.json and the anonymous salt file
+// alone.
+pub fn clear_unlocker_cache() -> Result<(), String> {
+    let cache_dir = get_cache_dir()?;
+    for name in ["smokeapi", "screamapi", "koaloader", "creamlinux"] {
+        let dir = cache_dir.join(name);
+        if dir.exists() {
+            fs::remove_dir_all(&dir)
+                .map_err(|e| format!("Failed to clear {} cache: {}", name, e))?;
+        }
+    }
+    info!("Cleared cached unlocker binaries");
+    Ok(())
+}
+
 // Get the CreamLinux cache directory path
 pub fn get_creamlinux_dir() -> Result<PathBuf, String> {
     let cache_dir = get_cache_dir()?;
