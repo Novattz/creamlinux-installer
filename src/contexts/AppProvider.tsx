@@ -1,10 +1,10 @@
-import { ReactNode, useState, useEffect } from 'react'
-import { AppContext, AppContextType } from './AppContext'
+import { ReactNode, useState, useEffect, useRef } from 'react'
+import { AppContext, AppContextType, ActivityItem } from './AppContext'
 import { useGames, useDlcManager, useGameActions, useToasts } from '@/hooks'
-import { DlcInfo, Config, EpicGame } from '@/types'
+import { DlcInfo, Config, EpicGame, Game } from '@/types'
 import { ActionType } from '@/components/buttons/ActionButton'
 import { ToastContainer } from '@/components/notifications'
-import { SmokeAPISettingsDialog, OptInDialog, RatingDialog, SmokeAPIVotesDialog, EpicUnlockerSelectionDialog, ScreamAPISettingsDialog } from '@/components/dialogs'
+import { ApiSettingsDialog, smokeApiSettingsSpec, screamApiSettingsSpec, OptInDialog, RatingDialog, SmokeAPIVotesDialog, UnlockerChoiceDialog } from '@/components/dialogs'
 import { invoke } from '@tauri-apps/api/core'
 import { listen } from '@tauri-apps/api/event'
 
@@ -19,7 +19,7 @@ interface AppProviderProps {
  */
 export const AppProvider = ({ children }: AppProviderProps) => {
   // Use our custom hooks
-  const { games, isLoading, error, loadGames, setGames } = useGames()
+  const { games, isLoading, isInitialLoad, scanProgress, error, loadGames, setGames } = useGames()
 
   const {
     dlcDialog,
@@ -41,12 +41,11 @@ export const AppProvider = ({ children }: AppProviderProps) => {
 
   const { toasts, removeToast, success, error: showError, warning, info } = useToasts()
 
-  // Settings dialog state
-  const [settingsDialog, setSettingsDialog] = useState({ visible: false })
-
   const [epicGames, setEpicGames] = useState<EpicGame[]>([])
   const [epicLoading, setEpicLoading] = useState(false)
   const [epicInstallingId, setEpicInstallingId] = useState<string | null>(null)
+  const epicGamesRef = useRef<EpicGame[]>(epicGames)
+  epicGamesRef.current = epicGames
 
   const [epicUnlockerDialog, setEpicUnlockerDialog] = useState<{
     visible: boolean
@@ -84,6 +83,17 @@ export const AppProvider = ({ children }: AppProviderProps) => {
   const [optInDialog, setOptInDialog] = useState(false)
   const [reportingEnabled, setReportingEnabled] = useState(false)
 
+  // Recent activity feed (session-only) shown on the Overview page
+  const [activityFeed, setActivityFeed] = useState<ActivityItem[]>([])
+  const pushActivity = (message: string, type: ActivityItem['type']) => {
+    setActivityFeed((prev) =>
+      [{ id: `${Date.now()}-${Math.random()}`, message, type, timestamp: Date.now() }, ...prev].slice(
+        0,
+        20
+      )
+    )
+  }
+
   // Rating dialog state
   const [ratingDialog, setRatingDialog] = useState<{
     visible: boolean
@@ -114,13 +124,16 @@ export const AppProvider = ({ children }: AppProviderProps) => {
     let unlisten: (() => void) | undefined
     listen<EpicGame>('epic-game-updated', (event) => {
       const updated = event.payload
-      const prev = epicGames.find((g) => g.app_name === updated.app_name)
-    
+      // Read from the ref (not the epicGames closure) so this effect doesn't
+      // need epicGames as a dependency. That would tear down and re-create
+      // the Tauri listener on every single update instead of registering once.
+      const prev = epicGamesRef.current.find((g) => g.app_name === updated.app_name)
+
       setEpicGames((games) =>
         games.map((g) => (g.app_name === updated.app_name ? updated : g))
       )
       setEpicInstallingId(null)
-    
+
       // Determine what changed and show appropriate toast
       if (prev) {
         const installedScream = !prev.scream_installed && updated.scream_installed
@@ -130,12 +143,16 @@ export const AppProvider = ({ children }: AppProviderProps) => {
       
         if (installedScream) {
           success(`ScreamAPI installed for ${updated.title}`)
+          pushActivity(`Installed ScreamAPI for ${updated.title}`, 'install')
         } else if (uninstalledScream) {
           info(`ScreamAPI removed from ${updated.title}`)
+          pushActivity(`Removed ScreamAPI from ${updated.title}`, 'uninstall')
         } else if (installedKoa) {
           success(`Koaloader installed for ${updated.title}`)
+          pushActivity(`Installed Koaloader for ${updated.title}`, 'install')
         } else if (uninstalledKoa) {
           info(`Koaloader removed from ${updated.title}`)
+          pushActivity(`Removed Koaloader from ${updated.title}`, 'uninstall')
         }
       
         if (updated.proxy_fallback_used) {
@@ -147,7 +164,7 @@ export const AppProvider = ({ children }: AppProviderProps) => {
       }
     }).then((fn) => { unlisten = fn })
     return () => { unlisten?.() }
-  }, [epicGames, success, info, warning])
+  }, [success, info, warning])
 
   const loadEpicGames = async () => {
     setEpicLoading(true)
@@ -195,15 +212,6 @@ export const AppProvider = ({ children }: AppProviderProps) => {
     if (game) runEpicAction(game, 'install_koaloader')
   }
 
-  // Settings handlers
-  const handleSettingsOpen = () => {
-    setSettingsDialog({ visible: true })
-  }
-
-  const handleSettingsClose = () => {
-    setSettingsDialog({ visible: false })
-  }
-
   // SmokeAPI settings handlers
   const handleSmokeAPISettingsOpen = (gameId: string) => {
     const game = games.find((g) => g.id === gameId)
@@ -234,9 +242,12 @@ export const AppProvider = ({ children }: AppProviderProps) => {
   const handleSmokeAPIVotesConfirm = () => {
     const gameId = smokeAPIVotesDialog.gameId
     setSmokeAPIVotesDialog({ visible: false, gameId: null, gameTitle: null })
-    if (gameId) {
-      // Now actually run the install
-      executeGameAction(gameId, 'install_smoke', games)
+    const game = gameId ? games.find((g) => g.id === gameId) : undefined
+    if (gameId && game) {
+      // Now actually run the install this is what was silently skipping
+      // the success toast and activity feed entry before, since it called
+      // the raw action executor instead of the notifying wrapper.
+      runGameAction(gameId, 'install_smoke', game)
     }
   }
 
@@ -287,6 +298,39 @@ export const AppProvider = ({ children }: AppProviderProps) => {
       })
     } catch (err) {
       console.error('Failed to submit rating:', err)
+    }
+  }
+
+  // Runs a game action and reports the result via toast + activity feed.
+  // Used both by handleGameAction's own fallthrough case and by
+  // handleSmokeAPIVotesConfirm, which needs to run the action *after* the
+  // votes dialog closes without re-triggering handleGameAction's own
+  // interception checks (which would just show that dialog again).
+  const runGameAction = async (gameId: string, action: ActionType, game: Game) => {
+    setGames((prevGames) =>
+      prevGames.map((g) => (g.id === gameId ? { ...g, installing: true } : g))
+    )
+
+    try {
+      await executeGameAction(gameId, action, games)
+
+      const product = action.includes('cream') ? 'CreamLinux' : 'SmokeAPI'
+      const isUninstall = action.includes('uninstall')
+      const isInstall = action.includes('install') && !isUninstall
+
+      if (isInstall) {
+        success(`Successfully installed ${product} for ${game.title}`)
+        pushActivity(`Installed ${product} for ${game.title}`, 'install')
+      } else if (isUninstall) {
+        info(`${product} uninstalled from ${game.title}`)
+        pushActivity(`Uninstalled ${product} from ${game.title}`, 'uninstall')
+      }
+    } catch (error) {
+      showError(`Action failed: ${error}`)
+    } finally {
+      setGames((prevGames) =>
+        prevGames.map((g) => (g.id === gameId ? { ...g, installing: false } : g))
+      )
     }
   }
 
@@ -341,7 +385,7 @@ export const AppProvider = ({ children }: AppProviderProps) => {
       )
 
       try {
-        // This will show the UnlockerSelectionDialog and handle the callback
+        // This will show the UnlockerChoiceDialog and handle the callback
         await executeGameAction(gameId, action, games)
       } catch (error) {
         showError(`Action failed: ${error}`)
@@ -355,41 +399,12 @@ export const AppProvider = ({ children }: AppProviderProps) => {
     }
 
     // For other actions (uninstall cream, install/uninstall smoke)
-    // Mark game as installing
-    setGames((prevGames) =>
-      prevGames.map((g) => (g.id === gameId ? { ...g, installing: true } : g))
-    )
-
-    try {
-      await executeGameAction(gameId, action, games)
-
-      // Show appropriate success message based on action type
-      const product = action.includes('cream') ? 'CreamLinux' : 'SmokeAPI'
-      const isUninstall = action.includes('uninstall')
-      const isInstall = action.includes('install') && !isUninstall
-
-      console.log('DEBUG: Action processed. Product:', product, 'isInstall:', isInstall, 'isUninstall:', isUninstall, 'action:', action)
-
-      if (isInstall) {
-        success(`Successfully installed ${product} for ${game.title}`)
-      } else if (isUninstall) {
-        info(`${product} uninstalled from ${game.title}`)
-      } else {
-        console.log('Unknown action type:', action)
-      }
-    } catch (error) {
-      showError(`Action failed: ${error}`)
-    } finally {
-      // Reset installing state
-      setGames((prevGames) =>
-        prevGames.map((g) => (g.id === gameId ? { ...g, installing: false } : g))
-      )
-    }
+    await runGameAction(gameId, action, game)
   }
 
   // DLC confirmation wrapper
   const handleDlcConfirm = (selectedDlcs: DlcInfo[]) => {
-    const { gameId, isEditMode } = dlcDialog
+    const { gameId, gameTitle, isEditMode } = dlcDialog
 
     // Create a deep copy to ensure we don't have reference issues
     const dlcsCopy = selectedDlcs.map((dlc) => ({ ...dlc }))
@@ -415,6 +430,12 @@ export const AppProvider = ({ children }: AppProviderProps) => {
           isEditMode
             ? 'DLC configuration updated successfully'
             : 'CreamLinux installed with selected DLCs'
+        )
+        pushActivity(
+          isEditMode
+            ? `Updated DLC configuration for ${gameTitle}`
+            : `Installed CreamLinux for ${gameTitle}`,
+          isEditMode ? 'update' : 'install'
         )
       })
       .catch((error) => {
@@ -455,6 +476,8 @@ export const AppProvider = ({ children }: AppProviderProps) => {
     // Game state
     games,
     isLoading,
+    isInitialLoad,
+    scanProgress,
     error,
     loadGames,
 
@@ -482,11 +505,6 @@ export const AppProvider = ({ children }: AppProviderProps) => {
     handleDlcConfirm,
     handleProgressDialogClose: handleCloseProgressDialog,
 
-    // Settings
-    settingsDialog,
-    handleSettingsOpen,
-    handleSettingsClose,
-
     // SmokeAPI Settings
     smokeAPISettingsDialog,
     handleSmokeAPISettingsOpen,
@@ -503,6 +521,9 @@ export const AppProvider = ({ children }: AppProviderProps) => {
     handleCloseRating,
     handleSubmitRating,
     reportingEnabled,
+
+    // Recent activity feed
+    activityFeed,
 
     // Toast notifications
     showToast,
@@ -561,28 +582,50 @@ export const AppProvider = ({ children }: AppProviderProps) => {
       <ToastContainer toasts={toasts} onDismiss={removeToast} />
       
       {/* SmokeAPI Settings Dialog */}
-      <SmokeAPISettingsDialog
+      <ApiSettingsDialog
         visible={smokeAPISettingsDialog.visible}
         onClose={handleSmokeAPISettingsClose}
         gamePath={smokeAPISettingsDialog.gamePath}
         gameTitle={smokeAPISettingsDialog.gameTitle}
+        spec={smokeApiSettingsSpec}
       />
 
       {/* Epic Unlocker Selection Dialog */}
-      <EpicUnlockerSelectionDialog
+      <UnlockerChoiceDialog
         visible={epicUnlockerDialog.visible}
-        game={epicUnlockerDialog.game}
+        gameTitle={epicUnlockerDialog.game?.title ?? ''}
         onClose={() => setEpicUnlockerDialog({ visible: false, game: null })}
-        onSelectScreamAPI={handleSelectScreamAPI}
-        onSelectKoaloader={handleSelectKoaloader}
+        options={[
+          {
+            key: 'scream',
+            title: 'ScreamAPI',
+            badge: 'recommended',
+            description:
+              'Replaces the EOS SDK DLL directly with ScreamAPI. Works for most Epic games and requires no additional files. DLC unlocking is automatic.',
+            buttonLabel: 'Install ScreamAPI',
+            buttonVariant: 'primary',
+            onSelect: handleSelectScreamAPI,
+          },
+          {
+            key: 'koaloader',
+            title: 'Koaloader + ScreamAPI',
+            badge: 'alternative',
+            description:
+              "Uses a proxy DLL to inject ScreamAPI without modifying the EOS SDK. Try this if the recommended method doesn't work for your game.",
+            buttonLabel: 'Install Koaloader',
+            buttonVariant: 'secondary',
+            onSelect: handleSelectKoaloader,
+          },
+        ]}
       />
 
       {/* ScreamAPI Settings Dialog */}
-      <ScreamAPISettingsDialog
+      <ApiSettingsDialog
         visible={screamSettingsDialog.visible}
         onClose={() => setScreamSettingsDialog({ visible: false, game: null })}
         gamePath={screamSettingsDialog.game?.install_path ?? ''}
         gameTitle={screamSettingsDialog.game?.title ?? ''}
+        spec={screamApiSettingsSpec}
       />
 
       {/* SmokeAPI Votes Dialog */}

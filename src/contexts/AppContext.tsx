@@ -34,11 +34,23 @@ export interface RatingDialogState {
   steamPath: string
 }
 
+// A single entry in the Overview page's recent-activity feed. Session-only
+// (not persisted) just a friendlier view of what you've been doing since
+// the app was launched.
+export interface ActivityItem {
+  id: string
+  message: string
+  type: 'install' | 'uninstall' | 'update'
+  timestamp: number
+}
+
 // Define the context type
 export interface AppContextType {
   // Game state
   games: Game[]
   isLoading: boolean
+  isInitialLoad: boolean
+  scanProgress: { message: string; progress: number }
   error: string | null
   loadGames: () => Promise<boolean>
   handleProgressDialogClose: () => void
@@ -64,11 +76,6 @@ export interface AppContextType {
   handleGameAction: (gameId: string, action: ActionType) => Promise<void>
   handleDlcConfirm: (selectedDlcs: DlcInfo[]) => void
 
-  // Settings
-  settingsDialog: { visible: boolean }
-  handleSettingsOpen: () => void
-  handleSettingsClose: () => void
-
   // SmokeAPI settings
   smokeAPISettingsDialog: SmokeAPISettingsDialogState
   handleSmokeAPISettingsOpen: (gameId: string) => void
@@ -89,6 +96,9 @@ export interface AppContextType {
   handleCloseRating: () => void
   handleSubmitRating: (worked: boolean) => Promise<void>
   reportingEnabled: boolean
+
+  // Recent activity feed (session-only, shown on Overview)
+  activityFeed: ActivityItem[]
 
   // Toast notifications
   showToast: (
