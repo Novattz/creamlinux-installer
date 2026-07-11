@@ -11,6 +11,9 @@ pub struct Config {
     // Reporting / compatibility voting
     pub reporting_opted_in: bool,
     pub reporting_has_seen_prompt: bool,
+    // Extra Steam library folders to scan, beyond the auto-detected ones
+    #[serde(default)]
+    pub custom_steam_paths: Vec<String>,
 }
 
 impl Default for Config {
@@ -19,6 +22,7 @@ impl Default for Config {
             show_disclaimer: true,
             reporting_opted_in: false,
             reporting_has_seen_prompt: false,
+            custom_steam_paths: Vec::new(),
         }
     }
 }
@@ -140,6 +144,28 @@ where
     updater(&mut config);
     save_config(&config)?;
     Ok(config)
+}
+
+// Reset configuration to defaults
+pub fn reset_config() -> Result<Config, String> {
+    let default_config = Config::default();
+    save_config(&default_config)?;
+    info!("Config reset to defaults");
+    Ok(default_config)
+}
+
+// Open the config directory (~/.config/creamlinux) in the system's file
+// manager
+pub fn open_config_folder() -> Result<(), String> {
+    let config_dir = get_config_dir()?;
+    ensure_config_dir()?;
+
+    std::process::Command::new("xdg-open")
+        .arg(&config_dir)
+        .spawn()
+        .map_err(|e| format!("Failed to open config folder: {}", e))?;
+
+    Ok(())
 }
 
 #[cfg(test)]
