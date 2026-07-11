@@ -24,8 +24,6 @@
 
     &:hover {
       background-color: var(--success-light);
-      transform: translateY(-2px) scale(1.02);
-      box-shadow: 0px 0px 12px rgba(140, 200, 147, 0.3);
     }
   }
 
@@ -34,22 +32,13 @@
 
     &:hover {
       background-color: var(--danger-light);
-      transform: translateY(-2px) scale(1.02);
-      box-shadow: 0px 0px 12px rgba(217, 107, 107, 0.3);
     }
-  }
-
-  &:active {
-    transform: scale(0.97);
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
   }
 
   &:disabled {
     opacity: 0.7;
     cursor: not-allowed;
     background-color: var(--disabled);
-    transform: none;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
     position: relative;
     overflow: hidden;
 
@@ -85,20 +74,11 @@
 
   &:hover {
     background-color: rgba(255, 255, 255, 0.3);
-    transform: translateY(-2px);
-    box-shadow: 0 7px 15px rgba(0, 0, 0, 0.3);
-  }
-
-  &:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
   }
 
   &:disabled {
     opacity: 0.5;
     cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
   }
   // Settings icon button variant
   &.settings-icon-button {

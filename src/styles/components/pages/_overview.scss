@@ -1,0 +1,263 @@
+@use '../../themes/index' as *;
+@use '../../abstracts/index' as *;
+
+/*
+  Overview page - a hero row for the two library totals, a Native/Proton
+  composition bar for the Steam library, and secondary stats as compact
+  chips (rather than one long row of identical boxes).
+*/
+
+.overview-section-label {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+// Hero numbers - the two headline totals
+.stat-hero {
+  display: flex;
+  align-items: center;
+  gap: 2.5rem;
+}
+
+.stat-hero-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.stat-hero-value {
+  font-size: 2.75rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--text-primary);
+}
+
+.stat-hero-label {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.stat-hero-divider {
+  width: 1px;
+  height: 42px;
+  background-color: var(--border-soft);
+}
+
+// Native/Proton composition bar for the Steam library
+.library-composition {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  max-width: 640px;
+}
+
+.composition-bar {
+  display: flex;
+  width: 100%;
+  height: 10px;
+  border-radius: 99px;
+  overflow: hidden;
+  background-color: var(--tertiary-bg);
+}
+
+.composition-segment {
+  height: 100%;
+  transition: width 0.4s ease;
+
+  &.native {
+    background-color: var(--native);
+  }
+
+  &.proton {
+    background-color: var(--proton);
+  }
+}
+
+.composition-legend {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+
+  &.native {
+    background-color: var(--native);
+  }
+
+  &.proton {
+    background-color: var(--proton);
+  }
+}
+
+.legend-label {
+  color: var(--text-secondary);
+}
+
+.legend-value {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+// Secondary stats as compact pill chips
+.stat-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.stat-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 1rem;
+  background-color: var(--elevated-bg);
+  border: 1px solid var(--border-soft);
+  border-radius: 99px;
+
+  .stat-chip-icon {
+    color: var(--icon-secondary);
+  }
+
+  .stat-chip-value {
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .stat-chip-label {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+  }
+}
+
+// Two side-by-side cards (Recent Activity / System) filling out the rest
+// of the page stacks on narrow windows.
+.overview-columns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+
+  .page-section {
+    flex: 1;
+    min-width: 280px;
+    max-width: none;
+  }
+}
+
+.activity-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 260px;
+  overflow-y: auto;
+  @include custom-scrollbar;
+}
+
+.activity-item {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.5rem 0;
+
+  &:not(:last-child) {
+    border-bottom: 1px solid var(--border-soft);
+  }
+}
+
+.activity-item-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+
+  &--install {
+    background-color: var(--success);
+  }
+
+  &--uninstall {
+    background-color: var(--danger);
+  }
+
+  &--update {
+    background-color: var(--info);
+  }
+}
+
+.activity-item-message {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.activity-item-time {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+// System spec sheet - a colored accent bar per field instead of plain
+// label/value rows, with the value given real typographic weight
+.system-specs {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.system-spec {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding-left: 0.85rem;
+  border-left: 3px solid var(--border-soft);
+
+  &--os {
+    border-left-color: var(--info);
+  }
+
+  &--cpu {
+    border-left-color: var(--success);
+  }
+
+  &--gpu {
+    border-left-color: var(--primary-color);
+  }
+}
+
+.system-spec-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.system-spec-value {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.system-spec-sub {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}

@@ -13,9 +13,7 @@
   // Size variations
   &.loading-small {
     .loading-spinner {
-      width: 20px;
-      height: 20px;
-      border-width: 2px;
+      @include spinner-size(20px);
     }
 
     .loading-dots {
@@ -29,18 +27,11 @@
       font-size: 0.8rem;
       margin-top: 0.5rem;
     }
-
-    .progress-bar-container {
-      height: 6px;
-      width: 100px;
-    }
   }
 
   &.loading-medium {
     .loading-spinner {
-      width: 30px;
-      height: 30px;
-      border-width: 3px;
+      @include spinner-size(30px);
     }
 
     .loading-dots {
@@ -54,18 +45,11 @@
       font-size: 0.9rem;
       margin-top: 0.75rem;
     }
-
-    .progress-bar-container {
-      height: 8px;
-      width: 200px;
-    }
   }
 
   &.loading-large {
     .loading-spinner {
-      width: 50px;
-      height: 50px;
-      border-width: 4px;
+      @include spinner-size(50px);
     }
 
     .loading-dots {
@@ -79,20 +63,42 @@
       font-size: 1.1rem;
       margin-top: 1rem;
     }
-
-    .progress-bar-container {
-      height: 10px;
-      width: 300px;
-    }
   }
 }
 
-// Spinner styles
-.loading-spinner {
-  border-radius: 50%;
-  border: 3px solid rgba(255, 255, 255, 0.1);
-  border-top-color: var(--primary-color);
-  animation: spin 1s linear infinite;
+// Windows/Fluent-style ring spinner - an SVG circle with an animated
+// stroke-dasharray + rotation, rather than a CSS conic-gradient mask.
+// Sizing is set per-context (see above); the ring geometry (viewBox +
+// circle radius) is fixed, so the stroke scales with it automatically.
+.spinner-ring {
+  overflow: visible;
+  color: var(--primary-color);
+
+  circle {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5px;
+    stroke-linecap: round;
+    transform-origin: 50% 50%;
+    animation: spinner-dash 2s linear infinite;
+  }
+}
+
+@keyframes spinner-dash {
+  0% {
+    stroke-dasharray: 0.01px, 43.97px;
+    transform: rotate(0deg);
+  }
+
+  50% {
+    stroke-dasharray: 21.99px, 21.99px;
+    transform: rotate(450deg);
+  }
+
+  100% {
+    stroke-dasharray: 0.01px, 43.97px;
+    transform: rotate(1080deg);
+  }
 }
 
 // Loading dots animation
@@ -115,49 +121,12 @@
   }
 }
 
-// Progress bar styles
-.loading-progress {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-}
-
-.progress-bar-container {
-  background-color: var(--border-soft);
-  border-radius: 4px;
-  overflow: hidden;
-  width: 100%;
-  margin-bottom: 0.5rem;
-}
-
-.progress-bar {
-  height: 100%;
-  background-color: var(--primary-color);
-  border-radius: 4px;
-  transition: width 0.3s ease;
-}
-
-.progress-percentage {
-  font-size: 0.8rem;
-  color: var(--text-secondary);
-}
-
 .loading-message {
   color: var(--text-secondary);
   text-align: center;
 }
 
-// Animations
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
+// Animation
 @keyframes bounce {
   0%,
   80%,

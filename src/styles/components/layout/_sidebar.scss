@@ -1,15 +1,14 @@
 @use '../../themes/index' as *;
 @use '../../abstracts/index' as *;
 
-/* 
+/*
   Sidebar component styles
 */
 .sidebar {
   width: var(--sidebar-width);
   min-width: var(--sidebar-width);
   background-color: var(--secondary-bg);
-  border-right: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: inset -5px 0 15px rgba(0, 0, 0, 0.2);
+  border-right: 1px solid var(--border-dark);
   padding: 1.5rem 1rem;
   display: flex;
   flex-direction: column;
@@ -21,13 +20,13 @@
 
 .sidebar-header {
   margin-bottom: 1.5rem;
+  padding: 0 0.5rem;
 
   h2 {
     color: var(--text-primary);
-    font-size: 1.1rem;
+    font-size: 1.05rem;
     font-weight: 600;
-    letter-spacing: 0.5px;
-    opacity: 0.9;
+    letter-spacing: 0.2px;
   }
 }
 
@@ -37,14 +36,13 @@
 
 .sidebar-section-label {
   display: block;
-  font-size: 0.65rem;
-  font-weight: 700;
-  letter-spacing: 1px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.6px;
   text-transform: uppercase;
-  color: var(--text-secondary);
-  opacity: 0.6;
+  color: var(--text-muted);
   padding: 0 1rem;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.35rem;
 }
 
 .sidebar-section .filter-list {
@@ -56,34 +54,33 @@
   margin-bottom: 0;
 
   li {
-    transition: all var(--duration-normal) var(--easing-ease-out);
-    border-radius: var(--radius-sm);
-    padding: 0.7rem 1rem;
-    margin-bottom: 0.3rem;
+    transition:
+      background-color var(--duration-normal) var(--easing-ease-out),
+      color var(--duration-normal) var(--easing-ease-out);
+    border-radius: var(--radius-md);
+    padding: 0.65rem 1rem;
+    margin-bottom: 0.15rem;
     font-weight: 500;
+    color: var(--text-secondary);
     cursor: pointer;
 
     &:hover {
-      background-color: rgba(255, 255, 255, 0.07);
+      background-color: var(--tertiary-bg);
+      color: var(--text-primary);
     }
 
     &.active {
-      background: linear-gradient(
-        135deg,
-        var(--primary-color),
-        color-mix(in srgb, black 10%, var(--primary-color))
-      );
-      box-shadow: 0 4px 10px rgba(var(--primary-color), 0.3);
-      color: var(--elevated-bg);
+      background-color: color-mix(in srgb, var(--primary-color) 16%, transparent);
+      color: var(--primary-color);
 
       .filter-icon {
-        color: var(--elevated-bg);
+        color: var(--primary-color);
       }
     }
 
-    // Ensure icons are white when not active
+    // Ensure icons follow the resting text color when not active
     &:not(.active) .filter-icon {
-      color: var(--text-primary);
+      color: var(--text-secondary);
     }
   }
 }
@@ -98,37 +95,6 @@
   }
 }
 
-.settings-button {
-  margin-top: auto;
-
-  &.btn.btn-secondary {
-    background-color: transparent;
-    border: 1px solid transparent;
-    color: var(--text-secondary);
-
-    &:hover {
-      background-color: rgba(255, 255, 255, 0.07);
-      color: var(--text-primary);
-      border-color: var(--border-soft);
-      transform: none;
-      box-shadow: none;
-    }
-
-    &:active {
-      transform: scale(0.98);
-    }
-
-    .settings-icon {
-      transition: transform 0.3s ease;
-      color: inherit;
-    }
-
-    &:hover .settings-icon {
-      transform: rotate(45deg);
-    }
-  }
-}
-
 // App logo styles
 .app-logo {
   display: flex;
@@ -139,6 +105,39 @@
     width: 28px;
     height: 28px;
     fill: var(--text-primary);
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+  }
+}
+
+// Pinned to the bottom of the sidebar via margin-top: auto - version/build
+// and a repo link, so this doesn't need its own page-section anymore
+.sidebar-footer {
+  margin-top: auto;
+  padding: 0.85rem 1rem 0.25rem;
+  border-top: 1px solid var(--border-dark);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sidebar-footer-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.sidebar-footer-version {
+  font-family: monospace;
+}
+
+.sidebar-footer-link {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: color var(--duration-normal) var(--easing-ease-out);
+
+  &:hover {
+    color: var(--primary-color);
   }
 }

@@ -20,6 +20,9 @@
 /* Dialog components */
 @use 'components/dialogs/index' as *;
 
+/* Page components (Overview, Settings) */
+@use 'components/pages/index' as *;
+
 /* Notification components */
 @use 'components/notifications/index' as *;
 
@@ -28,6 +31,3 @@
 
 /* Common components */
 @use 'components/common/index' as *;
-
-/* Page-specific styles */
-//@use 'pages/home';

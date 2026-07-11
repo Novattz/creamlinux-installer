@@ -1,0 +1,134 @@
+@use '../../themes/index' as *;
+@use '../../abstracts/index' as *;
+
+/*
+  Shared layout for top-level pages reached via the sidebar (Overview,
+  Settings) - same container treatment as .game-list so switching between
+  them feels consistent.
+*/
+.overview-page,
+.settings-page {
+  padding: 1.5rem;
+  flex: 1;
+  overflow-y: auto;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  @include custom-scrollbar;
+
+  h2 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: 0.3px;
+    padding-bottom: 0.9rem;
+    margin-bottom: 0.25rem;
+    border-bottom: 1px solid var(--border-dark);
+  }
+}
+
+// A titled subsection within a page (distinct from dialogs' .settings-section,
+// which is sized for a modal rather than a full page). Rendered as a single
+// unified card, the heading, description, and body content all live inside
+// the same container instead of the body floating below on its own.
+.page-section {
+  background-color: var(--elevated-bg);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  max-width: 640px;
+
+  h4 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.4rem;
+  }
+
+  .page-section-description {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 1.25rem;
+    line-height: 1.4;
+  }
+}
+
+// Danger Zone - a page-section with a subtle danger-tinted border instead
+// of the default neutral one, so it reads as "be careful here" without
+// resorting to a loud red banner
+.page-section.danger-zone {
+  border-color: color-mix(in srgb, var(--danger) 30%, var(--border-soft));
+
+  h4 {
+    color: var(--danger-light);
+  }
+}
+
+.danger-zone-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 0;
+
+  &:not(:last-child) {
+    border-bottom: 1px solid var(--border-soft);
+  }
+}
+
+.danger-zone-row-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.danger-zone-row-label {
+  font-weight: 500;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+.danger-zone-row-description {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.app-info {
+  .info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.6rem 0;
+
+    &:not(:last-child) {
+      border-bottom: 1px solid var(--border-soft);
+    }
+
+    .info-label {
+      font-weight: 500;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+
+    .info-value {
+      color: var(--text-primary);
+      font-size: 0.9rem;
+      font-family: monospace;
+    }
+
+    .info-link {
+      color: var(--primary-color);
+      text-decoration: none;
+      font-size: 0.9rem;
+      transition: color 0.2s ease;
+
+      &:hover {
+        color: var(--secondary-color);
+        text-decoration: underline;
+      }
+    }
+  }
+}

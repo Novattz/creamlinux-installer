@@ -14,25 +14,12 @@
   white-space: nowrap;
   border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: all var(--duration-normal) var(--easing-ease-out);
-
-  // Default states
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-hover);
-  }
-
-  &:active {
-    transform: translateY(0);
-    box-shadow: var(--shadow-standard);
-  }
+  transition: background-color var(--duration-normal) var(--easing-ease-out);
 
   &:disabled,
   &.disabled {
-    opacity: 0.7;
+    opacity: 0.55;
     cursor: not-allowed;
-    transform: none !important;
-    box-shadow: var(--shadow-standard) !important;
   }
 
   // Sizing
@@ -54,14 +41,30 @@
     gap: 0.6rem;
   }
 
-  // Variants
+  // Icon-only buttons are square, regardless of size
+  &.btn-icon-only.btn-sm {
+    padding: 0.45rem;
+  }
+
+  &.btn-icon-only.btn-md {
+    padding: 0.6rem;
+  }
+
+  &.btn-icon-only.btn-lg {
+    padding: 0.75rem;
+  }
+
+  // Variants - flat fill, a plain darken/lighten on hover, no lift or glow
   &.btn-primary {
     background-color: var(--primary-color);
     color: var(--text-heavy);
 
-    &:hover {
-      background-color: var(--primary-color);
-      box-shadow: 0 6px 14px rgba(var(--primary-color), 0.3);
+    &:hover:not(:disabled) {
+      background-color: color-mix(in srgb, black 8%, var(--primary-color));
+    }
+
+    &:active:not(:disabled) {
+      background-color: color-mix(in srgb, black 14%, var(--primary-color));
     }
   }
 
@@ -69,9 +72,12 @@
     background-color: var(--border-soft);
     color: var(--text-primary);
 
-    &:hover {
+    &:hover:not(:disabled) {
       background-color: var(--border);
-      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.3);
+    }
+
+    &:active:not(:disabled) {
+      background-color: color-mix(in srgb, black 10%, var(--border));
     }
   }
 
@@ -79,9 +85,8 @@
     background-color: var(--success);
     color: var(--text-heavy);
 
-    &:hover {
-      background-color: var(--success-light);
-      box-shadow: 0 6px 14px rgba(var(--success), 0.3);
+    &:hover:not(:disabled) {
+      background-color: color-mix(in srgb, black 8%, var(--success));
     }
   }
 
@@ -89,9 +94,8 @@
     background-color: var(--danger);
     color: var(--text-heavy);
 
-    &:hover {
-      background-color: var(--danger-light);
-      box-shadow: 0 6px 14px rgba(var(--danger), 0.3);
+    &:hover:not(:disabled) {
+      background-color: color-mix(in srgb, black 8%, var(--danger));
     }
   }
 
@@ -99,9 +103,8 @@
     background-color: var(--warning);
     color: var(--text-heavy);
 
-    &:hover {
-      background-color: var(--warning-light);
-      box-shadow: 0 6px 14px rgba(var(--warning), 0.3);
+    &:hover:not(:disabled) {
+      background-color: color-mix(in srgb, black 8%, var(--warning));
     }
   }
 
@@ -115,13 +118,10 @@
       position: relative;
       margin-right: 0.5rem;
 
-      .spinner {
+      .spinner-ring {
         width: 100%;
         height: 100%;
-        border: 2px solid rgba(255, 255, 255, 0.3);
-        border-top-color: currentColor;
-        border-radius: 50%;
-        animation: spin 0.8s linear infinite;
+        color: inherit;
       }
     }
 
@@ -151,42 +151,18 @@
   }
 }
 
-// Animation for spinner
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
 // Rating button on game card
 .rate-button {
   svg {
     color: var(--elevated-bg);
-    transition: transform var(--duration-normal) var(--easing-ease-out);
   }
 
   &:hover {
     background-color: rgba(255, 255, 255, 0.28);
-    transform: translateY(-2px);
-    box-shadow: 0 7px 15px rgba(0, 0, 0, 0.25);
-
-    svg {
-      transform: scale(1.1);
-    }
-  }
-
-  &:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
   }
 
   &:disabled {
     opacity: 0.4;
     cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
   }
 }

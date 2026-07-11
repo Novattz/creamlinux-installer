@@ -40,7 +40,7 @@
   font-size: 0.95rem;
   font-weight: var(--bold);
   cursor: pointer;
-  transition: all var(--duration-normal) var(--easing-ease-out);
+  transition: background-color var(--duration-normal) var(--easing-ease-out);
   color: var(--text-heavy);
 
   &--worked {
@@ -48,8 +48,6 @@
 
     &:hover:not(:disabled) {
       background-color: var(--success-light);
-      transform: translateY(-2px);
-      box-shadow: 0 6px 14px rgba(140, 200, 147, 0.3);
     }
   }
 
@@ -58,19 +56,12 @@
 
     &:hover:not(:disabled) {
       background-color: var(--danger-light);
-      transform: translateY(-2px);
-      box-shadow: 0 6px 14px rgba(217, 107, 107, 0.3);
     }
-  }
-
-  &:active:not(:disabled) {
-    transform: scale(0.97);
   }
 
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
-    transform: none;
   }
 }
 

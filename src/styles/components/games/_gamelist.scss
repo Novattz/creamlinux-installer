@@ -17,24 +17,18 @@
   h2 {
     font-size: 1.4rem;
     font-weight: 700;
-    margin-bottom: 1.5rem;
     color: var(--text-primary);
-    letter-spacing: 0.5px;
-    position: relative;
-    display: inline-block;
-    padding-bottom: 0.5rem;
-
-    &:after {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      height: 3px;
-      background: linear-gradient(90deg, var(--primary-color), transparent);
-      border-radius: 3px;
-    }
+    letter-spacing: 0.3px;
   }
+}
+
+.game-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 0.9rem;
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid var(--border-dark);
 }
 
 // Game grid
@@ -63,25 +57,8 @@
   color: var(--text-secondary);
   text-align: center;
   border-radius: var(--radius-lg);
-  background-color: rgba(255, 255, 255, 0.03);
-  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.2);
-  backdrop-filter: blur(5px);
-}
-
-.loading-indicator {
-  position: relative;
-  overflow: hidden;
-
-  &:after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 50%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
-    animation: loading-shimmer 2s infinite;
-  }
+  background-color: var(--tertiary-bg);
+  border: 1px solid var(--border-soft);
 }
 
 // Responsive adjustments
@@ -111,20 +88,19 @@
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: linear-gradient(
-    135deg,
-    var(--primary-color),
-    color-mix(in srgb, black 10%, var(--primary-color))
-  );
-  color: var(--text-primary);
+  background-color: var(--primary-color);
+  color: var(--text-heavy);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border-soft);
   opacity: 0;
-  transform: translateY(20px);
-  transition: all var(--duration-normal) var(--easing-ease-out);
+  transform: translateY(10px);
+  transition:
+    background-color var(--duration-normal) var(--easing-ease-out),
+    opacity var(--duration-normal) var(--easing-ease-out),
+    transform var(--duration-normal) var(--easing-ease-out);
   z-index: var(--z-header);
 
   &.visible {
@@ -133,18 +109,6 @@
   }
 
   &:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 20px rgba(var(--primary-color), 0.4);
-  }
-
-  &:active {
-    transform: translateY(0);
-  }
-}
-
-// Loading shimmer animation
-@keyframes loading-shimmer {
-  to {
-    left: 100%;
+    background-color: color-mix(in srgb, black 8%, var(--primary-color));
   }
 }

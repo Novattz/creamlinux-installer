@@ -11,8 +11,12 @@
   border-radius: var(--radius-lg);
   overflow: hidden;
   will-change: opacity, transform;
-  box-shadow: var(--shadow-standard);
-  transition: all var(--duration-normal) var(--easing-ease-out);
+  border: 1px solid var(--border-soft);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+  transition:
+    transform var(--duration-normal) var(--easing-ease-out),
+    box-shadow var(--duration-normal) var(--easing-ease-out),
+    border-color var(--duration-normal) var(--easing-ease-out);
   transform-origin: center;
 
   // Simple image loading animation
@@ -20,50 +24,67 @@
   animation: fadeIn 0.5s forwards;
 }
 
-// Hover effects for the card
+// Hover effects for the card a small lift, plus a soft ambient glow in
+// whatever status color is most relevant (installed unlocker takes
+// priority over the base native/proton badge), and each badge itself picks
+// up a matching glow too.
 .game-item-card:hover {
-  transform: translateY(-8px) scale(1.02);
-  box-shadow: var(--shadow-hover);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+  border-color: var(--border);
   z-index: 5;
 
+  &:has(.status-badge.native) {
+    box-shadow:
+      0 6px 18px rgba(0, 0, 0, 0.3),
+      0 0 24px rgba(140, 200, 147, 0.25);
+  }
+
+  &:has(.status-badge.proton) {
+    box-shadow:
+      0 6px 18px rgba(0, 0, 0, 0.3),
+      0 0 24px rgba(255, 200, 150, 0.25);
+  }
+
+  &:has(.status-badge.cream) {
+    box-shadow:
+      0 6px 18px rgba(0, 0, 0, 0.3),
+      0 0 24px rgba(128, 180, 255, 0.3);
+  }
+
+  &:has(.status-badge.smoke) {
+    box-shadow:
+      0 6px 18px rgba(0, 0, 0, 0.3),
+      0 0 24px rgba(255, 240, 150, 0.3);
+  }
+
+  // Epic's own badge color is near-black, so it needs a lighter stand-in
+  // to actually read as a glow
+  &:has(.status-badge.epic) {
+    box-shadow:
+      0 6px 18px rgba(0, 0, 0, 0.3),
+      0 0 24px rgba(120, 140, 165, 0.3);
+  }
+
   .status-badge.native {
-    box-shadow: 0 0 10px rgba(85, 224, 122, 0.5);
+    box-shadow: 0 0 10px rgba(140, 200, 147, 0.5);
   }
 
   .status-badge.proton {
-    box-shadow: 0 0 10px rgba(255, 201, 150, 0.5);
+    box-shadow: 0 0 10px rgba(255, 200, 150, 0.5);
   }
 
   .status-badge.cream {
-    box-shadow: 0 0 10px rgba(128, 181, 255, 0.5);
+    box-shadow: 0 0 10px rgba(128, 180, 255, 0.5);
   }
 
   .status-badge.smoke {
-    box-shadow: 0 0 10px rgba(255, 239, 150, 0.5);
+    box-shadow: 0 0 10px rgba(255, 240, 150, 0.5);
   }
 
   .status-badge.epic {
-    box-shadow: 0 0 10px rgba(15, 25, 35, 0.5);
+    box-shadow: 0 0 10px rgba(120, 140, 165, 0.5);
   }
-}
-
-// Special styling for cards with different statuses
-.game-item-card:has(.status-badge.cream) {
-  box-shadow:
-    var(--shadow-standard),
-    0 0 15px rgba(128, 181, 255, 0.15);
-}
-
-.game-item-card:has(.status-badge.smoke) {
-  box-shadow:
-    var(--shadow-standard),
-    0 0 15px rgba(255, 239, 150, 0.15);
-}
-
-.game-item-card:has(.status-badge.epic) {
-  box-shadow:
-    var(--shadow-standard),
-    0 0 15px rgba(15, 25, 35, 0.15);
 }
 
 // Game item overlay
@@ -85,9 +106,6 @@
   padding: 1rem;
   box-sizing: border-box;
   font-weight: var(--bold);
-  font-family: var(--family);
-  -webkit-font-smoothing: subpixel-antialiased;
-  text-rendering: geometricPrecision;
   color: var(--text-heavy);
   z-index: 1;
 }
@@ -108,13 +126,8 @@
   border-radius: 4px;
   font-size: 0.75rem;
   font-weight: var(--bold);
-  font-family: var(--family);
-  -webkit-font-smoothing: subpixel-antialiased;
-  text-rendering: geometricPrecision;
   color: var(--text-heavy);
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-  transition: all var(--duration-normal) var(--easing-ease-out);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: box-shadow var(--duration-normal) var(--easing-ease-out);
 }
 
 .status-badge.native {
@@ -152,8 +165,6 @@
   font-size: 1.6rem;
   font-weight: var(--bold);
   margin: 0;
-  -webkit-font-smoothing: subpixel-antialiased;
-  text-rendering: geometricPrecision;
   transform: translateZ(0);
   will-change: opacity, transform;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);

@@ -1,0 +1,130 @@
+@use '../../themes/index' as *;
+@use '../../abstracts/index' as *;
+
+/*
+  EntryList - generic add/remove list of string entries (e.g. file paths).
+  The input row (manual entry + browse button) is pinned below the
+  scrollable entries area, so it's always visible regardless of how many
+  entries there are.
+*/
+
+.entry-list-error {
+  color: var(--danger);
+  background-color: var(--danger-soft);
+  border: 1px solid var(--danger-light);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.entry-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+// Scrolls once entries exceed a handful of rows the input row below stays
+// put since it lives outside this scrolling box.
+.entry-list-scroll-area {
+  max-height: 260px;
+  overflow-y: auto;
+  @include custom-scrollbar;
+}
+
+.entry-list-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 2rem 1rem;
+  color: var(--text-soft);
+  background-color: var(--tertiary-bg);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-md);
+
+  .icon {
+    opacity: 0.5;
+    margin-bottom: 0.75rem;
+  }
+
+  p {
+    margin: 0;
+  }
+}
+
+.entry-list-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.entry-list-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background-color: var(--tertiary-bg);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+
+  .entry-list-item-icon {
+    flex-shrink: 0;
+    color: var(--text-secondary);
+  }
+
+  .entry-list-remove-button {
+    flex-shrink: 0;
+  }
+}
+
+// Truncate from the START so the end of a long path stays visible the
+// classic RTL trick: flipping the box's inline direction moves where the
+// overflow ellipsis lands, while individual LTR characters still render
+// left-to-right within it.
+.entry-list-item-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  direction: rtl;
+  text-align: left;
+  font-family: monospace;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.entry-list-input-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.entry-list-input {
+  flex: 1;
+  min-width: 0;
+  background-color: var(--tertiary-bg);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  padding: 0.7rem 1rem;
+  font-size: 0.9rem;
+  font-family: monospace;
+  transition: all var(--duration-normal) var(--easing-ease-out);
+
+  &:focus {
+    border-color: var(--primary-color);
+    outline: none;
+  }
+
+  &::placeholder {
+    color: var(--text-soft);
+    font-family: sans-serif;
+  }
+}
+
+.entry-list-browse-button {
+  flex-shrink: 0;
+}
