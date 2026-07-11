@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { invoke } from '@tauri-apps/api/core'
 import { useAppContext } from '@/contexts/useAppContext'
 import { useAppLogic, useConflictDetection, useDisclaimer } from '@/hooks'
+import { GameVotes } from '@/components/common/VotesDisplay'
 import './styles/main.scss'
 
 // Layout components
@@ -11,18 +12,19 @@ import {
   InitialLoadingScreen,
   ErrorBoundary,
   UpdateScreen,
-  AnimatedBackground,
 } from '@/components/layout'
 
 // Dialog components
 import {
   ProgressDialog,
   DlcSelectionDialog,
-  SettingsDialog,
   ConflictDialog,
   DisclaimerDialog,
-  UnlockerSelectionDialog,
+  UnlockerChoiceDialog,
 } from '@/components/dialogs'
+
+// Page components (Overview and Settings)
+import { OverviewPage, SettingsPage } from '@/components/pages'
 
 // Game components
 import { GameList, EpicGameList } from '@/components/games'
@@ -32,6 +34,8 @@ import { GameList, EpicGameList } from '@/components/games'
  */
 function App() {
   const [updateComplete, setUpdateComplete] = useState(false)
+  const [creamVotes, setCreamVotes] = useState<GameVotes | null>(null)
+  const [smokeVotes, setSmokeVotes] = useState<GameVotes | null>(null)
 
   const { showDisclaimer, handleDisclaimerClose } = useDisclaimer()
 
@@ -47,7 +51,7 @@ function App() {
     handleRefresh,
     isLoading,
     error,
-  } = useAppLogic({ autoLoad: updateComplete })
+  } = useAppLogic()
 
   // Get action handlers from context
   const {
@@ -60,9 +64,6 @@ function App() {
     handleDlcConfirm,
     handleGameEdit,
     handleUpdateDlcs,
-    settingsDialog,
-    handleSettingsOpen,
-    handleSettingsClose,
     handleSmokeAPISettingsOpen,
     handleOpenRating,
     reportingEnabled,
@@ -83,6 +84,28 @@ function App() {
 
   // Conflict detection
   const { conflicts, showDialog, resolveConflict, closeDialog } = useConflictDetection(games)
+
+  // Community vote data for the Steam unlocker choice dialog (Epic's
+  // equivalent choice has no vote data, so it skips this entirely)
+  useEffect(() => {
+    const gameId = unlockerSelectionDialog.gameId
+    if (!unlockerSelectionDialog.visible || !gameId) {
+      setCreamVotes(null)
+      setSmokeVotes(null)
+      return
+    }
+
+    invoke<GameVotes[]>('get_game_votes', { gameId })
+      .then((results) => {
+        setCreamVotes(results.find((v) => v.unlocker === 'creamlinux') ?? null)
+        setSmokeVotes(results.find((v) => v.unlocker === 'smokeapi') ?? null)
+      })
+      .catch(() => {
+        // Votes are non-critical, silently fall back to "No votes yet"
+        setCreamVotes(null)
+        setSmokeVotes(null)
+      })
+  }, [unlockerSelectionDialog.visible, unlockerSelectionDialog.gameId])
 
   const handleSetFilter = async (f: string) => {
     setFilter(f)
@@ -126,26 +149,18 @@ function App() {
   return (
     <ErrorBoundary>
       <div className="app-container">
-        {/* Animated background */}
-        <AnimatedBackground />
-
         {/* Header with search */}
-        <Header
-          onRefresh={handleRefresh}
-          onSearch={handleSearchChange}
-          searchQuery={searchQuery}
-          refreshDisabled={isLoading}
-        />
+        <Header onSearch={handleSearchChange} searchQuery={searchQuery} />
 
         <div className="main-content">
           {/* Sidebar for filtering */}
-          <Sidebar
-            setFilter={handleSetFilter}
-            currentFilter={filter}
-            onSettingsClick={handleSettingsOpen}
-          />
+          <Sidebar setFilter={handleSetFilter} currentFilter={filter} />
 
-          {filter === 'epic' ? (
+          {filter === 'overview' ? (
+            <OverviewPage />
+          ) : filter === 'settings' ? (
+            <SettingsPage />
+          ) : filter === 'epic' ? (
             <EpicGameList
               games={epicGames}
               isLoading={epicLoading}
@@ -154,6 +169,7 @@ function App() {
               onUninstallScream={handleEpicUninstallScream}
               onUninstallKoaloader={handleEpicUninstallKoaloader}
               onSettings={handleEpicSettings}
+              onRefresh={loadEpicGames}
             />
           ) : error ? (
             <div className="error-message">
@@ -169,6 +185,7 @@ function App() {
               onEdit={handleGameEdit}
               onSmokeAPISettings={handleSmokeAPISettingsOpen}
               onRate={handleOpenRating}
+              onRefresh={handleRefresh}
               reportingEnabled={reportingEnabled}
             />
           )}
@@ -203,9 +220,6 @@ function App() {
           onUpdate={handleUpdateDlcs}
         />
 
-        {/* Settings Dialog */}
-        <SettingsDialog visible={settingsDialog.visible} onClose={handleSettingsClose} />
-
         {/* Conflict Detection Dialog */}
         <ConflictDialog
           visible={showDialog}
@@ -215,13 +229,34 @@ function App() {
         />
 
         {/* Unlocker Selection Dialog */}
-        <UnlockerSelectionDialog
+        <UnlockerChoiceDialog
           visible={unlockerSelectionDialog.visible}
-          gameId={unlockerSelectionDialog.gameId}
           gameTitle={unlockerSelectionDialog.gameTitle || ''}
           onClose={closeUnlockerDialog}
-          onSelectCreamLinux={handleSelectCreamLinux}
-          onSelectSmokeAPI={handleSelectSmokeAPI}
+          options={[
+            {
+              key: 'cream',
+              title: 'CreamLinux',
+              badge: 'recommended',
+              description:
+                'Native Linux DLC unlocker. Works best with most native Linux games and provides better compatibility.',
+              votes: creamVotes,
+              buttonLabel: 'Install CreamLinux',
+              buttonVariant: 'primary',
+              onSelect: handleSelectCreamLinux,
+            },
+            {
+              key: 'smoke',
+              title: 'SmokeAPI',
+              badge: 'alternative',
+              description:
+                "Cross-platform DLC unlocker. Try this if CreamLinux doesn't work for your game. Automatically fetches DLC information.",
+              votes: smokeVotes,
+              buttonLabel: 'Install SmokeAPI',
+              buttonVariant: 'secondary',
+              onSelect: handleSelectSmokeAPI,
+            },
+          ]}
         />
 
         {/* Disclaimer Dialog - Shows AFTER everything is loaded */}
