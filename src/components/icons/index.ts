@@ -20,6 +20,7 @@ export const download = 'Download'
 export const download1 = 'Download1'
 export const edit = 'Edit'
 export const error = 'Error'
+export const folder = 'Folder'
 export const info = 'Info'
 export const layers = 'Layers'
 export const refresh = 'Refresh'
@@ -52,6 +53,7 @@ export const IconNames = {
   Download1: download1,
   Edit: edit,
   Error: error,
+  Folder: folder,
   Info: info,
   Layers: layers,
   Refresh: refresh,
