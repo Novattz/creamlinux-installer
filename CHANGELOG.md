@@ -1,3 +1,8 @@
+## [1.7.1] - 12-07-2026
+
+### Fixed
+- AppImage freezing on any interaction past the Overview page (KDE, GNOME, and others, mainly on Arch, Fedora, PikaOS, Bazzite, and Steam Deck). Caused by the WebKitGTK/GTK/GLib stack bundled into the AppImage drifting out of sync with the host system's own. The AppImage no longer bundles that stack at all and relies on the system's libraries instead
+
 ## [1.7.0] - 11-07-2026
 
 > A quick word before the changelog: sorry this update took as long as it did. Life, work, and a few other projects got in the way, but it's finally here. This one was mostly about polish, giving the app some life, cleaning up a lot of rough edges, and generally trying to make it feel nicer to use day to day. Between everything in this release, I'm confident enough in where things stand to move this over to the stable channel.
