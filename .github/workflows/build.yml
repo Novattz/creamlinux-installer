@@ -163,20 +163,120 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci
 
-      - name: Build Tauri app with updater
-        uses: tauri-apps/tauri-action@v0
+      - name: Build Tauri app
+        run: npm run tauri build
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+
+      - name: Strip bundled GTK/WebKit/GLib stack, rely on the host's instead
+        run: |
+          set -euo pipefail
+          cd src-tauri/target/release/bundle/appimage
+          APPIMAGE=$(ls *.AppImage)
+          chmod +x "$APPIMAGE"
+          ./"$APPIMAGE" --appimage-extract >/dev/null
+
+          LDCONFIG_CACHE=$(ldconfig -p)
+          resolve_lib_path() {
+            awk -v lib="$1" '$1==lib {print $NF; exit}' <<< "$LDCONFIG_CACHE"
+          }
+
+          # WebKitGTK bundled by the AppImage tooling is pinned to whatever the
+          # build image ships, and drifts out of sync with newer host systems
+          # (freezes on old bundled WebKit, EGL/DMABUF crashes on some newer
+          # ones). The only configuration that's tested clean is deferring the
+          # whole GTK/WebKit/GLib stack to the host's own matched libraries, so
+          # we compute the full dependency closure from the host side (whatever
+          # is actually installed here) and strip every bundled copy that's
+          # also part of that closure.
+          declare -A EXCLUDE
+          for seed in libwebkit2gtk-4.1.so.0 libglib-2.0.so.0 libgio-2.0.so.0 libgobject-2.0.so.0 libgmodule-2.0.so.0; do
+            EXCLUDE[$seed]=1
+          done
+
+          changed=1
+          while [ "$changed" -eq 1 ]; do
+            changed=0
+            for lib in "${!EXCLUDE[@]}"; do
+              hostpath=$(resolve_lib_path "$lib")
+              [ -n "$hostpath" ] && [ -e "$hostpath" ] || continue
+              deps=$(ldd "$hostpath" 2>/dev/null | grep -oE '[a-zA-Z0-9._+-]+\.so[0-9.]*' | sort -u) || true
+              for d in $deps; do
+                if [ -z "${EXCLUDE[$d]:-}" ]; then
+                  if find squashfs-root/usr/lib -maxdepth 1 -name "${d}*" 2>/dev/null | grep -q .; then
+                    EXCLUDE[$d]=1
+                    changed=1
+                  fi
+                fi
+              done
+            done
+          done
+
+          echo "Excluding ${#EXCLUDE[@]} bundled libraries, relying on the host's instead:"
+          for lib in "${!EXCLUDE[@]}"; do echo "  $lib"; done | sort
+
+          for lib in "${!EXCLUDE[@]}"; do
+            find squashfs-root/usr/lib -maxdepth 1 -name "${lib%.so*}.so*" -delete
+          done
+
+          curl -sSL -o appimagetool "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage"
+          chmod +x appimagetool
+          rm -f "$APPIMAGE"
+          ARCH=x86_64 ./appimagetool --appimage-extract-and-run squashfs-root "$APPIMAGE"
+          rm -rf squashfs-root appimagetool
+
+      - name: Sign artifacts and upload to release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-        with:
-          releaseId: ${{ needs.create-release.outputs.release_id }}
-          projectPath: '.'
-          includeDebug: false
-          includeRelease: true
-          includeUpdaterJson: true
-          tauriScript: 'npm run tauri'
-          args: ${{ matrix.args }}
+          VERSION: ${{ needs.create-release.outputs.version }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          cd src-tauri/target/release/bundle
+
+          APPIMAGE_PATH=$(ls appimage/*.AppImage)
+          DEB_PATH=$(ls deb/*.deb)
+          RPM_PATH=$(ls rpm/*.rpm)
+
+          for f in "$APPIMAGE_PATH" "$DEB_PATH" "$RPM_PATH"; do
+            npx --prefix "$GITHUB_WORKSPACE" tauri signer sign "$f"
+          done
+
+          APPIMAGE_NAME=$(basename "$APPIMAGE_PATH")
+          DEB_NAME=$(basename "$DEB_PATH")
+          RPM_NAME=$(basename "$RPM_PATH")
+
+          jq -n \
+            --arg version "$VERSION" \
+            --arg pub_date "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" \
+            --arg appimage_sig "$(cat "${APPIMAGE_PATH}.sig")" \
+            --arg appimage_url "https://github.com/$REPO/releases/latest/download/$APPIMAGE_NAME" \
+            --arg deb_sig "$(cat "${DEB_PATH}.sig")" \
+            --arg deb_url "https://github.com/$REPO/releases/latest/download/$DEB_NAME" \
+            --arg rpm_sig "$(cat "${RPM_PATH}.sig")" \
+            --arg rpm_url "https://github.com/$REPO/releases/latest/download/$RPM_NAME" \
+            '{
+              version: $version,
+              notes: "",
+              pub_date: $pub_date,
+              platforms: {
+                "linux-x86_64": { signature: $appimage_sig, url: $appimage_url },
+                "linux-x86_64-appimage": { signature: $appimage_sig, url: $appimage_url },
+                "linux-x86_64-deb": { signature: $deb_sig, url: $deb_url },
+                "linux-x86_64-rpm": { signature: $rpm_sig, url: $rpm_url }
+              }
+            }' > latest.json
+
+          gh release upload "v${VERSION}" \
+            "$APPIMAGE_PATH" "${APPIMAGE_PATH}.sig" \
+            "$DEB_PATH" "${DEB_PATH}.sig" \
+            "$RPM_PATH" "${RPM_PATH}.sig" \
+            latest.json \
+            --clobber \
+            --repo "$REPO"
 
   publish-release:
     name: Publish release
