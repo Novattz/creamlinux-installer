@@ -11,7 +11,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - platform: 'ubuntu-22.04'
+          - platform: 'ubuntu-24.04'
             args: ''
 
     runs-on: ${{ matrix.platform }}
@@ -36,11 +36,16 @@ jobs:
         with:
           workspaces: './src-tauri -> target'
 
-      - name: Install system dependencies
+      - name: Install system dependencies (Ubuntu)
         run: |
           sudo apt-get update
           sudo apt-get install -y \
+            libwebkit2gtk-4.1-0 \
             libwebkit2gtk-4.1-dev \
+            libjavascriptcoregtk-4.1-0 \
+            libjavascriptcoregtk-4.1-dev \
+            gir1.2-javascriptcoregtk-4.1 \
+            gir1.2-webkit2-4.1 \
             libappindicator3-dev \
             librsvg2-dev \
             patchelf \
@@ -60,11 +65,9 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
 
-      - name: Upload artifacts
+      - name: Upload AppImage artifact
         uses: actions/upload-artifact@v4
         with:
-          name: linux-build
-          path: |
-            src-tauri/target/release/bundle/deb/*.deb
-            src-tauri/target/release/bundle/appimage/*.AppImage
+          name: appimage
+          path: src-tauri/target/release/bundle/appimage/*.AppImage
           if-no-files-found: error
