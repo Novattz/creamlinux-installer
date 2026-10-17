@@ -45,11 +45,11 @@ rustPlatform.buildRustPackage {
     npmHooks.npmConfigHook
     pkg-config
   ]
-  ++ lib.optionals stdenv.isLinux [
+  ++ lib.optionals stdenv.hostPlatform.isLinux [
     wrapGAppsHook4
   ];
 
-  buildInputs = lib.optionals stdenv.isLinux [
+  buildInputs = lib.optionals stdenv.hostPlatform.isLinux [
     glib-networking
     openssl
     webkitgtk_4_1
