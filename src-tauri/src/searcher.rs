@@ -1,6 +1,6 @@
 use log::{debug, error, info, warn};
 use regex::Regex;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::io::Read;
 use std::path::{Path, PathBuf};
@@ -178,7 +178,12 @@ pub fn find_steam_libraries(base_paths: &[PathBuf]) -> Vec<PathBuf> {
         }
     }
 
-    let result: Vec<PathBuf> = libraries.into_iter().collect();
+    // ~/.steam/steam and ~/.steam/root are usually symlinks to the same library
+    let unique: HashSet<PathBuf> = libraries
+        .into_iter()
+        .map(|lib| fs::canonicalize(&lib).unwrap_or(lib))
+        .collect();
+    let result: Vec<PathBuf> = unique.into_iter().collect();
     info!("Found {} Steam library directories", result.len());
     for (i, lib) in result.iter().enumerate() {
         info!("  Library {}: {}", i + 1, lib.display());
@@ -280,77 +285,28 @@ fn check_creamlinux_installed(game_path: &Path) -> bool {
 }
 
 // Check if a game has SmokeAPI installed
-fn check_smokeapi_installed(game_path: &Path, api_files: &[String]) -> bool {
-    // For Proton games: check for backup DLL files
-    if !api_files.is_empty() {
-        for api_file in api_files {
-            let api_path = game_path.join(api_file);
-            let api_dir = api_path.parent().unwrap_or(game_path);
-            let api_filename = api_path.file_name().unwrap_or_default();
-
-            // Check for backup file (original file renamed with _o.dll suffix)
-            let backup_name = api_filename.to_string_lossy().replace(".dll", "_o.dll");
-            let backup_path = api_dir.join(backup_name);
-
-            if backup_path.exists() {
-                debug!("SmokeAPI backup file found: {}", backup_path.display());
-                return true;
-            }
-        }
-    }
-
-    // For Native games: check for lib_steam_api_o.so backup
-    for entry in WalkDir::new(game_path)
-        .max_depth(3)
-        .into_iter()
-        .filter_map(Result::ok)
-    {
-        let path = entry.path();
-        if !path.is_file() {
-            continue;
-        }
-
-        let filename = path.file_name().unwrap_or_default().to_string_lossy();
-
-        // Check for native SmokeAPI backup
-        if filename == "libsteam_api_o.so" {
-            debug!("Found native SmokeAPI backup: {}", path.display());
-            return true;
-        }
-    }
-    
-    // Also scan for orphaned backup files (in case the main DLL was removed)
-    // This handles the Proton->Native switch case where steam_api*.dll is gone
-    // but steam_api*_o.dll backup remains
-    for entry in WalkDir::new(game_path)
-        .max_depth(5)
-        .into_iter()
-        .filter_map(Result::ok)
-    {
-        let path = entry.path();
-        if !path.is_file() {
-            continue;
-        }
-        
-        let filename = path.file_name().unwrap_or_default().to_string_lossy();
-        
-        // Look for steam_api*_o.dll backup files (SmokeAPI pattern)
-        if filename.starts_with("steam_api") && filename.ends_with("_o.dll") {
-            debug!("Found orphaned SmokeAPI backup file: {}", path.display());
+// has_backup comes from scan_game_directory, so no second walk of the game folder here
+fn check_smokeapi_installed(game_path: &Path, has_backup: bool) -> bool {
+    // Hook mode leaves no backups, the manifest is the only record
+    if let Ok(manifest) = crate::cache::read_manifest(&game_path.to_string_lossy()) {
+        if manifest.smokeapi_hook.is_some() {
+            debug!("SmokeAPI hook mode install found in manifest");
             return true;
         }
     }
 
-    false
+    has_backup
 }
 
 // Scan a game directory to determine if it's native or needs Proton
 // Also collect any Steam API DLLs for potential SmokeAPI installation
-fn scan_game_directory(game_path: &Path) -> (bool, Vec<String>) {
+// Returns (is_native, api_files, has_smokeapi_backup)
+fn scan_game_directory(game_path: &Path) -> (bool, Vec<String>, bool) {
     let mut found_exe = false;
     let mut found_linux_binary = false;
     let mut found_main_executable = false;
     let mut steam_api_files = Vec::new();
+    let mut has_smokeapi_backup = false;
 
     // Strong indicators for native Linux games
     let mut has_libsteam_api = false;
@@ -408,7 +364,11 @@ fn scan_game_directory(game_path: &Path) -> (bool, Vec<String>) {
         .filter_map(Result::ok)
     {
         let path = entry.path();
-        if !path.is_file() {
+
+        // The walk already knows the type, only symlinks need a stat. A stat per file
+        // is what makes this crawl on a hard drive.
+        let file_type = entry.file_type();
+        if !(file_type.is_file() || (file_type.is_symlink() && path.is_file())) {
             continue;
         }
 
@@ -416,7 +376,15 @@ fn scan_game_directory(game_path: &Path) -> (bool, Vec<String>) {
             .unwrap_or_default()
             .to_string_lossy()
             .to_lowercase();
-        
+
+        // Backups SmokeAPI proxy mode leaves behind
+        if filename == "libsteam_api_o.so"
+            || (filename.starts_with("steam_api") && filename.ends_with("_o.dll"))
+        {
+            debug!("Found SmokeAPI backup: {}", path.display());
+            has_smokeapi_backup = true;
+        }
+
         // Check for strong Linux indicators first
         if filename == "libsteam_api.so" {
             has_libsteam_api = true;
@@ -465,11 +433,6 @@ fn scan_game_directory(game_path: &Path) -> (bool, Vec<String>) {
             if binary_extensions.iter().any(|&e| ext_str == e) {
                 found_linux_binary = true;
                 linux_binary_count += 1;
-
-                // Check if it's actually an ELF binary for more certainty
-                if ext_str == "so" && is_elf_binary(path) {
-                    found_linux_binary = true;
-                }
             }
         }
 
@@ -513,7 +476,7 @@ fn scan_game_directory(game_path: &Path) -> (bool, Vec<String>) {
         steam_api_files.len()
     );
 
-    (is_native, steam_api_files)
+    (is_native, steam_api_files, has_smokeapi_backup)
 }
 
 // Priority-based platform detection
@@ -630,12 +593,18 @@ pub async fn find_installed_games(steamapps_paths: &[PathBuf]) -> Vec<GameInfo> 
 
     info!("Found {} appmanifest files to process", app_manifests.len());
 
-    // Process appmanifest files
-    let max_concurrent = num_cpus::get().max(1).min(8); // Use between 1 and 8 CPU cores
-    info!("Using {} concurrent scanners", max_concurrent);
-
-    // Use a semaphore to limit concurrency
-    let semaphore = Arc::new(tokio::sync::Semaphore::new(max_concurrent));
+    // Scanning waits on the disk, not the CPU. Lots of walkers on one hard drive just
+    // makes it seek back and forth, so each library gets its own small limit.
+    const SCANNERS_PER_LIBRARY: usize = 2;
+    let semaphores: HashMap<PathBuf, Arc<tokio::sync::Semaphore>> = steamapps_paths
+        .iter()
+        .map(|lib| {
+            (
+                lib.clone(),
+                Arc::new(tokio::sync::Semaphore::new(SCANNERS_PER_LIBRARY)),
+            )
+        })
+        .collect();
 
     // Create a Vec to store all our task handles
     let mut handles = Vec::new();
@@ -648,7 +617,7 @@ pub async fn find_installed_games(steamapps_paths: &[PathBuf]) -> Vec<GameInfo> 
         let skip_patterns = Arc::clone(&skip_patterns);
         let tx = tx.clone();
         let seen_ids = Arc::clone(&seen_ids);
-        let semaphore = Arc::clone(&semaphore);
+        let semaphore = Arc::clone(&semaphores[steamapps_dir.as_path()]);
         let skip_ids = Arc::clone(&skip_ids);
 
         // Create a new task
@@ -690,16 +659,23 @@ pub async fn find_installed_games(steamapps_paths: &[PathBuf]) -> Vec<GameInfo> 
                 // Scan the game directory to determine platform and find Steam API DLLs
                 info!("Scanning game: {} at {}", name, game_path.display());
 
-                // Scanning is I/O heavy but not CPU heavy, so we can just do it directly
-                let (is_native, api_files) = scan_game_directory(&game_path);
+                // Blocking file IO, keep it off the async workers
+                let scan_path = game_path.clone();
+                let scan = tokio::task::spawn_blocking(move || {
+                    let (is_native, api_files, has_backup) = scan_game_directory(&scan_path);
+                    let cream_installed = check_creamlinux_installed(&scan_path);
+                    let smoke_installed = check_smokeapi_installed(&scan_path, has_backup);
+                    (is_native, api_files, cream_installed, smoke_installed)
+                })
+                .await;
 
-                // Check for CreamLinux installation
-                let cream_installed = check_creamlinux_installed(&game_path);
-
-                // Check for SmokeAPI installation
-                // For Proton games: check if api_files exist
-                // For Native games: ALSO check for orphaned backup files (proton->native switch)
-                let smoke_installed = check_smokeapi_installed(&game_path, &api_files);
+                let (is_native, api_files, cream_installed, smoke_installed) = match scan {
+                    Ok(result) => result,
+                    Err(e) => {
+                        error!("Scan failed for {}: {}", game_path.display(), e);
+                        return;
+                    }
+                };
 
                 // Create the game info
                 let game_info = GameInfo {
@@ -772,6 +748,46 @@ pub async fn find_installed_games(steamapps_paths: &[PathBuf]) -> Vec<GameInfo> 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn scan_finds_smokeapi_backups() {
+        let dir = tempfile::tempdir().unwrap();
+        let plugins = dir.path().join("Game_Data/Plugins/x86_64");
+        std::fs::create_dir_all(&plugins).unwrap();
+        std::fs::write(plugins.join("steam_api64.dll"), b"x").unwrap();
+
+        let (_, api_files, has_backup) = scan_game_directory(dir.path());
+        assert_eq!(api_files, vec!["Game_Data/Plugins/x86_64/steam_api64.dll"]);
+        assert!(!has_backup);
+
+        std::fs::write(plugins.join("steam_api64_o.dll"), b"x").unwrap();
+        let (_, api_files, has_backup) = scan_game_directory(dir.path());
+        assert_eq!(api_files.len(), 1);
+        assert!(has_backup);
+    }
+
+    #[test]
+    fn scan_finds_native_backup() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(dir.path().join("libsteam_api_o.so"), b"x").unwrap();
+        let (_, _, has_backup) = scan_game_directory(dir.path());
+        assert!(has_backup);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn scan_follows_file_symlinks_only() {
+        let dir = tempfile::tempdir().unwrap();
+        let real = dir.path().join("real");
+        std::fs::create_dir(&real).unwrap();
+        std::fs::write(real.join("target.dll"), b"x").unwrap();
+        std::os::unix::fs::symlink(real.join("target.dll"), dir.path().join("steam_api64.dll"))
+            .unwrap();
+        std::os::unix::fs::symlink(&real, dir.path().join("steam_api.dll")).unwrap();
+
+        let (_, api_files, _) = scan_game_directory(dir.path());
+        assert_eq!(api_files, vec!["steam_api64.dll"]);
+    }
 
     #[test]
     fn normalize_accepts_folder_containing_steamapps() {
