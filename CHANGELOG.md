@@ -1,3 +1,21 @@
+## [1.8.0] - 30-10-2026
+
+### Added
+- SmokeAPI hook mode for Proton games. After the votes dialog you can now pick proxy mode (same as before, still the default) or hook mode. Hook mode leaves `steam_api.dll` alone and loads SmokeAPI next to the game exe, either as `version.dll`, `winhttp.dll` or `winmm.dll` if the game imports one of those, or through Koaloader if it doesn't.
+- Hook mode shows the `WINEDLLOVERRIDES` launch option you need to set in Steam, and the one to remove again when you uninstall
+
+### Fixed
+- A failed unlocker download stopped all the downloads after it. A failed download now gets logged and the rest carry on.
+- Reinstalling or auto updating SmokeAPI after a game update overwrote the game's new `steam_api` file and kept the old backup. The backup is now refreshed whenever the current file is the real one
+- Native games with `libsteam_api_o.so` more than 3 folders deep didn't show SmokeAPI as installed
+
+### Changed
+- The Steam game scan does a lot less disk work, mainly noticeable on hard drives. Each game folder is walked once instead of up to three times, files don't get checked one by one anymore, and each library scans 2 games at a time
+- The same Steam library reached through symlinks (`~/.steam/steam`, `~/.steam/root`) is only counted once
+
+### Known issues
+- ScreamAPI can't be downloaded while its repo is disabled, so ScreamAPI and Koaloader + ScreamAPI won't install for Epic games unless you already have it cached
+
 ## [1.7.1] - 12-07-2026
 
 ### Fixed
