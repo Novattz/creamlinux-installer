@@ -33,6 +33,14 @@ impl Unlocker for ScreamAPI {
             .await
             .map_err(|e| format!("Failed to fetch ScreamAPI releases: {}", e))?;
 
+        // GitHub disabled the repo for a TOS violation, it answers 403 now
+        if response.status() == reqwest::StatusCode::FORBIDDEN {
+            return Err(
+                "ScreamAPI repo has been disabled by GitHub (TOS violation), skipping download"
+                    .to_string(),
+            );
+        }
+
         if !response.status().is_success() {
             return Err(format!(
                 "Failed to fetch ScreamAPI releases: HTTP {}",
@@ -196,7 +204,7 @@ impl ScreamAPI {
 
         let versions = crate::cache::read_versions()?;
         if versions.screamapi.latest.is_empty() {
-            return Err("ScreamAPI is not cached. Please restart the app.".to_string());
+            return Err("ScreamAPI is not available, the download failed (check the log)".to_string());
         }
         let scream_dir = crate::cache::get_screamapi_version_dir(&versions.screamapi.latest)?;
 
@@ -269,7 +277,7 @@ impl ScreamAPI {
 
         let versions = crate::cache::read_versions()?;
         if versions.screamapi.latest.is_empty() {
-            return Err("ScreamAPI is not cached. Please restart the app.".to_string());
+            return Err("ScreamAPI is not available, the download failed (check the log)".to_string());
         }
         let scream_dir = crate::cache::get_screamapi_version_dir(&versions.screamapi.latest)?;
         let exe_dir_path = Path::new(exe_dir);
