@@ -223,6 +223,9 @@ jobs:
           curl -sSL -o appimagetool "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage"
           chmod +x appimagetool
           rm -f "$APPIMAGE"
+          # Extracted folders come out as 0700, appimagetool refuses to pack those now
+          chmod -R a+rX squashfs-root
+          chmod a+rx squashfs-root/AppRun
           ARCH=x86_64 ./appimagetool --appimage-extract-and-run squashfs-root "$APPIMAGE"
           rm -rf squashfs-root appimagetool
 
