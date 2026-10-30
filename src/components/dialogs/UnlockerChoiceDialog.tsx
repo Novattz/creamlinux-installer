@@ -21,6 +21,8 @@ export interface UnlockerChoiceOption {
 
 export interface UnlockerChoiceDialogProps {
   visible: boolean
+  title?: string
+  prompt?: string
   gameTitle: string | null
   onClose: () => void
   options: UnlockerChoiceOption[]
@@ -32,19 +34,26 @@ export interface UnlockerChoiceDialogProps {
  * (ScreamAPI vs Koaloader, no votes) - they only differ in copy and options,
  * not in structure.
  */
-const UnlockerChoiceDialog = ({ visible, gameTitle, onClose, options }: UnlockerChoiceDialogProps) => {
+const UnlockerChoiceDialog = ({
+  visible,
+  title = 'Choose Unlocker',
+  prompt = 'Select which unlocker to install for',
+  gameTitle,
+  onClose,
+  options,
+}: UnlockerChoiceDialogProps) => {
   return (
     <Dialog visible={visible} onClose={onClose} size="medium">
       <DialogHeader onClose={onClose} hideCloseButton={true}>
         <div className="unlocker-selection-header">
-          <h3>Choose Unlocker</h3>
+          <h3>{title}</h3>
         </div>
       </DialogHeader>
 
       <DialogBody>
         <div className="unlocker-selection-content">
           <p className="game-title-info">
-            Select which unlocker to install for <strong>{gameTitle}</strong>:
+            {prompt} <strong>{gameTitle}</strong>:
           </p>
 
           <div className="unlocker-options">

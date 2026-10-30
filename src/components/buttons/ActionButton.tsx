@@ -3,7 +3,13 @@ import Button, { ButtonVariant } from '../buttons/Button'
 import { Icon, trash, download } from '@/components/icons'
 
 // Define available action types
-export type ActionType = 'install_cream' | 'uninstall_cream' | 'install_smoke' | 'uninstall_smoke' | 'install_unlocker'
+export type ActionType =
+  | 'install_cream'
+  | 'uninstall_cream'
+  | 'install_smoke'
+  | 'install_smoke_hook'
+  | 'uninstall_smoke'
+  | 'install_unlocker'
 
 interface ActionButtonProps {
   action: ActionType

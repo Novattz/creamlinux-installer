@@ -50,9 +50,12 @@ const ProgressDialog = ({
     }
   }
 
-  // Determine if we should show the copy button (for CreamLinux but not SmokeAPI)
+  // Copy button for anything that comes with a launch option
   const showCopyButton =
-    instructions?.type === 'cream_install' || instructions?.type === 'cream_uninstall'
+    instructions?.type === 'cream_install' ||
+    instructions?.type === 'cream_uninstall' ||
+    instructions?.type === 'smoke_hook_install' ||
+    instructions?.type === 'smoke_hook_uninstall'
 
   // Format instruction message based on type
   const getInstructionText = () => {
@@ -92,6 +95,20 @@ const ProgressDialog = ({
               </div>
             )}
           </>
+        )
+      case 'smoke_hook_install':
+        return (
+          <p className="instruction-text">
+            In Steam, set the following launch options for{' '}
+            <strong>{instructions.game_title}</strong> so Proton loads SmokeAPI:
+          </p>
+        )
+      case 'smoke_hook_uninstall':
+        return (
+          <p className="instruction-text">
+            For <strong>{instructions.game_title}</strong>, open Steam properties and remove the
+            following launch option:
+          </p>
         )
       case 'smoke_uninstall':
         return (

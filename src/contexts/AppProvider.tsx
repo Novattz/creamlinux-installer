@@ -52,6 +52,12 @@ export const AppProvider = ({ children }: AppProviderProps) => {
     game: EpicGame | null
   }>({ visible: false, game: null })
 
+  // Proxy or hook mode choice for SmokeAPI on Proton games
+  const [smokeModeDialog, setSmokeModeDialog] = useState<{
+    visible: boolean
+    gameId: string | null
+  }>({ visible: false, gameId: null })
+
   const [screamSettingsDialog, setScreamSettingsDialog] = useState<{
     visible: boolean
     game: EpicGame | null
@@ -242,13 +248,15 @@ export const AppProvider = ({ children }: AppProviderProps) => {
   const handleSmokeAPIVotesConfirm = () => {
     const gameId = smokeAPIVotesDialog.gameId
     setSmokeAPIVotesDialog({ visible: false, gameId: null, gameTitle: null })
+    if (gameId) setSmokeModeDialog({ visible: true, gameId })
+  }
+
+  const handleSelectSmokeMode = (action: ActionType) => {
+    const gameId = smokeModeDialog.gameId
+    setSmokeModeDialog({ visible: false, gameId: null })
     const game = gameId ? games.find((g) => g.id === gameId) : undefined
-    if (gameId && game) {
-      // Now actually run the install this is what was silently skipping
-      // the success toast and activity feed entry before, since it called
-      // the raw action executor instead of the notifying wrapper.
-      runGameAction(gameId, 'install_smoke', game)
-    }
+    // runGameAction gives the success toast and activity entry
+    if (gameId && game) runGameAction(gameId, action, game)
   }
 
   const handleOptInAccept = async () => {
@@ -615,6 +623,37 @@ export const AppProvider = ({ children }: AppProviderProps) => {
             buttonLabel: 'Install Koaloader',
             buttonVariant: 'secondary',
             onSelect: handleSelectKoaloader,
+          },
+        ]}
+      />
+
+      {/* SmokeAPI Mode Dialog */}
+      <UnlockerChoiceDialog
+        visible={smokeModeDialog.visible}
+        title="Choose Install Method"
+        prompt="Select how SmokeAPI gets installed for"
+        gameTitle={games.find((g) => g.id === smokeModeDialog.gameId)?.title ?? ''}
+        onClose={() => setSmokeModeDialog({ visible: false, gameId: null })}
+        options={[
+          {
+            key: 'proxy',
+            title: 'Proxy mode',
+            badge: 'recommended',
+            description:
+              'Replaces steam_api.dll with SmokeAPI and keeps the original as a backup. Works for most games. Might need a reinstall after a game update.',
+            buttonLabel: 'Install (Proxy)',
+            buttonVariant: 'primary',
+            onSelect: () => handleSelectSmokeMode('install_smoke'),
+          },
+          {
+            key: 'hook',
+            title: 'Hook mode',
+            badge: 'alternative',
+            description:
+              'Leaves steam_api.dll alone and loads SmokeAPI next to the game exe, through Koaloader if needed. Try this if the game fails to load the Steam API. Needs a launch option in Steam.',
+            buttonLabel: 'Install (Hook)',
+            buttonVariant: 'secondary',
+            onSelect: () => handleSelectSmokeMode('install_smoke_hook'),
           },
         ]}
       />
