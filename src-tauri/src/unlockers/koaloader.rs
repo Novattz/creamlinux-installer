@@ -153,7 +153,7 @@ impl Unlocker for Koaloader {
     /// Progress events are emitted by installer/mod.rs, not here.
     async fn install_to_game(game_path: &str, context: &str) -> Result<(), String> {
         let exe_path = Self::resolve_exe(game_path, context)?;
-        Self::install_proxy(&exe_path)?;
+        Self::install_proxy(&exe_path, &[])?;
 
         let exe_dir = exe_path.parent().ok_or("Failed to get executable directory")?;
         let exe_dir_str = exe_dir.to_string_lossy().to_string();
@@ -226,10 +226,11 @@ impl Koaloader {
     /// wraps this with progress events).
     pub(crate) fn install_proxy(
         exe_path: &Path,
+        exclude: &[&str],
     ) -> Result<crate::pe_inspector::ProxyScanResult, String> {
         let exe_dir = exe_path.parent().ok_or("Failed to get executable directory")?;
         let is_64bit = crate::pe_inspector::is_64bit_exe(exe_path);
-        let scan = crate::pe_inspector::find_best_proxy(exe_path);
+        let scan = crate::pe_inspector::find_best_proxy(exe_path, exclude);
         let proxy_stem = scan.proxy_name.trim_end_matches(".dll").to_string();
 
         let proxy_src = Self::get_proxy_dll(&proxy_stem, is_64bit)?;
@@ -287,7 +288,7 @@ impl Koaloader {
     pub fn get_proxy_dll(proxy_stem: &str, is_64bit: bool) -> Result<std::path::PathBuf, String> {
         let versions = crate::cache::read_versions()?;
         if versions.koaloader.latest.is_empty() {
-            return Err("Koaloader is not cached. Please restart the app.".to_string());
+            return Err("Koaloader is not available, the download failed (check the log)".to_string());
         }
 
         let version_dir = crate::cache::get_koaloader_version_dir(&versions.koaloader.latest)?;

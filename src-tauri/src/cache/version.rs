@@ -8,6 +8,18 @@ use std::path::Path;
 pub struct GameManifest {
     pub smokeapi_version: Option<String>,
     pub creamlinux_version: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub smokeapi_hook: Option<SmokeHook>,
+}
+
+// Files from a SmokeAPI hook mode install, paths are relative to the game folder
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct SmokeHook {
+    pub exe: String,
+    pub smoke_file: String,
+    pub proxy_file: Option<String>,
+    pub override_dll: String,
+    pub is_64bit: bool,
 }
 
 #[allow(dead_code)]
@@ -17,6 +29,7 @@ impl GameManifest {
         Self {
             smokeapi_version: Some(version),
             creamlinux_version: None,
+            smokeapi_hook: None,
         }
     }
 
@@ -25,6 +38,7 @@ impl GameManifest {
         Self {
             smokeapi_version: None,
             creamlinux_version: Some(version),
+            smokeapi_hook: None,
         }
     }
 
@@ -109,10 +123,18 @@ pub fn update_creamlinux_version(game_path: &str, version: String) -> Result<(),
     write_manifest(game_path, &manifest)
 }
 
+// Store or clear the SmokeAPI hook mode info
+pub fn set_smokeapi_hook(game_path: &str, hook: Option<SmokeHook>) -> Result<(), String> {
+    let mut manifest = read_manifest(game_path)?;
+    manifest.smokeapi_hook = hook;
+    write_manifest(game_path, &manifest)
+}
+
 // Remove SmokeAPI version from the manifest
 pub fn remove_smokeapi_version(game_path: &str) -> Result<(), String> {
     let mut manifest = read_manifest(game_path)?;
     manifest.smokeapi_version = None;
+    manifest.smokeapi_hook = None;
 
     // If both versions are None, delete the manifest file
     if manifest.smokeapi_version.is_none() && manifest.creamlinux_version.is_none() {

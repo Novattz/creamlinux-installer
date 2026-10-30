@@ -11,6 +11,15 @@ use zip::ZipArchive;
 
 const SMOKEAPI_REPO: &str = "acidicoala/SmokeAPI";
 
+// DLL names SmokeAPI can be loaded as on its own, without Koaloader
+const SELF_HOOK_DLLS: &[&str] = &["version.dll", "winhttp.dll", "winmm.dll"];
+
+// Result of a hook mode install
+pub struct HookInstall {
+    pub hook: crate::cache::SmokeHook,
+    pub proxy_fallback: bool,
+}
+
 pub struct SmokeAPI;
 
 #[async_trait]
@@ -198,8 +207,9 @@ impl SmokeAPI {
 
             info!("Processing: {}", original_path.display());
 
-            // Only backup if not already backed up
-            if !backup_path.exists() && original_path.exists() {
+            // Back up whenever the current file is the real one. After a game update the
+            // real steam_api is back and an old backup would be stale.
+            if original_path.exists() && !Self::is_smokeapi_file(&original_path) {
                 fs::copy(&original_path, &backup_path)
                     .map_err(|e| format!("Failed to backup original file: {}", e))?;
                 info!("Created backup: {}", backup_path.display());
@@ -282,8 +292,8 @@ impl SmokeAPI {
         // Create backup of original libsteam_api.so
         let backup_path = libsteam_path.with_file_name("libsteam_api_o.so");
         
-        // Only backup if not already backed up
-        if !backup_path.exists() && libsteam_path.exists() {
+        // Back up whenever the current file is the real one, same as Proton
+        if libsteam_path.exists() && !Self::is_smokeapi_file(&libsteam_path) {
             fs::copy(&libsteam_path, &backup_path)
                 .map_err(|e| format!("Failed to backup libsteam_api.so: {}", e))?;
             info!("Created backup: {}", backup_path.display());
@@ -404,6 +414,120 @@ impl SmokeAPI {
 
         info!("SmokeAPI (native) uninstallation completed for: {}", game_path);
         Ok(())
+    }
+
+    /// Hook mode for Proton games. steam_api stays untouched, SmokeAPI is loaded as
+    /// version/winhttp/winmm.dll if the exe imports one, otherwise through Koaloader.
+    pub(crate) fn install_hook(game_path: &str, exe_path: &Path) -> Result<HookInstall, String> {
+        let game_dir = Path::new(game_path);
+        let exe_dir = exe_path.parent().ok_or("Failed to get executable directory")?;
+        let is_64bit = crate::pe_inspector::is_64bit_exe(exe_path);
+        let smoke_src = Self::cached_smoke_dll(is_64bit)?;
+
+        info!(
+            "Installing SmokeAPI (hook) for {} ({}-bit)",
+            exe_path.display(),
+            if is_64bit { 64 } else { 32 }
+        );
+
+        // DLLs the game already ships next to the exe, never overwrite those
+        let existing: Vec<String> = fs::read_dir(exe_dir)
+            .map_err(|e| format!("Failed to read executable directory: {}", e))?
+            .filter_map(Result::ok)
+            .map(|e| e.file_name().to_string_lossy().to_lowercase())
+            .collect();
+
+        let imports = crate::pe_inspector::get_pe_imports(exe_path);
+        let self_hook = SELF_HOOK_DLLS
+            .iter()
+            .find(|dll| imports.iter().any(|i| i == *dll) && !existing.iter().any(|e| e == *dll));
+
+        let (smoke_dest, proxy_file, proxy_name, proxy_fallback) = match self_hook {
+            Some(dll) => {
+                let dest = exe_dir.join(dll);
+                fs::copy(&smoke_src, &dest)
+                    .map_err(|e| format!("Failed to install SmokeAPI as {}: {}", dll, e))?;
+                info!("Self hook: installed SmokeAPI as {}", dest.display());
+                (dest, None, dll.to_string(), false)
+            }
+            None => {
+                let mut exclude: Vec<&str> = crate::pe_inspector::PROTON_SKIP_PROXIES.to_vec();
+                exclude.extend(existing.iter().map(|e| e.as_str()));
+
+                let scan = crate::unlockers::Koaloader::install_proxy(exe_path, &exclude)?;
+                let smoke_name = if is_64bit { "smoke_api64.dll" } else { "smoke_api32.dll" };
+                let dest = exe_dir.join(smoke_name);
+                fs::copy(&smoke_src, &dest)
+                    .map_err(|e| format!("Failed to copy {}: {}", smoke_name, e))?;
+                crate::unlockers::Koaloader::write_koaloader_config(exe_path)?;
+                info!("Koaloader: proxy {} loads {}", scan.proxy_name, dest.display());
+                (dest, Some(exe_dir.join(&scan.proxy_name)), scan.proxy_name, scan.is_fallback)
+            }
+        };
+
+        let rel = |p: &Path| p.strip_prefix(game_dir).unwrap_or(p).to_string_lossy().to_string();
+
+        Ok(HookInstall {
+            hook: crate::cache::SmokeHook {
+                exe: rel(exe_path),
+                smoke_file: rel(&smoke_dest),
+                proxy_file: proxy_file.as_deref().map(rel),
+                override_dll: proxy_name.trim_end_matches(".dll").to_string(),
+                is_64bit,
+            },
+            proxy_fallback,
+        })
+    }
+
+    /// Removes everything a hook mode install placed
+    pub(crate) fn uninstall_hook(game_path: &str, hook: &crate::cache::SmokeHook) -> Result<(), String> {
+        let game_dir = Path::new(game_path);
+        let exe_dir = game_dir
+            .join(&hook.exe)
+            .parent()
+            .map(|p| p.to_path_buf())
+            .ok_or("Failed to get executable directory")?;
+
+        let mut files = vec![game_dir.join(&hook.smoke_file), exe_dir.join("SmokeAPI.config.json")];
+        if let Some(proxy) = &hook.proxy_file {
+            files.push(game_dir.join(proxy));
+            files.push(exe_dir.join("Koaloader.config.json"));
+        }
+
+        for file in files {
+            if file.exists() {
+                fs::remove_file(&file)
+                    .map_err(|e| format!("Failed to remove {}: {}", file.display(), e))?;
+                info!("Removed {}", file.display());
+            }
+        }
+
+        info!("SmokeAPI (hook) uninstalled from: {}", game_path);
+        Ok(())
+    }
+
+    /// Swaps in the latest cached SmokeAPI for a hook mode install
+    pub(crate) fn update_hook(game_path: &str, hook: &crate::cache::SmokeHook) -> Result<(), String> {
+        let src = Self::cached_smoke_dll(hook.is_64bit)?;
+        let dest = Path::new(game_path).join(&hook.smoke_file);
+        fs::copy(&src, &dest).map_err(|e| format!("Failed to update {}: {}", dest.display(), e))?;
+        info!("Updated SmokeAPI (hook) at {}", dest.display());
+        Ok(())
+    }
+
+    fn cached_smoke_dll(is_64bit: bool) -> Result<std::path::PathBuf, String> {
+        let name = if is_64bit { "smoke_api64.dll" } else { "smoke_api32.dll" };
+        crate::cache::list_smokeapi_files()?
+            .into_iter()
+            .find(|f| f.file_name().map(|n| n == name).unwrap_or(false))
+            .ok_or_else(|| format!("{} not found in cache", name))
+    }
+
+    // SmokeAPI builds have "SmokeAPI" in them, the real steam_api does not
+    fn is_smokeapi_file(path: &Path) -> bool {
+        fs::read(path)
+            .map(|data| data.windows(8).any(|w| w == b"SmokeAPI"))
+            .unwrap_or(false)
     }
 
     /// Find libsteam_api.so in the game directory

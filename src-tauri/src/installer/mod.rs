@@ -1,6 +1,6 @@
 use crate::cache::{
-    remove_creamlinux_version, remove_smokeapi_version,
-    update_game_creamlinux_version, update_game_smokeapi_version,
+    read_manifest, remove_creamlinux_version, remove_smokeapi_version, set_smokeapi_hook,
+    update_game_creamlinux_version, update_game_smokeapi_version, SmokeHook,
 };
 use crate::unlockers::{CreamLinux, SmokeAPI, ScreamAPI, Unlocker};
 use crate::epic_scanner::EpicGame;
@@ -21,6 +21,7 @@ use tauri::{AppHandle, Emitter};
 pub enum InstallerType {
     Cream,
     Smoke,
+    SmokeHook,
 }
 
 // Action to perform
@@ -105,8 +106,12 @@ pub async fn process_action(
         (InstallerType::Smoke, InstallerAction::Install) => {
             install_smokeapi(game, app_handle).await
         }
-        (InstallerType::Smoke, InstallerAction::Uninstall) => {
+        (InstallerType::Smoke, InstallerAction::Uninstall)
+        | (InstallerType::SmokeHook, InstallerAction::Uninstall) => {
             uninstall_smokeapi(game, app_handle).await
+        }
+        (InstallerType::SmokeHook, InstallerAction::Install) => {
+            install_smokeapi_hook(game, app_handle).await
         }
     }
 }
@@ -303,6 +308,82 @@ async fn install_smokeapi_proton(game: Game, app_handle: AppHandle) -> Result<()
     Ok(())
 }
 
+// Install SmokeAPI to a proton game in hook mode (steam_api is left alone)
+async fn install_smokeapi_hook(game: Game, app_handle: AppHandle) -> Result<(), String> {
+    if game.native {
+        return Err("SmokeAPI hook mode is only for Proton/Windows games".to_string());
+    }
+
+    info!("Installing SmokeAPI (hook) for game: {}", game.title);
+    let game_title = game.title.clone();
+
+    emit_progress(
+        &app_handle,
+        &format!("Installing SmokeAPI for {}", game_title),
+        "Finding the game executable...",
+        20.0,
+        false,
+        false,
+        None,
+    );
+
+    let client = reqwest::Client::new();
+    let launch_exe = fetch_steamcmd_info(&client, &game.id)
+        .await
+        .and_then(|info| steam_launch_exe(&info));
+
+    let exe_path = crate::pe_inspector::find_steam_exe(Path::new(&game.path), launch_exe.as_deref())
+        .ok_or_else(|| format!("Could not find the game executable in {}", game.path))?;
+
+    emit_progress(
+        &app_handle,
+        &format!("Installing SmokeAPI for {}", game_title),
+        "Installing from cache...",
+        50.0,
+        false,
+        false,
+        None,
+    );
+
+    let result = SmokeAPI::install_hook(&game.path, &exe_path)
+        .map_err(|e| format!("Failed to install SmokeAPI: {}", e))?;
+
+    let cached_versions = crate::cache::read_versions()?;
+    update_game_smokeapi_version(&game.path, cached_versions.smokeapi.latest)?;
+    set_smokeapi_hook(&game.path, Some(result.hook.clone()))?;
+
+    let message = if result.proxy_fallback {
+        "SmokeAPI has been installed, but the game doesn't seem to load any of the proxy DLLs. It might not get loaded."
+    } else {
+        "SmokeAPI has been installed successfully!"
+    };
+
+    let instructions = InstallationInstructions {
+        type_: "smoke_hook_install".to_string(),
+        command: wine_override_command(&result.hook.override_dll),
+        game_title: game_title.clone(),
+        dlc_count: None,
+    };
+
+    emit_progress(
+        &app_handle,
+        &format!("Installation Completed: {}", game_title),
+        message,
+        100.0,
+        true,
+        true,
+        Some(instructions),
+    );
+
+    info!("SmokeAPI (hook) installation completed for: {}", game_title);
+    Ok(())
+}
+
+// Launch option Proton needs so it loads our DLL instead of its builtin one
+fn wine_override_command(dll: &str) -> String {
+    format!("WINEDLLOVERRIDES=\"{}=n,b\" %command%", dll)
+}
+
 // Uninstall SmokeAPI from a proton game
 async fn uninstall_smokeapi_proton(game: Game, app_handle: AppHandle) -> Result<(), String> {
     if game.native {
@@ -311,6 +392,10 @@ async fn uninstall_smokeapi_proton(game: Game, app_handle: AppHandle) -> Result<
 
     let game_title = game.title.clone();
     info!("Uninstalling SmokeAPI from game: {}", game_title);
+
+    if let Some(hook) = read_manifest(&game.path)?.smokeapi_hook {
+        return uninstall_smokeapi_hook(game, hook, app_handle).await;
+    }
 
     emit_progress(
         &app_handle,
@@ -343,6 +428,50 @@ async fn uninstall_smokeapi_proton(game: Game, app_handle: AppHandle) -> Result<
     );
 
     info!("SmokeAPI uninstallation completed for: {}", game_title);
+    Ok(())
+}
+
+// Uninstall a hook mode SmokeAPI install
+async fn uninstall_smokeapi_hook(
+    game: Game,
+    hook: SmokeHook,
+    app_handle: AppHandle,
+) -> Result<(), String> {
+    let game_title = game.title.clone();
+
+    emit_progress(
+        &app_handle,
+        &format!("Uninstalling SmokeAPI from {}", game_title),
+        "Removing SmokeAPI files...",
+        50.0,
+        false,
+        false,
+        None,
+    );
+
+    SmokeAPI::uninstall_hook(&game.path, &hook)
+        .map_err(|e| format!("Failed to uninstall SmokeAPI: {}", e))?;
+
+    remove_smokeapi_version(&game.path)?;
+
+    let instructions = InstallationInstructions {
+        type_: "smoke_hook_uninstall".to_string(),
+        command: wine_override_command(&hook.override_dll),
+        game_title: game_title.clone(),
+        dlc_count: None,
+    };
+
+    emit_progress(
+        &app_handle,
+        &format!("Uninstallation Completed: {}", game_title),
+        "SmokeAPI has been removed successfully!",
+        100.0,
+        true,
+        true,
+        Some(instructions),
+    );
+
+    info!("SmokeAPI (hook) uninstallation completed for: {}", game_title);
     Ok(())
 }
 
@@ -531,7 +660,7 @@ pub async fn install_koaloader(
     );
 
     // Detects bitness, scans PE imports, and copies the matching proxy DLL
-    let scan = crate::unlockers::Koaloader::install_proxy(&exe_path)?;
+    let scan = crate::unlockers::Koaloader::install_proxy(&exe_path, &[])?;
     let is_fallback = scan.is_fallback;
 
     emit_progress(
@@ -638,6 +767,42 @@ async fn fetch_steamcmd_info(
     }
 
     json.get("data").and_then(|d| d.get(app_id)).cloned()
+}
+
+/// Picks the Windows executable from a game's Steam launch config.
+/// Prefers the 64-bit entry when there are several.
+fn steam_launch_exe(info: &serde_json::Value) -> Option<String> {
+    let launch = info.get("config")?.get("launch")?.as_object()?;
+
+    let windows: Vec<&serde_json::Value> = launch
+        .values()
+        .filter(|entry| {
+            entry
+                .get("config")
+                .and_then(|c| c.get("oslist"))
+                .and_then(|o| o.as_str())
+                .map(|o| o.contains("windows"))
+                .unwrap_or(true)
+        })
+        .filter(|entry| entry.get("executable").and_then(|e| e.as_str()).is_some())
+        .collect();
+
+    let is_64 = |entry: &serde_json::Value| {
+        entry
+            .get("config")
+            .and_then(|c| c.get("osarch"))
+            .and_then(|a| a.as_str())
+            == Some("64")
+    };
+
+    windows
+        .iter()
+        .copied()
+        .find(|entry| is_64(entry))
+        .or_else(|| windows.first().copied())
+        .and_then(|entry| entry.get("executable"))
+        .and_then(|e| e.as_str())
+        .map(|e| e.to_string())
 }
 
 /// Extracts DLC app-IDs from a game's steamcmd info object.
@@ -891,4 +1056,32 @@ fn write_cream_api_ini(game_path: &str, app_id: &str, dlcs: &[DlcInfo]) -> Resul
 
     info!("Wrote cream_api.ini to {}", cream_api_path.display());
     Ok(())
+}
+#[cfg(test)]
+mod tests {
+    use super::steam_launch_exe;
+    use serde_json::json;
+
+    #[test]
+    fn launch_exe_prefers_windows_64() {
+        let info = json!({ "config": { "launch": {
+            "0": { "executable": "game_linux", "config": { "oslist": "linux" } },
+            "1": { "executable": "bin\\game32.exe", "config": { "oslist": "windows", "osarch": "32" } },
+            "2": { "executable": "bin\\game64.exe", "config": { "oslist": "windows", "osarch": "64" } }
+        }}});
+        assert_eq!(steam_launch_exe(&info).as_deref(), Some("bin\\game64.exe"));
+    }
+
+    #[test]
+    fn launch_exe_without_oslist() {
+        let info = json!({ "config": { "launch": {
+            "0": { "executable": "Game.exe", "type": "default" }
+        }}});
+        assert_eq!(steam_launch_exe(&info).as_deref(), Some("Game.exe"));
+    }
+
+    #[test]
+    fn launch_exe_missing() {
+        assert_eq!(steam_launch_exe(&json!({})), None);
+    }
 }

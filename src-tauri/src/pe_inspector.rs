@@ -33,6 +33,9 @@ pub const KOA_VARIANTS: &[&str] = &[
     "xinput9_1_0.dll",
 ];
 
+/// Proxies Proton already replaces with DXVK, a Koaloader copy of these is a bad idea
+pub const PROTON_SKIP_PROXIES: &[&str] = &["d3d9.dll", "d3d10.dll", "d3d11.dll", "dxgi.dll"];
+
 /// Result of a proxy scan. Which proxy was chosen and whether it was a
 /// direct match or a fallback.
 pub struct ProxyScanResult {
@@ -47,7 +50,9 @@ pub struct ProxyScanResult {
 ///   1. Variants imported by the main exe itself
 ///   2. Variants imported by any other PE file in the same directory
 ///   3. Fallback to version.dll with is_fallback = true
-pub fn find_best_proxy(exe_path: &Path) -> ProxyScanResult {
+///
+/// Names in `exclude` are never picked.
+pub fn find_best_proxy(exe_path: &Path, exclude: &[&str]) -> ProxyScanResult {
     let exe_dir = match exe_path.parent() {
         Some(d) => d,
         None => {
@@ -106,7 +111,13 @@ pub fn find_best_proxy(exe_path: &Path) -> ProxyScanResult {
     }
 
     // Pass 1: prefer a variant the main exe itself imports
-    for &variant in KOA_VARIANTS {
+    let variants: Vec<&str> = KOA_VARIANTS
+        .iter()
+        .copied()
+        .filter(|v| !exclude.contains(v))
+        .collect();
+
+    for &variant in &variants {
         if exe_imports.contains(variant) {
             info!("Best proxy (main exe imports): {}", variant);
             return ProxyScanResult { proxy_name: variant.to_string(), is_fallback: false };
@@ -114,19 +125,111 @@ pub fn find_best_proxy(exe_path: &Path) -> ProxyScanResult {
     }
 
     // Pass 2: fall back to a variant imported by any other PE in the directory
-    for &variant in KOA_VARIANTS {
+    for &variant in &variants {
         if other_imports.contains(variant) {
             info!("Best proxy (sibling PE imports): {}", variant);
             return ProxyScanResult { proxy_name: variant.to_string(), is_fallback: false };
         }
     }
 
-    // No match at all - use version.dll and flag it so the caller can warn the user
+    // No match at all, use the first allowed variant (version.dll unless excluded)
+    // and flag it so the caller can warn the user
+    let fallback = variants.first().copied().unwrap_or("version.dll");
     warn!(
-        "No Koaloader-compatible import found in {} PE files, falling back to version.dll",
-        all_pe_files.len()
+        "No Koaloader-compatible import found in {} PE files, falling back to {}",
+        all_pe_files.len(),
+        fallback
     );
-    ProxyScanResult { proxy_name: "version.dll".to_string(), is_fallback: true }
+    ProxyScanResult { proxy_name: fallback.to_string(), is_fallback: true }
+}
+
+/// Best guess at the real game exe of a Steam game.
+/// Order: exe that imports steam_api, Unreal *-Shipping.exe, the exe Steam launches,
+/// then the biggest exe. `launch_exe` is the path from the Steam launch config.
+pub fn find_steam_exe(game_path: &Path, launch_exe: Option<&str>) -> Option<PathBuf> {
+    const SKIP: &[&str] = &[
+        "unins", "crash", "redist", "vc_", "dxsetup", "dotnet", "prereq", "setup",
+        "easyanticheat", "battleye", "report",
+    ];
+
+    let exes: Vec<(PathBuf, u64)> = walkdir::WalkDir::new(game_path)
+        .max_depth(8)
+        .into_iter()
+        .filter_map(Result::ok)
+        .map(|e| e.into_path())
+        .filter(|p| {
+            p.is_file()
+                && p.extension()
+                    .and_then(|e| e.to_str())
+                    .map(|e| e.eq_ignore_ascii_case("exe"))
+                    .unwrap_or(false)
+        })
+        .filter(|p| {
+            let name = p.file_name().unwrap_or_default().to_string_lossy().to_lowercase();
+            !SKIP.iter().any(|s| name.contains(s))
+        })
+        .filter(|p| is_pe_file(p))
+        .map(|p| {
+            let size = fs::metadata(&p).map(|m| m.len()).unwrap_or(0);
+            (p, size)
+        })
+        .collect();
+
+    if exes.is_empty() {
+        warn!("No game exe found in {}", game_path.display());
+        return None;
+    }
+
+    let biggest = |list: Vec<&(PathBuf, u64)>| -> Option<PathBuf> {
+        list.into_iter().max_by_key(|(_, size)| *size).map(|(p, _)| p.clone())
+    };
+
+    let imports_steam: Vec<_> = exes
+        .iter()
+        .filter(|(p, _)| {
+            get_pe_imports(p)
+                .iter()
+                .any(|i| i == "steam_api64.dll" || i == "steam_api.dll")
+        })
+        .collect();
+    if let Some(exe) = biggest(imports_steam) {
+        info!("Game exe (imports steam_api): {}", exe.display());
+        return Some(exe);
+    }
+
+    let shipping: Vec<_> = exes
+        .iter()
+        .filter(|(p, _)| {
+            p.file_name()
+                .unwrap_or_default()
+                .to_string_lossy()
+                .to_lowercase()
+                .ends_with("-shipping.exe")
+        })
+        .collect();
+    if let Some(exe) = biggest(shipping) {
+        info!("Game exe (Unreal shipping exe): {}", exe.display());
+        return Some(exe);
+    }
+
+    if let Some(launch) = launch_exe {
+        let wanted = launch.replace('\\', "/").to_lowercase();
+        let found = exes.iter().find(|(p, _)| {
+            p.strip_prefix(game_path)
+                .map(|rel| rel.to_string_lossy().to_lowercase() == wanted)
+                .unwrap_or(false)
+        });
+        if let Some((exe, _)) = found {
+            info!("Game exe (Steam launch config): {}", exe.display());
+            return Some(exe.clone());
+        }
+    }
+
+    let exe = biggest(exes.iter().collect());
+    if let Some(exe) = &exe {
+        info!("Game exe (biggest exe): {}", exe.display());
+    }
+    exe
 }
 
 /// Detect if a Windows PE executable is 64-bit.

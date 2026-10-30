@@ -288,6 +288,7 @@ async fn process_game_action(
         "uninstall_cream" => (InstallerType::Cream, InstallerAction::Uninstall),
         "install_smoke" => (InstallerType::Smoke, InstallerAction::Install),
         "uninstall_smoke" => (InstallerType::Smoke, InstallerAction::Uninstall),
+        "install_smoke_hook" => (InstallerType::SmokeHook, InstallerAction::Install),
         _ => return Err(format!("Invalid action: {}", game_action.action)),
     };
 
@@ -316,10 +317,12 @@ async fn process_game_action(
             (InstallerType::Cream, InstallerAction::Uninstall) => {
                 game.cream_installed = false;
             }
-            (InstallerType::Smoke, InstallerAction::Install) => {
+            (InstallerType::Smoke, InstallerAction::Install)
+            | (InstallerType::SmokeHook, InstallerAction::Install) => {
                 game.smoke_installed = true;
             }
-            (InstallerType::Smoke, InstallerAction::Uninstall) => {
+            (InstallerType::Smoke, InstallerAction::Uninstall)
+            | (InstallerType::SmokeHook, InstallerAction::Uninstall) => {
                 game.smoke_installed = false;
             }
         }
@@ -712,6 +715,14 @@ async fn resolve_platform_conflict(
                 }
             }
             
+            // Hook mode files sit next to the game exe
+            if let Ok(Some(hook)) = crate::cache::read_manifest(&game.path).map(|m| m.smokeapi_hook) {
+                match SmokeAPI::uninstall_hook(&game.path, &hook) {
+                    Ok(_) => removed_files = true,
+                    Err(e) => warn!("SmokeAPI hook uninstall warning: {}", e),
+                }
+            }
+
             if !removed_files {
                 warn!("No SmokeAPI files found to remove for: {}", game_title);
             }

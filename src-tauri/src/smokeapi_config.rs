@@ -98,6 +98,13 @@ pub fn delete_config(game_path: &str) -> Result<(), String> {
 fn find_smokeapi_config_path(game_path: &str) -> Result<std::path::PathBuf, String> {
     let game_path_obj = Path::new(game_path);
 
+    // Hook mode keeps the config next to the game exe
+    if let Ok(Some(hook)) = crate::cache::read_manifest(game_path).map(|m| m.smokeapi_hook) {
+        if let Some(exe_dir) = game_path_obj.join(&hook.exe).parent() {
+            return Ok(exe_dir.join("SmokeAPI.config.json"));
+        }
+    }
+
     // Search for steam_api*.dll files with _o.dll backups (indicating SmokeAPI installation)
     let mut smokeapi_dir: Option<std::path::PathBuf> = None;
 

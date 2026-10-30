@@ -10,7 +10,7 @@ pub use storage::{
 };
 
 pub use version::{
-    read_manifest, remove_creamlinux_version, remove_smokeapi_version,
+    read_manifest, remove_creamlinux_version, remove_smokeapi_version, set_smokeapi_hook, SmokeHook,
     update_creamlinux_version as update_game_creamlinux_version,
     update_smokeapi_version as update_game_smokeapi_version,
 };
@@ -20,7 +20,7 @@ use log::{error, info, warn};
 use std::collections::HashMap;
 
 // Initialize the cache on app startup
-// Downloads both unlockers if they don't exist
+// Downloads any unlocker that's missing, a failed one is skipped
 pub async fn initialize_cache() -> Result<(), String> {
     info!("Initializing cache...");
 
@@ -120,8 +120,7 @@ pub async fn initialize_cache() -> Result<(), String> {
                 update_smokeapi_version(&version)?;
             }
             Err(e) => {
-                error!("Failed to download SmokeAPI: {}", e);
-                return Err(format!("Failed to download SmokeAPI: {}", e));
+                warn!("Skipping SmokeAPI, download failed: {}", e);
             }
         }
     }
@@ -135,8 +134,7 @@ pub async fn initialize_cache() -> Result<(), String> {
                 update_creamlinux_version(&version)?;
             }
             Err(e) => {
-                error!("Failed to download CreamLinux: {}", e);
-                return Err(format!("Failed to download CreamLinux: {}", e));
+                warn!("Skipping CreamLinux, download failed: {}", e);
             }
         }
     }
@@ -150,8 +148,7 @@ pub async fn initialize_cache() -> Result<(), String> {
                 update_screamapi_version(&version)?;
             }
             Err(e) => {
-                error!("Failed to download SmokeAPI: {}", e);
-                return Err(format!("Failed to download ScreamAPI: {}", e));
+                warn!("Skipping ScreamAPI, download failed: {}", e);
             }
         }
     }
@@ -165,8 +162,7 @@ pub async fn initialize_cache() -> Result<(), String> {
                 update_koaloader_version(&version)?;
             }
             Err(e) => {
-                error!("Failed to download Koaloader: {}", e);
-                return Err(format!("Failed to download Koaloader: {}", e));
+                warn!("Skipping Koaloader, download failed: {}", e);
             }
         }
     }
@@ -204,8 +200,7 @@ pub async fn check_and_update_cache() -> Result<UpdateResult, String> {
                         info!("SmokeAPI updated successfully");
                     }
                     Err(e) => {
-                        error!("Failed to download SmokeAPI update: {}", e);
-                        return Err(format!("Failed to download SmokeAPI update: {}", e));
+                        warn!("Skipping SmokeAPI update, download failed: {}", e);
                     }
                 }
             } else {
@@ -235,8 +230,7 @@ pub async fn check_and_update_cache() -> Result<UpdateResult, String> {
                         info!("CreamLinux updated successfully");
                     }
                     Err(e) => {
-                        error!("Failed to download CreamLinux update: {}", e);
-                        return Err(format!("Failed to download CreamLinux update: {}", e));
+                        warn!("Skipping CreamLinux update, download failed: {}", e);
                     }
                 }
             } else {
@@ -266,8 +260,7 @@ pub async fn check_and_update_cache() -> Result<UpdateResult, String> {
                         info!("ScreamAPI updated successfully");
                     }
                     Err(e) => {
-                        error!("Failed to download ScreamAPI update: {}", e);
-                        return Err(format!("Failed to download ScreamAPI update: {}", e));
+                        warn!("Skipping ScreamAPI update, download failed: {}", e);
                     }
                 }
             } else {
@@ -297,8 +290,7 @@ pub async fn check_and_update_cache() -> Result<UpdateResult, String> {
                         info!("Koaloader updated successfully");
                     }
                     Err(e) => {
-                        error!("Failed to download Koaloader update: {}", e);
-                        return Err(format!("Failed to download Koaloader update: {}", e));
+                        warn!("Skipping Koaloader update, download failed: {}", e);
                     }
                 }
             } else {
@@ -341,9 +333,14 @@ pub async fn update_outdated_games(
                 game.title
             );
 
-            // Convert api_files Vec to comma-separated string
-            let api_files_str = game.api_files.join(",");
-            match SmokeAPI::install_to_game(&game.path, &api_files_str).await {
+            let update = match &manifest.smokeapi_hook {
+                Some(hook) => SmokeAPI::update_hook(&game.path, hook),
+                None => {
+                    let api_files_str = game.api_files.join(",");
+                    SmokeAPI::install_to_game(&game.path, &api_files_str).await
+                }
+            };
+            match update {
                 Ok(_) => {
                     update_game_smokeapi_version(&game.path, cached_versions.smokeapi.latest.clone())?;
                     stats.smokeapi_updated += 1;
