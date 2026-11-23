@@ -103,10 +103,40 @@ Similarly to running the AppImage, you will need to set `WEBKIT_DISABLE_DMABUF_R
 
 #### Prerequisites
 
-- Rust 1.77.2 or later
+- [Rust](https://rustup.rs/) — `src-tauri/Cargo.toml` declares `rust-version = "1.77.2"`, but the locked dependency tree in `src-tauri/Cargo.lock` currently requires **Rust 1.88 or newer**. Install a current stable toolchain via `rustup` to be safe.
 - Node.js 18 or later
-- webkit2gtk-4.1 (libwebkit2gtk-4.1 for debian)
 - npm or yarn
+- Tauri v2 system dependencies (see below)
+
+If you don't have Rust installed yet, `rustup` installs it without root privileges:
+
+```bash
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+source "$HOME/.cargo/env"
+```
+
+##### System dependencies
+
+<details>
+<summary>Arch Linux / CachyOS / Manjaro</summary>
+
+```bash
+sudo pacman -S --needed base-devel curl wget file openssl gtk3 webkit2gtk-4.1 libsoup3 librsvg
+```
+
+</details>
+
+<details>
+<summary>Debian / Ubuntu</summary>
+
+```bash
+sudo apt install build-essential curl wget file libssl-dev libgtk-3-dev \
+  libwebkit2gtk-4.1-dev libsoup-3.0-dev librsvg2-dev
+```
+
+</details>
+
+For other distributions, see the [Tauri prerequisites](https://tauri.app/start/prerequisites/) and look for the **webkit2gtk-4.1** / **libsoup-3.0** packages.
 
 #### Steps
 
@@ -129,7 +159,23 @@ Similarly to running the AppImage, you will need to set `WEBKIT_DISABLE_DMABUF_R
    NO_STRIP=true npm run tauri build
    ```
 
-4. The compiled binary will be available in `src-tauri/target/release/creamlinux`
+   > **Note:** `src-tauri/tauri.conf.json` sets `bundle.createUpdaterArtifacts` to `true`, which requires the private key used for release signing. Without `TAURI_SIGNING_PRIVATE_KEY` the build still produces the binary and all bundles, but exits with:
+   >
+   > ```
+   > A public key has been found, but no private key. Make sure to set `TAURI_SIGNING_PRIVATE_KEY` environment variable.
+   > ```
+   >
+   > That is expected for a local build. To finish without a signing key, disable updater artifacts for that run:
+   >
+   > ```bash
+   > NO_STRIP=true npm run tauri build -- --config '{"bundle":{"createUpdaterArtifacts":false}}'
+   > ```
+   >
+   > A build like this still receives updates from the official releases (it embeds the official public key), but it cannot publish signed updates itself.
+
+4. The compiled binary will be available in `src-tauri/target/release/creamlinux`, and the installable bundles (AppImage, `.deb`, `.rpm`) in `src-tauri/target/release/bundle/`.
+
+5. When running the binary directly on an NVIDIA GPU, prefix the command with `WEBKIT_DISABLE_DMABUF_RENDERER=1` as described above.
 
 ### Desktop Integration
 
