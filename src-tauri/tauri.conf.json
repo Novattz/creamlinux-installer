@@ -15,7 +15,7 @@
       "icons/128x128@2x.png",
       "icons/icon.png"
     ],
-    "createUpdaterArtifacts": true
+    "createUpdaterArtifacts": false
   },
   "productName": "Creamlinux",
   "mainBinaryName": "creamlinux",

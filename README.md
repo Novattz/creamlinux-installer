@@ -103,7 +103,7 @@ Similarly to running the AppImage, you will need to set `WEBKIT_DISABLE_DMABUF_R
 
 #### Prerequisites
 
-- Rust 1.77.2 or later
+- Rust 1.88 or later
 - Node.js 18 or later
 - webkit2gtk-4.1 (libwebkit2gtk-4.1 for debian)
 - npm or yarn
@@ -129,7 +129,7 @@ Similarly to running the AppImage, you will need to set `WEBKIT_DISABLE_DMABUF_R
    NO_STRIP=true npm run tauri build
    ```
 
-4. The compiled binary will be available in `src-tauri/target/release/creamlinux`
+4. The compiled binary will be available in `src-tauri/target/release/creamlinux`, and the AppImage, .deb and .rpm in `src-tauri/target/release/bundle/`. On Nvidia GPUs, run it with `WEBKIT_DISABLE_DMABUF_RENDERER=1` set.
 
 ### Desktop Integration
 
