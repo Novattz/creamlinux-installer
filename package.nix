@@ -59,11 +59,6 @@ rustPlatform.buildRustPackage {
 
   buildAndTestSubdir = cargoRoot;
 
-  postPatch = ''
-    substituteInPlace src-tauri/tauri.conf.json \
-      --replace-fail '"createUpdaterArtifacts": true' '"createUpdaterArtifacts": false'
-  '';
-
   preBuild = ''
     ${patchSassEmbedded}/bin/patch-sass-embedded
   '';
